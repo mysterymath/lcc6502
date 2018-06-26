@@ -238,22 +238,22 @@ static void I(stabline)(Coordinate *cp) {
 
 Interface bytecodeIR = {
 	1, 1, 0,	/* char */
-	2, 2, 0,	/* short */
-	4, 4, 0,	/* int */
-	4, 4, 0,	/* long */
-	4, 4, 0,	/* long long */
-	4, 4, 1,	/* float */
-	8, 8, 1,	/* double */
-	8, 8, 1,	/* long double */
-	4, 4, 0,	/* T* */
-	0, 4, 0,	/* struct */
-	0,		/* little_endian */
+	2, 1, 0,	/* short */
+	2, 1, 0,	/* int */
+	4, 1, 0,	/* long */
+	4, 1, 0,	/* long long */
+	4, 1, 0,	/* float */
+	4, 1, 0,	/* double */
+	4, 1, 0,	/* long double */
+	2, 1, 0,	/* T* */
+	0, 1, 0,	/* struct */
+	1,		/* little_endian */
 	0,		/* mulops_calls */
-	0,		/* wants_callb */
-	0,		/* wants_argb */
+	1,		/* wants_callb */
+	1,		/* wants_argb */
 	1,		/* left_to_right */
-	0,		/* wants_dag */
-	0,		/* unsigned_char */
+	1,		/* wants_dag */
+	1,		/* unsigned_char */
 	I(address),
 	I(blockbeg),
 	I(blockend),
