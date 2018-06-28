@@ -252,7 +252,7 @@ Interface bytecodeIR = {
 	1,		/* wants_callb */
 	1,		/* wants_argb */
 	1,		/* left_to_right */
-	1,		/* wants_dag */
+	0,		/* wants_dag */
 	1,		/* unsigned_char */
 	I(address),
 	I(blockbeg),
