@@ -20,12 +20,12 @@ expect("proc main 0 0")
 
 @attrs
 class Store(object):
-    addr = attrib()
+    address = attrib()
     value = attrib()
 
 @attrs
 class Jump(object):
-    dest = attrib()
+    destination = attrib()
 
 @attrs
 class BasicBlock(object):
@@ -40,16 +40,16 @@ while line != "endproc main 0 0":
         raise "Expected: 'endproc main 0 0'. Found: EOF"
     components = line.split()
     match = re.match("(\w+)(\D)(\d)?", components[0])
-    op = match[1]
+    operation = match[1]
     #instruction = Instruction(match[1], match[2], match[3] and int(match[3]))
 
-    if op == 'CNST':
+    if operation == 'CNST':
         instructions.append(int(components[1]))
-    elif op == 'ASGN':
+    elif operation == 'ASGN':
         value = instructions.pop()
-        addr = instructions.pop()
-        instructions.append(Store(addr, value))
-    elif op == 'LABEL':
+        address = instructions.pop()
+        instructions.append(Store(address, value))
+    elif operation == 'LABEL':
         label = components[1]
         if label in labels:
             block = labels[block]
@@ -58,14 +58,14 @@ while line != "endproc main 0 0":
             labels[label] = block
         instructions.append(Jump(block))
         instructions = block.instructions
-    elif op == 'ADDRG':
+    elif operation == 'ADDRG':
         label = components[1]
         if label not in labels:
             labels[label] = BasicBlock([])
         instructions.append(labels[label])
-    elif op == 'JUMP':
-        dest = instructions.pop()
-        instructions.append(Jump(dest))
+    elif operation == 'JUMP':
+        destination = instructions.pop()
+        instructions.append(Jump(destination))
         block = BasicBlock([])
         instructions = block.instructions
 
