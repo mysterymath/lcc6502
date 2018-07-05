@@ -27,9 +27,13 @@ class Store(object):
 class Jump(object):
     destination = attrib()
 
-@attrs
+@attrs(cmp=False)
 class BasicBlock(object):
     instructions = attrib()
+
+    @property
+    def terminator(self):
+        return self.instructions[-1]
 
 labels = {}
 instructions = []
@@ -72,7 +76,34 @@ while line != "endproc main 0 0":
     read()
 
 def pprint(x):
-    print(FormatCode(repr(x))[0])
+    print(FormatCode(repr(x))[0], end='')
 
-print("Start:")
-pprint(start)
+
+# Generate code for each basic block, from start to end.
+
+block_ids = {}
+
+block = start
+while True:
+    # Generate a label for each block.
+    if block not in block_ids:
+        block_ids[block] = len(block_ids)
+    print(".{}:".format(block_ids[block]))
+
+    # TODO: Generate instructions (except terminator).
+    for instruction in block.instructions[:-1]:
+        pprint(instruction)
+
+    # Jump is currently the only supported block terminator.
+    assert isinstance(block.terminator, Jump)
+
+    # Jumps to already-generated blocks must be emitted.
+    if block.terminator.destination in block_ids:
+        print("JMP .{}".format(block_ids[block.terminator.destination]))
+        # Since all jumps are currently unconditional, the first backward jump starts an infinite loop.
+        # This means we are done.
+        break
+    else:
+        # Jumps to not-yet-generated blocks can be handled using fall-through.
+        # This requires generating the destination next.
+        block = block.terminator.destination
