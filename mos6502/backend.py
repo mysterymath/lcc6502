@@ -6,15 +6,19 @@ from collections import defaultdict
 from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
 
+
 def pprint(x):
     print(FormatCode(repr(x))[0], end='')
+
 
 class ParseError(Exception):
     pass
 
+
 def read():
     global line
     line = sys.stdin.readline().strip()
+
 
 def expect(expected):
     global line
@@ -22,16 +26,20 @@ def expect(expected):
         raise ParseError("Expected: '{}'. Actual: '{}'".format(expected, line))
     read()
 
+
 def expect_startswith(expected):
     global line
     if not line.startswith(expected):
-        raise ParseError("Expected to start with: '{}'. Actual: '{}'".format(expected, line))
+        raise ParseError("Expected to start with: '{}'. Actual: '{}'".format(
+            expected, line))
     read()
+
 
 read()
 expect("export main")
 expect("code")
 expect_startswith("proc main")
+
 
 @attrs(cmp=False)
 class Store(object):
@@ -39,9 +47,11 @@ class Store(object):
     value = attrib()
     size = attrib()
 
+
 @attrs(cmp=False)
 class Jump(object):
     destination = attrib()
+
 
 @attrs
 class AsmCall(object):
@@ -50,6 +60,7 @@ class AsmCall(object):
     X = attrib()
     Y = attrib()
 
+
 @attrs(cmp=False)
 class BasicBlock(object):
     instructions = attrib()
@@ -57,6 +68,7 @@ class BasicBlock(object):
     @property
     def terminator(self):
         return self.instructions[-1]
+
 
 labels = {}
 instructions = []
@@ -103,7 +115,9 @@ while not line.startswith("endproc main"):
     elif operation == 'CALL':
         args = instructions[-4:]
         del instructions[-4:]
-        instructions.append(AsmCall(args[0], *map(lambda arg: arg if arg >= 0 else None, args[1:])))
+        instructions.append(
+            AsmCall(args[0],
+                    *map(lambda arg: arg if arg >= 0 else None, args[1:])))
     else:
         raise ParseError("Unsupported operation: {}".format(operation))
 
@@ -111,8 +125,10 @@ while not line.startswith("endproc main"):
 
 # Lower each basic block sizes to single bytes, from start to end.
 
+
 class LoweringError(Exception):
     pass
+
 
 visited_blocks = set()
 block = start
@@ -126,7 +142,8 @@ while True:
         if isinstance(instruction, Store) and instruction.size > 1:
             value = instruction.value
             address = instruction.address
-            if instruction.size == 2 and isinstance(address, Number) and isinstance(value, Number):
+            if instruction.size == 2 and isinstance(
+                    address, Number) and isinstance(value, Number):
                 instructions.append(Store(address, value % 256, 1))
                 instructions.append(Store(address + 1, value // 256, 1))
             else:
@@ -143,6 +160,7 @@ while True:
 
 # Select instructions for each basic block, from start to end.
 
+
 @attrs
 class LoadImmediate(object):
     register = attrib()
@@ -150,6 +168,7 @@ class LoadImmediate(object):
 
     def emit(self):
         print("ld{} #{}".format(self.register.lower(), self.value))
+
 
 # Note: This includes absolute zero page stores.
 @attrs
@@ -160,12 +179,14 @@ class StoreAbsolute(object):
     def emit(self):
         print("st{} {}".format(self.register.lower(), self.address))
 
+
 @attrs
 class JumpSubroutine(object):
     address = attrib()
 
     def emit(self):
         print("jsr {}".format(self.address))
+
 
 @attrs
 class JumpAbsolute(object):
@@ -190,8 +211,10 @@ class State(object):
     def key(self):
         return self.registers, self.next_instruction_index
 
+
 class InstructionSelectionError(Exception):
     pass
+
 
 num_iter = 0
 num_closed = 0
@@ -223,7 +246,8 @@ while True:
     while not done:
         # If the frontier is empty, then there was no way to cover the graph.
         if not frontier:
-            raise InstructionSelectionError("No way found to implement block: {}".format(block))
+            raise InstructionSelectionError(
+                "No way found to implement block: {}".format(block))
 
         # Find the next lowest cost in the frontier
         while cur_cost not in frontier:
@@ -261,8 +285,13 @@ while True:
                 return
             next_cost = cur_cost + 2
             next_registers = state.registers | {(register, value)}
-            next_instructions = state.instructions + (LoadImmediate(register, value),)
-            update_state(next_cost, State(next_registers, state.next_instruction_index, next_instructions))
+            next_instructions = state.instructions + (LoadImmediate(
+                register, value), )
+            update_state(
+                next_cost,
+                State(next_registers, state.next_instruction_index,
+                      next_instructions))
+
         if isinstance(instruction, Store):
             ConsiderLoadImmediate('A', instruction.value)
             ConsiderLoadImmediate('X', instruction.value)
@@ -277,10 +306,16 @@ while True:
 
         # Consider adding StoreAbsolute
         def ConsiderStoreAbsolute(register, address, value):
-            if isinstance(address, Number) and (register, value) in state.registers:
+            if isinstance(address, Number) and (register,
+                                                value) in state.registers:
                 next_cost = cur_cost + (3 if address < 256 else 4)
-                next_instructions = state.instructions + (StoreAbsolute(register, address),)
-                update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
+                next_instructions = state.instructions + (StoreAbsolute(
+                    register, address), )
+                update_state(
+                    next_cost,
+                    State(state.registers, state.next_instruction_index + 1,
+                          next_instructions))
+
         if isinstance(instruction, Store):
             ConsiderStoreAbsolute('A', instruction.address, instruction.value)
             ConsiderStoreAbsolute('X', instruction.address, instruction.value)
@@ -289,25 +324,37 @@ while True:
         # Consider adding JumpAbsolute
         if isinstance(instruction, Jump):
             next_cost = cur_cost + 3
-            next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
-            update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
+            next_instructions = state.instructions + (JumpAbsolute(
+                instruction.destination), )
+            update_state(
+                next_cost,
+                State(state.registers, state.next_instruction_index + 1,
+                      next_instructions))
 
         # Consider adding JumpSubroutine
         if isinstance(instruction, AsmCall):
+
             def try_apply():
-                if instruction.A is not None and ('A', instruction.A) not in state.registers:
+                if instruction.A is not None and (
+                        'A', instruction.A) not in state.registers:
                     return
-                if instruction.X is not None and ('X', instruction.X) not in state.registers:
+                if instruction.X is not None and (
+                        'X', instruction.X) not in state.registers:
                     return
-                if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
+                if instruction.Y is not None and (
+                        'Y', instruction.Y) not in state.registers:
                     return
                 next_cost = cur_cost + 6
-                next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
+                next_instructions = state.instructions + (JumpSubroutine(
+                    instruction.address), )
                 # To be safe, assume that calls clear all computed values.
                 # TODO: Clobbered register annotations.
-                update_state(next_cost, State(frozenset(), state.next_instruction_index + 1, next_instructions))
-            try_apply()
+                update_state(
+                    next_cost,
+                    State(frozenset(), state.next_instruction_index + 1,
+                          next_instructions))
 
+            try_apply()
 
     terminator = block.terminator
     block.instructions = instructions
