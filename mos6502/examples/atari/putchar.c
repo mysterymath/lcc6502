@@ -20,9 +20,11 @@ typedef struct {
 void main(void) {
   IOCB0.CMD = PUT_CHARACTERS;
   IOCB0.BA = 0;
+  __begin_asm();
   __ldx(0);
   __lda('A');
   __jsr(CIOV);
+  __end_asm();
   while(1)
     ;
 }
