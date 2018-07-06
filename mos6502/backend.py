@@ -179,16 +179,20 @@ class State(object):
     # A frozenset of register-contents pairs.
     registers = attrib()
 
+    # Index of the first instruction yet to be generated.
+    next_instruction_index = attrib()
+
     # Instructions used to reach the given state.
     instructions = attrib()
-    done = attrib(default=False)
 
     @property
     def key(self):
-        return self.registers, self.done
+        return self.registers, self.next_instruction_index
 
 class InstructionSelectionError(Exception):
     pass
+
+num_iter = 0
 
 visited_blocks = set()
 block = start
@@ -197,61 +201,60 @@ while True:
         break
     visited_blocks.add(block)
 
-    instructions = []
-    for instruction in block.instructions:
-        # Perform a best-first search to select and schedule instructions for given DAG.
+    # Perform a best-first search to select and schedule instructions for given DAG.
 
-        # Search states already optimally reached.
-        closed = set()
+    # Search states already optimally reached.
+    closed = set()
 
-        # States yet to be exampined. A dictionary from cost to list of states.
-        # There may be duplicates for each state; these are resolved when the state is popped.
-        # This avoids maintaining an expensive priority queue, at the cost of using additional memory.
-        frontier = defaultdict(list)
+    # States yet to be exampined. A dictionary from cost to list of states.
+    # There may be duplicates for each state; these are resolved when the state is popped.
+    # This avoids maintaining an expensive priority queue, at the cost of using additional memory.
+    frontier = defaultdict(list)
 
-        # Add the empty state to start.
-        frontier[0].append(State(frozenset(), tuple()))
+    # Add the empty state to start.
+    frontier[0].append(State(frozenset(), 0, tuple()))
 
-        # Value of the lowest cost known to contain a state in the frontier.
-        cur_cost = 0
+    # Value of the lowest cost known to contain a state in the frontier.
+    cur_cost = 0
 
-        done = False
-        while not done:
-            # If the frontier is empty, then there was no way to cover the graph.
-            if not frontier:
-                raise InstructionSelectionError("No way found to implement instruction: {}".format(instruction))
+    done = False
+    while not done:
+        # If the frontier is empty, then there was no way to cover the graph.
+        if not frontier:
+            raise InstructionSelectionError("No way found to implement block: {}".format(block))
 
-            # Find the next lowest cost in the frontier
-            while cur_cost not in frontier:
-                cur_cost += 1
+        # Find the next lowest cost in the frontier
+        while cur_cost not in frontier:
+            cur_cost += 1
 
-            # Pull the next best item out of the frontier.
-            state = frontier[cur_cost].pop()
-            if not frontier[cur_cost]:
-                del frontier[cur_cost]
+        # Pull the next best item out of the frontier.
+        state = frontier[cur_cost].pop()
+        if not frontier[cur_cost]:
+            del frontier[cur_cost]
 
-            # If we have already handled this state, a better path to it has already been found.
-            if state.key in closed:
-                continue
-            # Otherwise, we now have found the best path to this state.
-            closed.add(state.key)
+        # If we have already handled this state, a better path to it has already been found.
+        if state.key in closed:
+            continue
+        # Otherwise, we now have found the best path to this state.
+        closed.add(state.key)
 
-            # If the instruction graph root is covered, we have found optimal instructions for the whole graph.
-            if state.done:
-                instructions += state.instructions
-                done = True
-                break
+        num_iter += 1
 
+        # If the instruction graph root is covered, we have found optimal instructions for the whole graph.
+        if state.next_instruction_index == len(block.instructions):
+            instructions = state.instructions
+            done = True
+            break
+
+        for instruction in block.instructions[state.next_instruction_index:]:
             # Consider adding LoadImmediate
             def ConsiderLoadImmediate(reg, value):
                 if not isinstance(value, Number):
                     return
-                if value >= 256:
-                    return
                 next_cost = cur_cost + 2
                 next_registers = state.registers | {(reg, value)}
                 next_instructions = state.instructions + (LoadImmediate(reg, value),)
-                frontier[next_cost].append(State(next_registers, next_instructions))
+                frontier[next_cost].append(State(next_registers, state.next_instruction_index, next_instructions))
             if isinstance(instruction, Store):
                 ConsiderLoadImmediate('A', instruction.value)
                 ConsiderLoadImmediate('X', instruction.value)
@@ -264,36 +267,38 @@ while True:
                 if instruction.Y is not None:
                     ConsiderLoadImmediate('Y', instruction.Y)
 
-            # Consider adding StoreAAbsolute
-            if isinstance(instruction, Store):
-                address = instruction.address
-                value = instruction.value
-                if isinstance(address, Number) and instruction.size == 1 and ('A', value) in state.registers:
-                    next_cost = cur_cost + (3 if instruction.address < 256 else 4)
-                    next_instructions = state.instructions + (StoreAAbsolute(address),)
-                    frontier[next_cost].append(State(state.registers, next_instructions, done=True))
+            # Root instructions are executed for their side effects and cannot be scheduled before the previous. 
+            if instruction is block.instructions[state.next_instruction_index]:
+                # Consider adding StoreAAbsolute
+                if isinstance(instruction, Store):
+                    address = instruction.address
+                    value = instruction.value
+                    if isinstance(address, Number) and instruction.size == 1 and ('A', value) in state.registers:
+                        next_cost = cur_cost + (3 if instruction.address < 256 else 4)
+                        next_instructions = state.instructions + (StoreAAbsolute(address),)
+                        frontier[next_cost].append(State(state.registers, state.next_instruction_index + 1, next_instructions))
 
-            # Consider adding JumpAbsolute
-            if isinstance(instruction, Jump):
-                next_cost = cur_cost + 3
-                next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
-                frontier[next_cost].append(State(state.registers, next_instructions, done=True))
+                # Consider adding JumpAbsolute
+                if isinstance(instruction, Jump):
+                    next_cost = cur_cost + 3
+                    next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
+                    frontier[next_cost].append(State(state.registers, state.next_instruction_index + 1, next_instructions))
 
-            # Consider adding JumpSubroutine
-            if isinstance(instruction, AsmCall):
-                def try_apply():
-                    if instruction.A is not None and ('A', instruction.A) not in state.registers:
-                        return
-                    if instruction.X is not None and ('X', instruction.X) not in state.registers:
-                        return
-                    if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
-                        return
-                    next_cost = cur_cost + 6
-                    next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
-                    # To be safe, assume that calls clear all computed values.
-                    # TODO: Clobbered register annotations.
-                    frontier[next_cost].append(State(frozenset(), next_instructions, done=True))
-                try_apply()
+                # Consider adding JumpSubroutine
+                if isinstance(instruction, AsmCall):
+                    def try_apply():
+                        if instruction.A is not None and ('A', instruction.A) not in state.registers:
+                            return
+                        if instruction.X is not None and ('X', instruction.X) not in state.registers:
+                            return
+                        if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
+                            return
+                        next_cost = cur_cost + 6
+                        next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
+                        # To be safe, assume that calls clear all computed values.
+                        # TODO: Clobbered register annotations.
+                        frontier[next_cost].append(State(frozenset(), state.next_instruction_index + 1, next_instructions))
+                    try_apply()
 
 
     terminator = block.terminator
@@ -341,3 +346,6 @@ while True:
 
 # Emit epilogue.
 print("end = *")
+
+print("\n\nStats:", file=sys.stderr)
+print("Num_iter: {}".format(num_iter), file=sys.stderr)
