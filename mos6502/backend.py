@@ -2,6 +2,8 @@ import attr
 import re
 import sys
 from attr import attrs, attrib
+from collections import defaultdict
+from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
 
 def read():
@@ -18,12 +20,12 @@ expect("export main")
 expect("code")
 expect("proc main 0 0")
 
-@attrs
+@attrs(cmp=False)
 class Store(object):
     address = attrib()
     value = attrib()
 
-@attrs
+@attrs(cmp=False)
 class Jump(object):
     destination = attrib()
 
@@ -72,38 +74,159 @@ while line != "endproc main 0 0":
         instructions.append(Jump(destination))
         block = BasicBlock([])
         instructions = block.instructions
+    else:
+        raise "Unsupoported operation: {}".format(operation)
 
     read()
 
 def pprint(x):
     print(FormatCode(repr(x))[0], end='')
 
+@attrs
+class LoadAImmediate(object):
+    value = attrib()
 
-# Generate code for each basic block, from start to end.
+    def emit(self):
+        print("LDA #{}".format(self.value))
+
+# Note: This includes absolute zero page stores.
+@attrs
+class StoreAAbsolute(object):
+    address = attrib()
+
+    def emit(self):
+        print("STA {}".format(self.address))
+
+@attrs
+class JumpAbsolute(object):
+    destination = attrib()
+
+    def emit(self, block_ids):
+        print("JMP .{}".format(block_ids[self.destination]))
+
+# Select instructions for each basic block, from start to end.
+
+# TODO: Track resources used and prevent clobbering.
+
+@attrs(frozen=True)
+class State(object):
+    covered = attrib()
+    instructions = attrib()
+
+    @property
+    def key(self):
+        return self.covered
+
+visited_blocks = set()
+block = start
+while True:
+    if block in visited_blocks:
+        break
+    visited_blocks.add(block)
+
+    instructions = []
+    for instruction in block.instructions:
+        # Perform a best-first search to select and schedule instructions for given DAG.
+
+        # Search states already optimally reached.
+        closed = set()
+
+        # States yet to be exampined. A dictionary from cost to list of states.
+        # There may be duplicates for each state; these are resolved when the state is popped.
+        # This avoids maintaining an expensive priority queue, at the cost of using additional memory.
+        frontier = defaultdict(list)
+
+        # Add the empty state to start.
+        frontier[0].append(State(frozenset(), tuple()))
+
+        # Value of the lowest cost known to contain a state in the frontier.
+        cur_cost = 0
+
+        done = False
+        while not done:
+            # If the frontier is empty, then there was no way to cover the graph.
+            assert frontier
+
+            # Find the next lowest cost in the frontier
+            while cur_cost not in frontier:
+                cur_cost += 1
+
+            # Pull the next best item out of the frontier.
+            state = frontier[cur_cost].pop()
+            if not frontier[cur_cost]:
+                del frontier[cur_cost]
+
+            # If we have already handled this state, a better path to it has already been found.
+            if state.key in closed:
+                continue
+            # Otherwise, we now have found the best path to this state.
+            closed.add(state.key)
+
+            # If the instruction graph root is covered, we have found optimal instructions for the whole graph.
+            if instruction in state.covered:
+                instructions += state.instructions
+                done = True
+                break
+
+            # Consider adding LoadAImmediate
+            if isinstance(instruction, Store):
+                value = instruction.value
+                if isinstance(value, Number):
+                    next_cost = cur_cost + 2
+                    next_covered = state.covered | {value}
+                    next_instructions = state.instructions + (LoadAImmediate(value),)
+                    frontier[next_cost].append(State(next_covered, next_instructions))
+
+            # Consider adding StoreAAbsolute
+            if isinstance(instruction, Store):
+                address = instruction.address
+                value = instruction.value
+                if isinstance(address, Number) and value in state.covered:
+                    next_cost = cur_cost + (3 if instruction.address < 256 else 4)
+                    next_covered = state.covered | {instruction}
+                    next_instructions = state.instructions + (StoreAAbsolute(address),)
+                    frontier[next_cost].append(State(next_covered, next_instructions))
+
+            # Consider adding JumpAbsolute
+            if isinstance(instruction, Jump):
+                next_cost = cur_cost + 3
+                next_covered = state.covered | {instruction}
+                next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
+                frontier[next_cost].append(State(next_covered, next_instructions))
+
+
+    terminator = block.terminator
+    block.instructions = instructions
+
+    # Jump is currently the only supported block terminator.
+    assert isinstance(terminator, Jump)
+    block = terminator.destination
+
+# Emit code for each basic block, from start to end.
 
 block_ids = {}
 
 block = start
 while True:
-    # Generate a label for each block.
+    # Emit a label for each block.
     if block not in block_ids:
         block_ids[block] = len(block_ids)
     print(".{}:".format(block_ids[block]))
 
-    # TODO: Generate instructions (except terminator).
+    # Emit instructions (except terminator).
     for instruction in block.instructions[:-1]:
-        pprint(instruction)
+        instruction.emit()
 
-    # Jump is currently the only supported block terminator.
-    assert isinstance(block.terminator, Jump)
+    # JumpAbsolute is currently the only supported block terminator.
+    assert isinstance(block.terminator, JumpAbsolute)
 
-    # Jumps to already-generated blocks must be emitted.
     if block.terminator.destination in block_ids:
-        print("JMP .{}".format(block_ids[block.terminator.destination]))
+        # Jumps to already-emitted blocks must be emitted.
+        block.terminator.emit(block_ids)
         # Since all jumps are currently unconditional, the first backward jump starts an infinite loop.
         # This means we are done.
         break
     else:
-        # Jumps to not-yet-generated blocks can be handled using fall-through.
-        # This requires generating the destination next.
+        # Jumps to not-yet-emitted blocks can be handled using fall-through.
+        # This requires emitting the destination next.
         block = block.terminator.destination
