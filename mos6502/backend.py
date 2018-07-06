@@ -45,10 +45,10 @@ class Jump(object):
 
 @attrs
 class AsmCall(object):
-    destination = attrib()
-    a = attrib()
-    x = attrib()
-    y = attrib()
+    address = attrib()
+    A = attrib()
+    X = attrib()
+    Y = attrib()
 
 @attrs(cmp=False)
 class BasicBlock(object):
@@ -109,28 +109,6 @@ while not line.startswith("endproc main"):
 
     read()
 
-@attrs
-class LoadAImmediate(object):
-    value = attrib()
-
-    def emit(self):
-        print("lda #{}".format(self.value))
-
-# Note: This includes absolute zero page stores.
-@attrs
-class StoreAAbsolute(object):
-    address = attrib()
-
-    def emit(self):
-        print("sta {}".format(self.address))
-
-@attrs
-class JumpAbsolute(object):
-    destination = attrib()
-
-    def emit(self, block_ids):
-        print("jmp _{}".format(block_ids[self.destination]))
-
 # Lower each basic block sizes to single bytes, from start to end.
 
 class LoweringError(Exception):
@@ -164,6 +142,37 @@ while True:
     block = terminator.destination
 
 # Select instructions for each basic block, from start to end.
+
+@attrs
+class LoadImmediate(object):
+    reg = attrib()
+    value = attrib()
+
+    def emit(self):
+        print("ld{} #{}".format(self.reg.lower(), self.value))
+
+# Note: This includes absolute zero page stores.
+@attrs
+class StoreAAbsolute(object):
+    address = attrib()
+
+    def emit(self):
+        print("sta {}".format(self.address))
+
+@attrs
+class JumpSubroutine(object):
+    address = attrib()
+
+    def emit(self):
+        print("jsr {}".format(self.address))
+
+@attrs
+class JumpAbsolute(object):
+    destination = attrib()
+
+    def emit(self, block_ids):
+        print("jmp _{}".format(block_ids[self.destination]))
+
 
 @attrs(frozen=True)
 class State(object):
@@ -233,14 +242,27 @@ while True:
                 done = True
                 break
 
-            # Consider adding LoadAImmediate
+            # Consider adding LoadImmediate
+            def ConsiderLoadImmediate(reg, value):
+                if not isinstance(value, Number):
+                    return
+                if value >= 256:
+                    return
+                next_cost = cur_cost + 2
+                next_registers = state.registers | {(reg, value)}
+                next_instructions = state.instructions + (LoadImmediate(reg, value),)
+                frontier[next_cost].append(State(next_registers, next_instructions))
             if isinstance(instruction, Store):
-                value = instruction.value
-                if isinstance(value, Number) and value < 256:
-                    next_cost = cur_cost + 2
-                    next_registers = state.registers | {('A', value)}
-                    next_instructions = state.instructions + (LoadAImmediate(value),)
-                    frontier[next_cost].append(State(next_registers, next_instructions))
+                ConsiderLoadImmediate('A', instruction.value)
+                ConsiderLoadImmediate('X', instruction.value)
+                ConsiderLoadImmediate('Y', instruction.value)
+            elif isinstance(instruction, AsmCall):
+                if instruction.A is not None:
+                    ConsiderLoadImmediate('A', instruction.A)
+                if instruction.X is not None:
+                    ConsiderLoadImmediate('X', instruction.X)
+                if instruction.Y is not None:
+                    ConsiderLoadImmediate('Y', instruction.Y)
 
             # Consider adding StoreAAbsolute
             if isinstance(instruction, Store):
@@ -256,6 +278,22 @@ while True:
                 next_cost = cur_cost + 3
                 next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
                 frontier[next_cost].append(State(state.registers, next_instructions, done=True))
+
+            # Consider adding JumpSubroutine
+            if isinstance(instruction, AsmCall):
+                def try_apply():
+                    if instruction.A is not None and ('A', instruction.A) not in state.registers:
+                        return
+                    if instruction.X is not None and ('X', instruction.X) not in state.registers:
+                        return
+                    if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
+                        return
+                    next_cost = cur_cost + 6
+                    next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
+                    # To be safe, assume that calls clear all computed values.
+                    # TODO: Clobbered register annotations.
+                    frontier[next_cost].append(State(frozenset(), next_instructions, done=True))
+                try_apply()
 
 
     terminator = block.terminator
