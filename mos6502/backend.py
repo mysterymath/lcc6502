@@ -87,7 +87,7 @@ class LoadAImmediate(object):
     value = attrib()
 
     def emit(self):
-        print("LDA #{}".format(self.value))
+        print("lda #{}".format(self.value))
 
 # Note: This includes absolute zero page stores.
 @attrs
@@ -95,14 +95,14 @@ class StoreAAbsolute(object):
     address = attrib()
 
     def emit(self):
-        print("STA {}".format(self.address))
+        print("sta {}".format(self.address))
 
 @attrs
 class JumpAbsolute(object):
     destination = attrib()
 
     def emit(self, block_ids):
-        print("JMP .{}".format(block_ids[self.destination]))
+        print("jmp _{}".format(block_ids[self.destination]))
 
 # Select instructions for each basic block, from start to end.
 
@@ -202,6 +202,13 @@ while True:
     assert isinstance(terminator, Jump)
     block = terminator.destination
 
+# Emit prologue.
+print(".word $FFFF")
+print("start = $0700")
+print(".word start")
+print(".word end - 1")
+print("* = start")
+
 # Emit code for each basic block, from start to end.
 
 block_ids = {}
@@ -211,7 +218,7 @@ while True:
     # Emit a label for each block.
     if block not in block_ids:
         block_ids[block] = len(block_ids)
-    print(".{}:".format(block_ids[block]))
+    print("_{}:".format(block_ids[block]))
 
     # Emit instructions (except terminator).
     for instruction in block.instructions[:-1]:
@@ -230,3 +237,6 @@ while True:
         # Jumps to not-yet-emitted blocks can be handled using fall-through.
         # This requires emitting the destination next.
         block = block.terminator.destination
+
+# Emit epilogue.
+print("end = *")
