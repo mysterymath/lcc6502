@@ -145,19 +145,20 @@ while True:
 
 @attrs
 class LoadImmediate(object):
-    reg = attrib()
+    register = attrib()
     value = attrib()
 
     def emit(self):
-        print("ld{} #{}".format(self.reg.lower(), self.value))
+        print("ld{} #{}".format(self.register.lower(), self.value))
 
 # Note: This includes absolute zero page stores.
 @attrs
-class StoreAAbsolute(object):
+class StoreAbsolute(object):
+    register = attrib()
     address = attrib()
 
     def emit(self):
-        print("sta {}".format(self.address))
+        print("st{} {}".format(self.register.lower(), self.address))
 
 @attrs
 class JumpSubroutine(object):
@@ -193,6 +194,7 @@ class InstructionSelectionError(Exception):
     pass
 
 num_iter = 0
+num_closed = 0
 
 visited_blocks = set()
 block = start
@@ -234,6 +236,7 @@ while True:
 
         # If we have already handled this state, a better path to it has already been found.
         if state.key in closed:
+            num_closed += 1
             continue
         # Otherwise, we now have found the best path to this state.
         closed.add(state.key)
@@ -248,12 +251,12 @@ while True:
 
         for instruction in block.instructions[state.next_instruction_index:]:
             # Consider adding LoadImmediate
-            def ConsiderLoadImmediate(reg, value):
+            def ConsiderLoadImmediate(register, value):
                 if not isinstance(value, Number):
                     return
                 next_cost = cur_cost + 2
-                next_registers = state.registers | {(reg, value)}
-                next_instructions = state.instructions + (LoadImmediate(reg, value),)
+                next_registers = state.registers | {(register, value)}
+                next_instructions = state.instructions + (LoadImmediate(register, value),)
                 frontier[next_cost].append(State(next_registers, state.next_instruction_index, next_instructions))
             if isinstance(instruction, Store):
                 ConsiderLoadImmediate('A', instruction.value)
@@ -269,14 +272,16 @@ while True:
 
             # Root instructions are executed for their side effects and cannot be scheduled before the previous. 
             if instruction is block.instructions[state.next_instruction_index]:
-                # Consider adding StoreAAbsolute
-                if isinstance(instruction, Store):
-                    address = instruction.address
-                    value = instruction.value
-                    if isinstance(address, Number) and instruction.size == 1 and ('A', value) in state.registers:
-                        next_cost = cur_cost + (3 if instruction.address < 256 else 4)
-                        next_instructions = state.instructions + (StoreAAbsolute(address),)
+                # Consider adding StoreAbsolute
+                def ConsiderStoreAbsolute(register, address, value):
+                    if isinstance(address, Number) and (register, value) in state.registers:
+                        next_cost = cur_cost + (3 if address < 256 else 4)
+                        next_instructions = state.instructions + (StoreAbsolute(register, address),)
                         frontier[next_cost].append(State(state.registers, state.next_instruction_index + 1, next_instructions))
+                if isinstance(instruction, Store):
+                    ConsiderStoreAbsolute('A', instruction.address, instruction.value)
+                    ConsiderStoreAbsolute('X', instruction.address, instruction.value)
+                    ConsiderStoreAbsolute('Y', instruction.address, instruction.value)
 
                 # Consider adding JumpAbsolute
                 if isinstance(instruction, Jump):
@@ -348,4 +353,5 @@ while True:
 print("end = *")
 
 print("\n\nStats:", file=sys.stderr)
-print("Num_iter: {}".format(num_iter), file=sys.stderr)
+print("Num iter: {}".format(num_iter), file=sys.stderr)
+print("Num closed: {}".format(num_closed), file=sys.stderr)
