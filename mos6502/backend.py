@@ -47,6 +47,10 @@ class BasicBlock(object):
     def terminator(self):
         return self.instructions[-1]
 
+@attrs
+class Arg(object):
+    value = attrib()
+
 labels = {}
 instructions = []
 block = BasicBlock(instructions)
@@ -84,6 +88,9 @@ while not line.startswith("endproc main"):
         instructions.append(Jump(destination))
         block = BasicBlock([])
         instructions = block.instructions
+    elif operation == 'ARG':
+        value = instructions.pop()
+        instructions.append(Arg(value))
     else:
         raise ParseError("Unsupported operation: {}".format(operation))
 

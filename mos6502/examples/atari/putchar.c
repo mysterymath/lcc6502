@@ -2,10 +2,7 @@
 #define PUT_CHARACTERS 0x0B
 #define CIOV ((void*)0xE456)
 
-#define __a 0
-#define __x 1
-
-void __asm_call(void* address, ...);
+void __asm_call(void* address, int a, int x, int y);
 
 typedef struct {
   unsigned char HID;
@@ -21,7 +18,7 @@ typedef struct {
 void main(void) {
   IOCB0.CMD = PUT_CHARACTERS;
   IOCB0.BA = 0;
-  __asm_call(CIOV, __x, 0, __a, 'A');
+  __asm_call(CIOV, 'A', 0, -1);
   while(1)
     ;
 }
