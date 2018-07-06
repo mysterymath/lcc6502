@@ -253,61 +253,60 @@ while True:
             if state.key not in closed:
                 frontier[cost].append(state)
 
-        for instruction in block.instructions[state.next_instruction_index:]:
-            # Consider adding LoadImmediate
-            def ConsiderLoadImmediate(register, value):
-                if not isinstance(value, Number):
+        instruction = block.instructions[state.next_instruction_index]
+
+        # Consider adding LoadImmediate
+        def ConsiderLoadImmediate(register, value):
+            if not isinstance(value, Number):
+                return
+            next_cost = cur_cost + 2
+            next_registers = state.registers | {(register, value)}
+            next_instructions = state.instructions + (LoadImmediate(register, value),)
+            update_state(next_cost, State(next_registers, state.next_instruction_index, next_instructions))
+        if isinstance(instruction, Store):
+            ConsiderLoadImmediate('A', instruction.value)
+            ConsiderLoadImmediate('X', instruction.value)
+            ConsiderLoadImmediate('Y', instruction.value)
+        elif isinstance(instruction, AsmCall):
+            if instruction.A is not None:
+                ConsiderLoadImmediate('A', instruction.A)
+            if instruction.X is not None:
+                ConsiderLoadImmediate('X', instruction.X)
+            if instruction.Y is not None:
+                ConsiderLoadImmediate('Y', instruction.Y)
+
+        # Consider adding StoreAbsolute
+        def ConsiderStoreAbsolute(register, address, value):
+            if isinstance(address, Number) and (register, value) in state.registers:
+                next_cost = cur_cost + (3 if address < 256 else 4)
+                next_instructions = state.instructions + (StoreAbsolute(register, address),)
+                update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
+        if isinstance(instruction, Store):
+            ConsiderStoreAbsolute('A', instruction.address, instruction.value)
+            ConsiderStoreAbsolute('X', instruction.address, instruction.value)
+            ConsiderStoreAbsolute('Y', instruction.address, instruction.value)
+
+        # Consider adding JumpAbsolute
+        if isinstance(instruction, Jump):
+            next_cost = cur_cost + 3
+            next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
+            update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
+
+        # Consider adding JumpSubroutine
+        if isinstance(instruction, AsmCall):
+            def try_apply():
+                if instruction.A is not None and ('A', instruction.A) not in state.registers:
                     return
-                next_cost = cur_cost + 2
-                next_registers = state.registers | {(register, value)}
-                next_instructions = state.instructions + (LoadImmediate(register, value),)
-                update_state(next_cost, State(next_registers, state.next_instruction_index, next_instructions))
-            if isinstance(instruction, Store):
-                ConsiderLoadImmediate('A', instruction.value)
-                ConsiderLoadImmediate('X', instruction.value)
-                ConsiderLoadImmediate('Y', instruction.value)
-            elif isinstance(instruction, AsmCall):
-                if instruction.A is not None:
-                    ConsiderLoadImmediate('A', instruction.A)
-                if instruction.X is not None:
-                    ConsiderLoadImmediate('X', instruction.X)
-                if instruction.Y is not None:
-                    ConsiderLoadImmediate('Y', instruction.Y)
-
-            # Root instructions are executed for their side effects and cannot be scheduled before the previous. 
-            if instruction is block.instructions[state.next_instruction_index]:
-                # Consider adding StoreAbsolute
-                def ConsiderStoreAbsolute(register, address, value):
-                    if isinstance(address, Number) and (register, value) in state.registers:
-                        next_cost = cur_cost + (3 if address < 256 else 4)
-                        next_instructions = state.instructions + (StoreAbsolute(register, address),)
-                        update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
-                if isinstance(instruction, Store):
-                    ConsiderStoreAbsolute('A', instruction.address, instruction.value)
-                    ConsiderStoreAbsolute('X', instruction.address, instruction.value)
-                    ConsiderStoreAbsolute('Y', instruction.address, instruction.value)
-
-                # Consider adding JumpAbsolute
-                if isinstance(instruction, Jump):
-                    next_cost = cur_cost + 3
-                    next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
-                    update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
-
-                # Consider adding JumpSubroutine
-                if isinstance(instruction, AsmCall):
-                    def try_apply():
-                        if instruction.A is not None and ('A', instruction.A) not in state.registers:
-                            return
-                        if instruction.X is not None and ('X', instruction.X) not in state.registers:
-                            return
-                        if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
-                            return
-                        next_cost = cur_cost + 6
-                        next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
-                        # To be safe, assume that calls clear all computed values.
-                        # TODO: Clobbered register annotations.
-                        update_state(next_cost, State(frozenset(), state.next_instruction_index + 1, next_instructions))
-                    try_apply()
+                if instruction.X is not None and ('X', instruction.X) not in state.registers:
+                    return
+                if instruction.Y is not None and ('Y', instruction.Y) not in state.registers:
+                    return
+                next_cost = cur_cost + 6
+                next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
+                # To be safe, assume that calls clear all computed values.
+                # TODO: Clobbered register annotations.
+                update_state(next_cost, State(frozenset(), state.next_instruction_index + 1, next_instructions))
+            try_apply()
 
 
     terminator = block.terminator
