@@ -6,19 +6,29 @@ from collections import defaultdict
 from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
 
+class ParseError(Exception):
+    pass
+
 def read():
     global line
     line = sys.stdin.readline().strip()
 
 def expect(expected):
     global line
-    assert line == expected, "Expected: '{}'. Actual: '{}'".format(expected, line);
+    if line != expected:
+        raise ParseError("Expected: '{}'. Actual: '{}'".format(expected, line))
+    read()
+
+def expect_startswith(expected):
+    global line
+    if not line.startswith(expected):
+        raise ParseError("Expected to start with: '{}'. Actual: '{}'".format(expected, line))
     read()
 
 read()
 expect("export main")
 expect("code")
-expect("proc main 0 0")
+expect_startswith("proc main")
 
 @attrs(cmp=False)
 class Store(object):
@@ -41,9 +51,9 @@ labels = {}
 instructions = []
 block = BasicBlock(instructions)
 start = block
-while line != "endproc main 0 0":
+while not line.startswith("endproc main"):
     if not line:
-        raise "Expected: 'endproc main 0 0'. Found: EOF"
+        raise ParseError("Expected: 'endproc main \d \d'. Found: EOF")
     components = line.split()
     match = re.match("(\w+)(\D)(\d)?", components[0])
     operation = match[1]
@@ -75,7 +85,7 @@ while line != "endproc main 0 0":
         block = BasicBlock([])
         instructions = block.instructions
     else:
-        raise "Unsupoported operation: {}".format(operation)
+        raise ParseError("Unsupported operation: {}".format(operation))
 
     read()
 
@@ -121,6 +131,9 @@ class State(object):
     def key(self):
         return self.registers, self.done
 
+class InstructionSelectionError(Exception):
+    pass
+
 visited_blocks = set()
 block = start
 while True:
@@ -149,7 +162,8 @@ while True:
         done = False
         while not done:
             # If the frontier is empty, then there was no way to cover the graph.
-            assert frontier
+            if not frontier:
+                raise InstructionSelectionError("No way found to implement instruction: {}".format(instruction))
 
             # Find the next lowest cost in the frontier
             while cur_cost not in frontier:
