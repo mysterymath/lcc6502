@@ -17,7 +17,7 @@ typedef struct {
 
 void putchar(unsigned char c) {
   IOCB0.CMD = PUT_CHARACTERS;
-  IOCB0.BA = 0;
+  IOCB0.BL = 0;
   __asm_call(CIOV, c, 0, -1);
 }
 

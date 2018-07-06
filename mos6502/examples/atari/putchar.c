@@ -17,7 +17,7 @@ typedef struct {
 
 void main(void) {
   IOCB0.CMD = PUT_CHARACTERS;
-  IOCB0.BA = 0;
+  IOCB0.BL = 0;
   __asm_call(CIOV, 'H', 0, -1);
   __asm_call(CIOV, 'e', 0, -1);
   __asm_call(CIOV, 'l', 0, -1);
