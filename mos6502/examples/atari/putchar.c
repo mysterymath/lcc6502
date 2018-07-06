@@ -18,7 +18,19 @@ typedef struct {
 void main(void) {
   IOCB0.CMD = PUT_CHARACTERS;
   IOCB0.BA = 0;
-  __asm_call(CIOV, 'A', 0, -1);
+  __asm_call(CIOV, 'H', 0, -1);
+  __asm_call(CIOV, 'e', 0, -1);
+  __asm_call(CIOV, 'l', 0, -1);
+  __asm_call(CIOV, 'l', 0, -1);
+  __asm_call(CIOV, 'o', 0, -1);
+  __asm_call(CIOV, ',', 0, -1);
+  __asm_call(CIOV, ' ', 0, -1);
+  __asm_call(CIOV, 'W', 0, -1);
+  __asm_call(CIOV, 'o', 0, -1);
+  __asm_call(CIOV, 'r', 0, -1);
+  __asm_call(CIOV, 'l', 0, -1);
+  __asm_call(CIOV, 'd', 0, -1);
+  __asm_call(CIOV, '!', 0, -1);
   while(1)
     ;
 }

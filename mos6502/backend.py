@@ -249,6 +249,10 @@ while True:
             done = True
             break
 
+        def update_state(cost, state):
+            if state.key not in closed:
+                frontier[cost].append(state)
+
         for instruction in block.instructions[state.next_instruction_index:]:
             # Consider adding LoadImmediate
             def ConsiderLoadImmediate(register, value):
@@ -257,7 +261,7 @@ while True:
                 next_cost = cur_cost + 2
                 next_registers = state.registers | {(register, value)}
                 next_instructions = state.instructions + (LoadImmediate(register, value),)
-                frontier[next_cost].append(State(next_registers, state.next_instruction_index, next_instructions))
+                update_state(next_cost, State(next_registers, state.next_instruction_index, next_instructions))
             if isinstance(instruction, Store):
                 ConsiderLoadImmediate('A', instruction.value)
                 ConsiderLoadImmediate('X', instruction.value)
@@ -277,7 +281,7 @@ while True:
                     if isinstance(address, Number) and (register, value) in state.registers:
                         next_cost = cur_cost + (3 if address < 256 else 4)
                         next_instructions = state.instructions + (StoreAbsolute(register, address),)
-                        frontier[next_cost].append(State(state.registers, state.next_instruction_index + 1, next_instructions))
+                        update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
                 if isinstance(instruction, Store):
                     ConsiderStoreAbsolute('A', instruction.address, instruction.value)
                     ConsiderStoreAbsolute('X', instruction.address, instruction.value)
@@ -287,7 +291,7 @@ while True:
                 if isinstance(instruction, Jump):
                     next_cost = cur_cost + 3
                     next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
-                    frontier[next_cost].append(State(state.registers, state.next_instruction_index + 1, next_instructions))
+                    update_state(next_cost, State(state.registers, state.next_instruction_index + 1, next_instructions))
 
                 # Consider adding JumpSubroutine
                 if isinstance(instruction, AsmCall):
@@ -302,7 +306,7 @@ while True:
                         next_instructions = state.instructions + (JumpSubroutine(instruction.address),)
                         # To be safe, assume that calls clear all computed values.
                         # TODO: Clobbered register annotations.
-                        frontier[next_cost].append(State(frozenset(), state.next_instruction_index + 1, next_instructions))
+                        update_state(next_cost, State(frozenset(), state.next_instruction_index + 1, next_instructions))
                     try_apply()
 
 
