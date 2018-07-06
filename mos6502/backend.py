@@ -131,9 +131,39 @@ class JumpAbsolute(object):
     def emit(self, block_ids):
         print("jmp _{}".format(block_ids[self.destination]))
 
-# Select instructions for each basic block, from start to end.
+# Lower each basic block sizes to single bytes, from start to end.
 
-# TODO: Track resources used and prevent clobbering.
+class LoweringError(Exception):
+    pass
+
+visited_blocks = set()
+block = start
+while True:
+    if block in visited_blocks:
+        break
+    visited_blocks.add(block)
+
+    instructions = []
+    for instruction in block.instructions:
+        if isinstance(instruction, Store) and instruction.size > 1:
+            value = instruction.value
+            address = instruction.address
+            if instruction.size == 2 and isinstance(address, Number) and isinstance(value, Number):
+                instructions.append(Store(address, value % 256, 1))
+                instructions.append(Store(address + 1, value // 256, 1))
+            else:
+                raise LoweringError("Could not lower: {}".format(instruction))
+        else:
+            instructions.append(instruction)
+
+    terminator = block.terminator
+    block.instructions = instructions
+
+    # Jump is currently the only supported block terminator.
+    assert isinstance(terminator, Jump)
+    block = terminator.destination
+
+# Select instructions for each basic block, from start to end.
 
 @attrs(frozen=True)
 class State(object):
