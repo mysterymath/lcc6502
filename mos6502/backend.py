@@ -110,12 +110,16 @@ class JumpAbsolute(object):
 
 @attrs(frozen=True)
 class State(object):
-    covered = attrib()
+    # A frozenset of register-contents pairs.
+    registers = attrib()
+
+    # Instructions used to reach the given state.
     instructions = attrib()
+    done = attrib(default=False)
 
     @property
     def key(self):
-        return self.covered
+        return self.registers, self.done
 
 visited_blocks = set()
 block = start
@@ -163,7 +167,7 @@ while True:
             closed.add(state.key)
 
             # If the instruction graph root is covered, we have found optimal instructions for the whole graph.
-            if instruction in state.covered:
+            if state.done:
                 instructions += state.instructions
                 done = True
                 break
@@ -173,26 +177,24 @@ while True:
                 value = instruction.value
                 if isinstance(value, Number):
                     next_cost = cur_cost + 2
-                    next_covered = state.covered | {value}
+                    next_registers = state.registers | {('A', value)}
                     next_instructions = state.instructions + (LoadAImmediate(value),)
-                    frontier[next_cost].append(State(next_covered, next_instructions))
+                    frontier[next_cost].append(State(next_registers, next_instructions))
 
             # Consider adding StoreAAbsolute
             if isinstance(instruction, Store):
                 address = instruction.address
                 value = instruction.value
-                if isinstance(address, Number) and value in state.covered:
+                if isinstance(address, Number) and ('A', value) in state.registers:
                     next_cost = cur_cost + (3 if instruction.address < 256 else 4)
-                    next_covered = state.covered | {instruction}
                     next_instructions = state.instructions + (StoreAAbsolute(address),)
-                    frontier[next_cost].append(State(next_covered, next_instructions))
+                    frontier[next_cost].append(State(state.registers, next_instructions, done=True))
 
             # Consider adding JumpAbsolute
             if isinstance(instruction, Jump):
                 next_cost = cur_cost + 3
-                next_covered = state.covered | {instruction}
                 next_instructions = state.instructions + (JumpAbsolute(instruction.destination),)
-                frontier[next_cost].append(State(next_covered, next_instructions))
+                frontier[next_cost].append(State(state.registers, next_instructions, done=True))
 
 
     terminator = block.terminator
