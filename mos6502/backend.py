@@ -6,6 +6,9 @@ from collections import defaultdict
 from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
 
+def pprint(x):
+    print(FormatCode(repr(x))[0], end='')
+
 class ParseError(Exception):
     pass
 
@@ -39,6 +42,13 @@ class Store(object):
 class Jump(object):
     destination = attrib()
 
+@attrs
+class AsmCall(object):
+    destination = attrib()
+    a = attrib()
+    x = attrib()
+    y = attrib()
+
 @attrs(cmp=False)
 class BasicBlock(object):
     instructions = attrib()
@@ -46,10 +56,6 @@ class BasicBlock(object):
     @property
     def terminator(self):
         return self.instructions[-1]
-
-@attrs
-class Arg(object):
-    value = attrib()
 
 labels = {}
 instructions = []
@@ -80,24 +86,25 @@ while not line.startswith("endproc main"):
         instructions = block.instructions
     elif operation == 'ADDRG':
         label = components[1]
-        if label not in labels:
-            labels[label] = BasicBlock([])
-        instructions.append(labels[label])
+        if label != '__asm_call':
+            if label not in labels:
+                labels[label] = BasicBlock([])
+            instructions.append(labels[label])
     elif operation == 'JUMP':
         destination = instructions.pop()
         instructions.append(Jump(destination))
         block = BasicBlock([])
         instructions = block.instructions
     elif operation == 'ARG':
-        value = instructions.pop()
-        instructions.append(Arg(value))
+        pass
+    elif operation == 'CALL':
+        args = instructions[-4:]
+        del instructions[-4:]
+        instructions.append(AsmCall(args[0], *map(lambda arg: arg if arg >= 0 else None, args[1:])))
     else:
         raise ParseError("Unsupported operation: {}".format(operation))
 
     read()
-
-def pprint(x):
-    print(FormatCode(repr(x))[0], end='')
 
 @attrs
 class LoadAImmediate(object):
