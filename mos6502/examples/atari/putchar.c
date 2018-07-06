@@ -2,6 +2,8 @@
 #define PUT_CHARACTERS 0x0B
 #define CIOV ((void*)0xE456)
 
+void __begin_asm(void);
+void __end_asm(void);
 void __ldx(unsigned char x);
 void __lda(unsigned char a);
 void __jsr(void* destination);
