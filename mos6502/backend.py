@@ -37,6 +37,7 @@ expect_startswith("proc main")
 class Store(object):
     address = attrib()
     value = attrib()
+    size = attrib()
 
 @attrs(cmp=False)
 class Jump(object):
@@ -67,14 +68,16 @@ while not line.startswith("endproc main"):
     components = line.split()
     match = re.match("(\w+)(\D)(\d)?", components[0])
     operation = match[1]
-    #instruction = Instruction(match[1], match[2], match[3] and int(match[3]))
+    size = match[3] and int(match[3])
 
     if operation == 'CNST':
         instructions.append(int(components[1]))
     elif operation == 'ASGN':
         value = instructions.pop()
         address = instructions.pop()
-        instructions.append(Store(address, value))
+        if not size:
+            raise ParseError("ASGN requires a size; found none.")
+        instructions.append(Store(address, value, size))
     elif operation == 'LABEL':
         label = components[1]
         if label in labels:
@@ -203,7 +206,7 @@ while True:
             # Consider adding LoadAImmediate
             if isinstance(instruction, Store):
                 value = instruction.value
-                if isinstance(value, Number):
+                if isinstance(value, Number) and value < 256:
                     next_cost = cur_cost + 2
                     next_registers = state.registers | {('A', value)}
                     next_instructions = state.instructions + (LoadAImmediate(value),)
@@ -213,7 +216,7 @@ while True:
             if isinstance(instruction, Store):
                 address = instruction.address
                 value = instruction.value
-                if isinstance(address, Number) and ('A', value) in state.registers:
+                if isinstance(address, Number) and instruction.size == 1 and ('A', value) in state.registers:
                     next_cost = cur_cost + (3 if instruction.address < 256 else 4)
                     next_instructions = state.instructions + (StoreAAbsolute(address),)
                     frontier[next_cost].append(State(state.registers, next_instructions, done=True))
