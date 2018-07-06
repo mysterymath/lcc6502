@@ -1,4 +1,4 @@
-#define IOCB0 (*(IOCB*)$0340)
+#define IOCB0 (*(IOCB*)0x0340)
 #define PUT_CHARACTERS 0x0B
 #define CIOV ((void*)0xE456)
 
@@ -6,7 +6,7 @@ void __ldx(unsigned char x);
 void __lda(unsigned char a);
 void __jsr(void* destination);
 
-struct IOCB {
+typedef struct {
   unsigned char HID;
   unsigned char DNO;
   unsigned char CMD;
@@ -15,7 +15,7 @@ struct IOCB {
   void* PT;
   unsigned short BL;
   unsigned char AX[6];
-};
+} IOCB;
 
 void main(void) {
   IOCB0.CMD = PUT_CHARACTERS;
