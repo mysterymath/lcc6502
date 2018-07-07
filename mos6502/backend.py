@@ -2,6 +2,7 @@ import attr
 import re
 import sys
 from attr import attrs, attrib
+from copy import deepcopy
 from collections import defaultdict
 from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
@@ -61,7 +62,7 @@ class BasicBlock(object):
         return self.instructions[-1]
 
 
-@attrs
+@attrs(cmp=False)
 class Function(object):
     name = attrib()
     start = attrib()
@@ -181,9 +182,77 @@ while line:
     else:
         advance()
 
-pprint(labels)
+functions = {v for v in labels.values() if isinstance(v, Function)}
+
+
+def is_leaf_function(value):
+    if not isinstance(value, Function):
+        return False
+
+    visited_blocks = set()
+    block = value.start
+    while block not in visited_blocks:
+        visited_blocks.add(block)
+        for instruction in block.instructions:
+            if isinstance(instruction, Call):
+                return False
+        if isinstance(block.terminator, Return):
+            break
+        block = block.terminator.destination
+    return True
+
+
+def inline_call(call, next_block):
+    visited_blocks = set()
+
+    start = deepcopy(call.destination.start)
+    block = start
+
+    while block not in visited_blocks:
+        visited_blocks.add(block)
+        for instruction in block.instructions:
+            # TODO: This should modify everywhere a parameter can appear. Need a real visitor.
+            if isinstance(instruction, AsmCall):
+                if isinstance(instruction.A, Parameter):
+                    instruction.A = call.arguments[instruction.A.index]
+
+        if isinstance(block.terminator, Return):
+            block.instructions[-1] = Jump(next_block)
+            break
+        block = block.terminator.destination
+    return start
+
+
+def inline_leaf_functions(leaf_functions):
+    for function in functions:
+        visited_blocks = set()
+        block = function.start
+        while block not in visited_blocks:
+            visited_blocks.add(block)
+            instructions = []
+            for i, instruction in enumerate(block.instructions):
+                if isinstance(
+                        instruction,
+                        Call) and instruction.destination in leaf_functions:
+                    next_block = BasicBlock(block.instructions[i + 1:])
+                    inline_block = inline_call(instruction, next_block)
+                    instructions.append(Jump(inline_block))
+                    break
+                else:
+                    instructions.append(instruction)
+            block.instructions = instructions
+
+            if isinstance(block.terminator, Return):
+                break
+            block = block.terminator.destination
+    return False
+
 
 # TODO: Inline all functions into main.
+while True:
+    leaf_functions = set(filter(is_leaf_function, functions))
+    if not inline_leaf_functions(leaf_functions):
+        break
 
 start = labels['main'].start
 
