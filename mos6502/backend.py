@@ -185,50 +185,46 @@ while line:
 functions = {v for v in labels.values() if isinstance(v, Function)}
 
 
+def blocks_dfs(start):
+    blocks = []
+    block = start
+    while block not in blocks:
+        blocks.append(block)
+        if isinstance(block.terminator, Return):
+            break
+        block = block.terminator.destination
+    return blocks
+
+
 def is_leaf_function(value):
     if not isinstance(value, Function):
         return False
 
-    visited_blocks = set()
-    block = value.start
-    while block not in visited_blocks:
-        visited_blocks.add(block)
+    for block in blocks_dfs(value.start):
         for instruction in block.instructions:
             if isinstance(instruction, Call):
                 return False
-        if isinstance(block.terminator, Return):
-            break
-        block = block.terminator.destination
     return True
 
 
 def inline_call(call, next_block):
-    visited_blocks = set()
-
     start = deepcopy(call.destination.start)
-    block = start
 
-    while block not in visited_blocks:
-        visited_blocks.add(block)
+    for block in blocks_dfs(start):
         for instruction in block.instructions:
             # TODO: This should modify everywhere a parameter can appear. Need a real visitor.
             if isinstance(instruction, AsmCall):
                 if isinstance(instruction.A, Parameter):
                     instruction.A = call.arguments[instruction.A.index]
-
         if isinstance(block.terminator, Return):
             block.instructions[-1] = Jump(next_block)
-            break
-        block = block.terminator.destination
     return start
 
 
 def inline_leaf_functions(leaf_functions):
+    inlined_any = False
     for function in functions:
-        visited_blocks = set()
-        block = function.start
-        while block not in visited_blocks:
-            visited_blocks.add(block)
+        for block in blocks_dfs(function.start):
             instructions = []
             for i, instruction in enumerate(block.instructions):
                 if isinstance(
@@ -237,18 +233,14 @@ def inline_leaf_functions(leaf_functions):
                     next_block = BasicBlock(block.instructions[i + 1:])
                     inline_block = inline_call(instruction, next_block)
                     instructions.append(Jump(inline_block))
+                    inlined_any = True
                     break
                 else:
                     instructions.append(instruction)
             block.instructions = instructions
-
-            if isinstance(block.terminator, Return):
-                break
-            block = block.terminator.destination
-    return False
+    return inlined_any
 
 
-# TODO: Inline all functions into main.
 while True:
     leaf_functions = set(filter(is_leaf_function, functions))
     if not inline_leaf_functions(leaf_functions):
@@ -263,13 +255,7 @@ class LoweringError(Exception):
     pass
 
 
-visited_blocks = set()
-block = start
-while True:
-    if block in visited_blocks:
-        break
-    visited_blocks.add(block)
-
+for block in blocks_dfs(start):
     instructions = []
     for instruction in block.instructions:
         if isinstance(instruction, Store) and instruction.size > 1:
@@ -283,13 +269,7 @@ while True:
                 raise LoweringError("Could not lower: {}".format(instruction))
         else:
             instructions.append(instruction)
-
-    terminator = block.terminator
     block.instructions = instructions
-
-    # Jump is currently the only supported block terminator.
-    assert isinstance(terminator, Jump)
-    block = terminator.destination
 
 # Select instructions for each basic block, from start to end.
 
@@ -352,13 +332,7 @@ class InstructionSelectionError(Exception):
 num_iter = 0
 num_closed = 0
 
-visited_blocks = set()
-block = start
-while True:
-    if block in visited_blocks:
-        break
-    visited_blocks.add(block)
-
+for block in blocks_dfs(start):
     # Perform a best-first search to select and schedule instructions for given DAG.
 
     # Search states already optimally reached.
@@ -375,8 +349,7 @@ while True:
     # Value of the lowest cost known to contain a state in the frontier.
     cur_cost = 0
 
-    done = False
-    while not done:
+    while True:
         # If the frontier is empty, then there was no way to cover the graph.
         if not frontier:
             raise InstructionSelectionError(
@@ -402,8 +375,7 @@ while True:
 
         # If the instruction graph root is covered, we have found optimal instructions for the whole graph.
         if state.next_instruction_index == len(block.instructions):
-            instructions = state.instructions
-            done = True
+            block.instructions = state.instructions
             break
 
         def update_state(cost, state):
@@ -488,13 +460,6 @@ while True:
                           next_instructions))
 
             try_apply()
-
-    terminator = block.terminator
-    block.instructions = instructions
-
-    # Jump is currently the only supported block terminator.
-    assert isinstance(terminator, Jump)
-    block = terminator.destination
 
 # Emit prologue.
 print(".word $FFFF")
