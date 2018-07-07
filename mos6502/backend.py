@@ -2,6 +2,7 @@ from attr import attrs, attrib
 from yapf.yapflib.yapf_api import FormatCode
 
 import asm
+import block_merger
 import emitter
 import inliner
 import ir
@@ -19,8 +20,10 @@ functions = parser.parse()
 
 # Inline leaf functions until none remain.
 inliner.inline(functions)
-
 start = [f for f in functions if f.name == 'main'][0].start
+
+# Merge basic blocks.
+block_merger.merge(start)
 
 # Lower operation sizes to single bytes.
 lowerer.lower(start)
