@@ -79,12 +79,25 @@ def advance():
 labels = {}
 
 
+def resolve_block(label):
+    if label not in labels:
+        labels[label] = BasicBlock([])
+    return labels[label]
+
+
+def resolve_function(label):
+    if label not in labels:
+        labels[label] = Function(label, BasicBlock([]))
+    return labels[label]
+
+
 def parse_function():
     name = line.split()[1]
-    instructions = []
-    block = BasicBlock(instructions)
-    start = block
+
+    block = resolve_function(name).start
+    instructions = block.instructions
     advance()
+
     try:
         while not line.startswith("endproc"):
             if not line:
@@ -106,29 +119,19 @@ def parse_function():
                         raise ParseError("ASGN requires a size; found none.")
                     instructions.append(Store(address, value, size))
             elif operation == 'LABEL':
-                label = components[1]
-                if label in labels:
-                    block = labels[block]
-                else:
-                    block = BasicBlock([])
-                    labels[label] = block
-                instructions.append(Jump(block))
+                block = resolve_block(components[1])
+                if instructions is not None:
+                    instructions.append(Jump(block))
                 instructions = block.instructions
             elif operation == 'ADDRF':
                 instructions.append(Parameter(int(components[1])))
             elif operation == 'ADDRG':
-                label = components[1]
-                if label == '__asm_call':
-                    instructions.append(label)
-                else:
-                    if label not in labels:
-                        labels[label] = BasicBlock([])
-                    instructions.append(labels[label])
+                instructions.append(components[1])
             elif operation == 'JUMP':
-                destination = instructions.pop()
-                instructions.append(Jump(destination))
-                block = BasicBlock([])
-                instructions = block.instructions
+                label = instructions.pop()
+                instructions.append(Jump(resolve_block(label)))
+                block = None
+                instructions = None
             elif operation == 'INDIR':
                 pass
             elif operation == 'ARG':
@@ -136,14 +139,14 @@ def parse_function():
             elif operation.startswith('CV'):
                 pass
             elif operation == 'CALL':
-                destination = instructions.pop()
+                label = instructions.pop()
 
                 arguments = []
                 while instructions and isinstance(instructions[-1], Argument):
                     arguments.append(instructions.pop().value)
                 arguments.reverse()
 
-                if destination == '__asm_call':
+                if label == '__asm_call':
 
                     def ArgFn(arg):
                         if not isinstance(arg, Number):
@@ -154,7 +157,9 @@ def parse_function():
                     instructions.append(
                         AsmCall(arguments[0], *map(ArgFn, arguments[1:])))
                 else:
-                    instructions.append(Call(destination, arguments))
+                    if label not in labels:
+                        labels[label] = Function(label, BasicBlock([]))
+                    instructions.append(Call(labels[label], arguments))
             else:
                 raise ParseError("Unsupported operation: {}".format(operation))
 
@@ -167,24 +172,20 @@ def parse_function():
     if not instructions or not isinstance(block.terminator, Jump):
         instructions.append(Return())
 
-    return Function(name, start)
-
 
 advance()
 
-functions = {}
 while line:
     if line.startswith("proc"):
-        func = parse_function()
-        functions[func.name] = func
+        parse_function()
     else:
         advance()
 
-pprint(functions)
+pprint(labels)
 
 # TODO: Inline all functions into main.
 
-start = functions['main'].start
+start = labels['main'].start
 
 # Lower each basic block sizes to single bytes, from start to end.
 
