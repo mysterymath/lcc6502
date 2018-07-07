@@ -1,4 +1,3 @@
-import attr
 import re
 import sys
 from attr import attrs, attrib
@@ -7,111 +6,11 @@ from collections import defaultdict
 from numbers import Number
 from yapf.yapflib.yapf_api import FormatCode
 
+import ir
+
 
 def pprint(x):
     print(FormatCode(repr(x))[0], end='')
-
-
-def blocks_dfs(start):
-    blocks = []
-    block = start
-    while block not in blocks:
-        blocks.append(block)
-        if isinstance(block.terminator, Return):
-            break
-        block = block.terminator.destination
-    return blocks
-
-
-def print_blocks(start):
-    print()
-    blocks = blocks_dfs(start)
-    block_ids = {block: i for i, block in enumerate(blocks)}
-    def print_node(node, indent):
-        if isinstance(node, BasicBlock):
-            print('  ' * indent + "_{}".format(block_ids[node]))
-            return
-
-        try:
-            fields = attr.fields(type(node))
-            print('  ' * indent + type(node).__name__)
-            indent += 1
-            for field in fields:
-                print('  ' * indent + field.name + ':')
-                print_node(getattr(node, field.name), indent + 1)
-        except attr.exceptions.NotAnAttrsClassError:
-            print('  ' * indent + str(node))
-    for block in blocks:
-        print("_{}:".format(block_ids[block]))
-        for instruction in block.instructions:
-            print_node(instruction, indent=0)
-    print()
-
-
-
-def replace_nodes(x, fn):
-    try:
-        for field in attr.fields(type(x)):
-            setattr(x, field.name, replace_nodes(getattr(x, field.name), fn))
-    except attr.exceptions.NotAnAttrsClassError:
-        pass
-    return fn(x)
-
-
-@attrs(cmp=False)
-class Store(object):
-    address = attrib()
-    value = attrib()
-    size = attrib()
-
-
-@attrs(cmp=False)
-class Jump(object):
-    destination = attrib()
-
-
-@attrs(cmp=False)
-class Return(object):
-    pass
-
-
-@attrs(cmp=False)
-class Call(object):
-    destination = attrib()
-    arguments = attrib()
-
-
-@attrs(cmp=False)
-class AsmCall(object):
-    address = attrib()
-    A = attrib()
-    X = attrib()
-    Y = attrib()
-
-
-@attrs(cmp=False)
-class Parameter(object):
-    index = attrib()
-
-
-@attrs(cmp=False)
-class Argument(object):
-    value = attrib()
-
-
-@attrs(cmp=False)
-class BasicBlock(object):
-    instructions = attrib()
-
-    @property
-    def terminator(self):
-        return self.instructions[-1]
-
-
-@attrs(cmp=False)
-class Function(object):
-    name = attrib()
-    start = attrib()
 
 
 class ParseError(Exception):
@@ -128,13 +27,13 @@ labels = {}
 
 def resolve_block(label):
     if label not in labels:
-        labels[label] = BasicBlock([])
+        labels[label] = ir.BasicBlock([])
     return labels[label]
 
 
 def resolve_function(label):
     if label not in labels:
-        labels[label] = Function(label, BasicBlock([]))
+        labels[label] = ir.Function(label, ir.BasicBlock([]))
     return labels[label]
 
 
@@ -161,35 +60,36 @@ def parse_function():
                 value = instructions.pop()
                 address = instructions.pop()
                 # Assignments to formal parameters are not yet handled.
-                if not isinstance(address, Parameter):
+                if not isinstance(address, ir.Parameter):
                     if not size:
                         raise ParseError("ASGN requires a size; found none.")
-                    instructions.append(Store(address, value, size))
+                    instructions.append(ir.Store(address, value, size))
             elif operation == 'LABEL':
                 block = resolve_block(components[1])
                 if instructions is not None:
-                    instructions.append(Jump(block))
+                    instructions.append(ir.Jump(block))
                 instructions = block.instructions
             elif operation == 'ADDRF':
-                instructions.append(Parameter(int(components[1])))
+                instructions.append(ir.Parameter(int(components[1])))
             elif operation == 'ADDRG':
                 instructions.append(components[1])
             elif operation == 'JUMP':
                 label = instructions.pop()
-                instructions.append(Jump(resolve_block(label)))
+                instructions.append(ir.Jump(resolve_block(label)))
                 block = None
                 instructions = None
             elif operation == 'INDIR':
                 pass
             elif operation == 'ARG':
-                instructions.append(Argument(instructions.pop()))
+                instructions.append(ir.Argument(instructions.pop()))
             elif operation.startswith('CV'):
                 pass
             elif operation == 'CALL':
                 label = instructions.pop()
 
                 arguments = []
-                while instructions and isinstance(instructions[-1], Argument):
+                while instructions and isinstance(instructions[-1],
+                                                  ir.Argument):
                     arguments.append(instructions.pop().value)
                 arguments.reverse()
 
@@ -202,11 +102,11 @@ def parse_function():
                             return arg
 
                     instructions.append(
-                        AsmCall(arguments[0], *map(ArgFn, arguments[1:])))
+                        ir.AsmCall(arguments[0], *map(ArgFn, arguments[1:])))
                 else:
                     if label not in labels:
-                        labels[label] = Function(label, BasicBlock([]))
-                    instructions.append(Call(labels[label], arguments))
+                        labels[label] = ir.Function(label, ir.BasicBlock([]))
+                    instructions.append(ir.Call(labels[label], arguments))
             else:
                 raise ParseError("Unsupported operation: {}".format(operation))
 
@@ -216,8 +116,8 @@ def parse_function():
     advance()
 
     # If the block does not already have a terminator, add a Return.
-    if not instructions or not isinstance(block.terminator, Jump):
-        instructions.append(Return())
+    if not instructions or not isinstance(block.terminator, ir.Jump):
+        instructions.append(ir.Return())
 
 
 advance()
@@ -228,16 +128,16 @@ while line:
     else:
         advance()
 
-functions = {v for v in labels.values() if isinstance(v, Function)}
+functions = {v for v in labels.values() if isinstance(v, ir.Function)}
 
 
 def is_leaf_function(value):
-    if not isinstance(value, Function):
+    if not isinstance(value, ir.Function):
         return False
 
-    for block in blocks_dfs(value.start):
+    for block in ir.blocks_dfs(value.start):
         for instruction in block.instructions:
-            if isinstance(instruction, Call):
+            if isinstance(instruction, ir.Call):
                 return False
     return True
 
@@ -246,30 +146,30 @@ def inline_call(call, next_block):
     start = deepcopy(call.destination.start)
 
     def replace(x):
-        if isinstance(x, Parameter):
+        if isinstance(x, ir.Parameter):
             return call.arguments[x.index]
-        if isinstance(x, Return):
-            return Jump(next_block)
+        if isinstance(x, ir.Return):
+            return ir.Jump(next_block)
         return x
 
-    for block in blocks_dfs(start):
+    for block in ir.blocks_dfs(start):
         for i in range(len(block.instructions)):
-            block.instructions[i] = replace_nodes(block.instructions[i], replace)
+            block.instructions[i] = ir.replace(block.instructions[i], replace)
     return start
 
 
 def inline_leaf_functions(leaf_functions):
     inlined_any = False
     for function in functions:
-        for block in blocks_dfs(function.start):
+        for block in ir.blocks_dfs(function.start):
             instructions = []
             for i, instruction in enumerate(block.instructions):
                 if isinstance(
                         instruction,
-                        Call) and instruction.destination in leaf_functions:
-                    next_block = BasicBlock(block.instructions[i + 1:])
+                        ir.Call) and instruction.destination in leaf_functions:
+                    next_block = ir.BasicBlock(block.instructions[i + 1:])
                     inline_block = inline_call(instruction, next_block)
-                    instructions.append(Jump(inline_block))
+                    instructions.append(ir.Jump(inline_block))
                     inlined_any = True
                     break
                 else:
@@ -292,22 +192,21 @@ class LoweringError(Exception):
     pass
 
 
-for block in blocks_dfs(start):
+for block in ir.blocks_dfs(start):
     instructions = []
     for instruction in block.instructions:
-        if isinstance(instruction, Store) and instruction.size > 1:
+        if isinstance(instruction, ir.Store) and instruction.size > 1:
             value = instruction.value
             address = instruction.address
             if instruction.size == 2 and isinstance(
                     address, Number) and isinstance(value, Number):
-                instructions.append(Store(address, value % 256, 1))
-                instructions.append(Store(address + 1, value // 256, 1))
+                instructions.append(ir.Store(address, value % 256, 1))
+                instructions.append(ir.Store(address + 1, value // 256, 1))
             else:
                 raise LoweringError("Could not lower: {}".format(instruction))
         else:
             instructions.append(instruction)
     block.instructions = instructions
-
 
 # Select instructions for each basic block, from start to end.
 
@@ -370,7 +269,7 @@ class InstructionSelectionError(Exception):
 num_iter = 0
 num_closed = 0
 
-for block in blocks_dfs(start):
+for block in ir.blocks_dfs(start):
     # Perform a best-first search to select and schedule instructions for given DAG.
 
     # Search states already optimally reached.
@@ -435,11 +334,11 @@ for block in blocks_dfs(start):
                 State(next_registers, state.next_instruction_index,
                       next_instructions))
 
-        if isinstance(instruction, Store):
+        if isinstance(instruction, ir.Store):
             ConsiderLoadImmediate('A', instruction.value)
             ConsiderLoadImmediate('X', instruction.value)
             ConsiderLoadImmediate('Y', instruction.value)
-        elif isinstance(instruction, AsmCall):
+        elif isinstance(instruction, ir.AsmCall):
             if instruction.A is not None:
                 ConsiderLoadImmediate('A', instruction.A)
             if instruction.X is not None:
@@ -459,13 +358,13 @@ for block in blocks_dfs(start):
                     State(state.registers, state.next_instruction_index + 1,
                           next_instructions))
 
-        if isinstance(instruction, Store):
+        if isinstance(instruction, ir.Store):
             ConsiderStoreAbsolute('A', instruction.address, instruction.value)
             ConsiderStoreAbsolute('X', instruction.address, instruction.value)
             ConsiderStoreAbsolute('Y', instruction.address, instruction.value)
 
         # Consider adding JumpAbsolute
-        if isinstance(instruction, Jump):
+        if isinstance(instruction, ir.Jump):
             next_cost = cur_cost + 3
             next_instructions = state.instructions + (JumpAbsolute(
                 instruction.destination), )
@@ -475,7 +374,7 @@ for block in blocks_dfs(start):
                       next_instructions))
 
         # Consider adding JumpSubroutine
-        if isinstance(instruction, AsmCall):
+        if isinstance(instruction, ir.AsmCall):
 
             def try_apply():
                 if instruction.A is not None and (
