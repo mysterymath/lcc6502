@@ -8,6 +8,7 @@ import ir
 import parser
 import inliner
 import lowerer
+import asm
 
 
 def pprint(x):
@@ -26,41 +27,6 @@ start = [f for f in functions if f.name == 'main'][0].start
 lowerer.lower(start)
 
 # Select assembly instructions.
-
-
-@attrs
-class LoadImmediate(object):
-    register = attrib()
-    value = attrib()
-
-    def emit(self):
-        print("ld{} #{}".format(self.register.lower(), self.value))
-
-
-# Note: This includes absolute zero page stores.
-@attrs
-class StoreAbsolute(object):
-    register = attrib()
-    address = attrib()
-
-    def emit(self):
-        print("st{} {}".format(self.register.lower(), self.address))
-
-
-@attrs
-class JumpSubroutine(object):
-    address = attrib()
-
-    def emit(self):
-        print("jsr {}".format(self.address))
-
-
-@attrs
-class JumpAbsolute(object):
-    destination = attrib()
-
-    def emit(self, block_ids):
-        print("jmp _{}".format(block_ids[self.destination]))
 
 
 @attrs(frozen=True)
@@ -144,7 +110,7 @@ for block in ir.blocks_dfs(start):
                 return
             next_cost = cur_cost + 2
             next_registers = state.registers | {(register, value)}
-            next_instructions = state.instructions + (LoadImmediate(
+            next_instructions = state.instructions + (asm.LoadImmediate(
                 register, value), )
             update_state(
                 next_cost,
@@ -168,7 +134,7 @@ for block in ir.blocks_dfs(start):
             if isinstance(address, Number) and (register,
                                                 value) in state.registers:
                 next_cost = cur_cost + (3 if address < 256 else 4)
-                next_instructions = state.instructions + (StoreAbsolute(
+                next_instructions = state.instructions + (asm.StoreAbsolute(
                     register, address), )
                 update_state(
                     next_cost,
@@ -183,7 +149,7 @@ for block in ir.blocks_dfs(start):
         # Consider adding JumpAbsolute
         if isinstance(instruction, ir.Jump):
             next_cost = cur_cost + 3
-            next_instructions = state.instructions + (JumpAbsolute(
+            next_instructions = state.instructions + (asm.JumpAbsolute(
                 instruction.destination), )
             update_state(
                 next_cost,
@@ -204,7 +170,7 @@ for block in ir.blocks_dfs(start):
                         'Y', instruction.Y) not in state.registers:
                     return
                 next_cost = cur_cost + 6
-                next_instructions = state.instructions + (JumpSubroutine(
+                next_instructions = state.instructions + (asm.JumpSubroutine(
                     instruction.address), )
                 # To be safe, assume that calls clear all computed values.
                 # TODO: Clobbered register annotations.
@@ -224,6 +190,24 @@ print("* = start")
 
 # Emit code for each basic block, from start to end.
 
+
+class EmitError(Exception):
+    pass
+
+
+def emit(instruction):
+    if isinstance(instruction, asm.LoadImmediate):
+        print("ld{} #{}".format(instruction.register.lower(),
+                                instruction.value))
+    elif isinstance(instruction, asm.StoreAbsolute):
+        print("st{} {}".format(instruction.register.lower(),
+                               instruction.address))
+    elif isinstance(instruction, asm.JumpSubroutine):
+        print("jsr {}".format(instruction.address))
+    else:
+        raise EmitError("Could not emit instruction {}".format(instruction))
+
+
 block_ids = {}
 
 block = start
@@ -235,14 +219,14 @@ while True:
 
     # Emit instructions (except terminator).
     for instruction in block.instructions[:-1]:
-        instruction.emit()
+        emit(instruction)
 
     # JumpAbsolute is currently the only supported block terminator.
-    assert isinstance(block.terminator, JumpAbsolute)
+    assert isinstance(block.terminator, asm.JumpAbsolute)
 
     if block.terminator.destination in block_ids:
         # Jumps to already-emitted blocks must be emitted.
-        block.terminator.emit(block_ids)
+        print("jmp _{}".format(block_ids[block.terminator.destination]))
         # Since all jumps are currently unconditional, the first backward jump starts an infinite loop.
         # This means we are done.
         break
