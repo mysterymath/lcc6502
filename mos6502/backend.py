@@ -7,42 +7,25 @@ from yapf.yapflib.yapf_api import FormatCode
 import ir
 import parser
 import inliner
+import lowerer
 
 
 def pprint(x):
     print(FormatCode(repr(x))[0], end='')
 
 
+# Parse LCC bytecode into function IR.
 functions = parser.parse()
 
+# Inline leaf functions until none remain.
 inliner.inline(functions)
 
 start = [f for f in functions if f.name == 'main'][0].start
 
-# Lower each basic block sizes to single bytes, from start to end.
+# Lower operation sizes to single bytes.
+lowerer.lower(start)
 
-
-class LoweringError(Exception):
-    pass
-
-
-for block in ir.blocks_dfs(start):
-    instructions = []
-    for instruction in block.instructions:
-        if isinstance(instruction, ir.Store) and instruction.size > 1:
-            value = instruction.value
-            address = instruction.address
-            if instruction.size == 2 and isinstance(
-                    address, Number) and isinstance(value, Number):
-                instructions.append(ir.Store(address, value % 256, 1))
-                instructions.append(ir.Store(address + 1, value // 256, 1))
-            else:
-                raise LoweringError("Could not lower: {}".format(instruction))
-        else:
-            instructions.append(instruction)
-    block.instructions = instructions
-
-# Select instructions for each basic block, from start to end.
+# Select assembly instructions.
 
 
 @attrs
