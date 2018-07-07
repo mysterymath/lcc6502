@@ -15,13 +15,17 @@ typedef struct {
   unsigned char AX[6];
 } IOCB;
 
-void putchar(unsigned char c) {
+void begin_putchar(void) {
   IOCB0.CMD = PUT_CHARACTERS;
   IOCB0.BL = 0;
+}
+
+void putchar(unsigned char c) {
   __asm_call(CIOV, c, 0, -1);
 }
 
 void main(void) {
+  begin_putchar();
   putchar('H');
   putchar('e');
   putchar('l');
