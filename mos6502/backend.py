@@ -11,36 +11,6 @@ def pprint(x):
     print(FormatCode(repr(x))[0], end='')
 
 
-class ParseError(Exception):
-    pass
-
-
-def read():
-    global line
-    line = sys.stdin.readline().strip()
-
-
-def expect(expected):
-    global line
-    if line != expected:
-        raise ParseError("Expected: '{}'. Actual: '{}'".format(expected, line))
-    read()
-
-
-def expect_startswith(expected):
-    global line
-    if not line.startswith(expected):
-        raise ParseError("Expected to start with: '{}'. Actual: '{}'".format(
-            expected, line))
-    read()
-
-
-read()
-expect("export main")
-expect("code")
-expect_startswith("proc main")
-
-
 @attrs(cmp=False)
 class Store(object):
     address = attrib()
@@ -70,58 +40,94 @@ class BasicBlock(object):
         return self.instructions[-1]
 
 
+@attrs
+class Function(object):
+    name = attrib()
+    start = attrib()
+
+
+class ParseError(Exception):
+    pass
+
+
+def advance():
+    global line
+    line = sys.stdin.readline().strip()
+
+
 labels = {}
-instructions = []
-block = BasicBlock(instructions)
-start = block
-while not line.startswith("endproc main"):
-    if not line:
-        raise ParseError("Expected: 'endproc main \d \d'. Found: EOF")
-    components = line.split()
-    match = re.match("(\w+)(\D)(\d)?", components[0])
-    operation = match[1]
-    size = match[3] and int(match[3])
 
-    if operation == 'CNST':
-        instructions.append(int(components[1]))
-    elif operation == 'ASGN':
-        value = instructions.pop()
-        address = instructions.pop()
-        if not size:
-            raise ParseError("ASGN requires a size; found none.")
-        instructions.append(Store(address, value, size))
-    elif operation == 'LABEL':
-        label = components[1]
-        if label in labels:
-            block = labels[block]
-        else:
+
+def parse_function():
+    name = line.split()[1]
+    instructions = []
+    block = BasicBlock(instructions)
+    start = block
+    advance()
+    while not line.startswith("endproc"):
+        if not line:
+            raise ParseError(
+                "Expected: 'endproc {}...'. Found: EOF".format(name))
+        components = line.split()
+        match = re.match("(\w+)(\D)(\d)?", components[0])
+        operation = match[1]
+        size = match[3] and int(match[3])
+
+        if operation == 'CNST':
+            instructions.append(int(components[1]))
+        elif operation == 'ASGN':
+            value = instructions.pop()
+            address = instructions.pop()
+            if not size:
+                raise ParseError("ASGN requires a size; found none.")
+            instructions.append(Store(address, value, size))
+        elif operation == 'LABEL':
+            label = components[1]
+            if label in labels:
+                block = labels[block]
+            else:
+                block = BasicBlock([])
+                labels[label] = block
+            instructions.append(Jump(block))
+            instructions = block.instructions
+        elif operation == 'ADDRG':
+            label = components[1]
+            if label != '__asm_call':
+                if label not in labels:
+                    labels[label] = BasicBlock([])
+                instructions.append(labels[label])
+        elif operation == 'JUMP':
+            destination = instructions.pop()
+            instructions.append(Jump(destination))
             block = BasicBlock([])
-            labels[label] = block
-        instructions.append(Jump(block))
-        instructions = block.instructions
-    elif operation == 'ADDRG':
-        label = components[1]
-        if label != '__asm_call':
-            if label not in labels:
-                labels[label] = BasicBlock([])
-            instructions.append(labels[label])
-    elif operation == 'JUMP':
-        destination = instructions.pop()
-        instructions.append(Jump(destination))
-        block = BasicBlock([])
-        instructions = block.instructions
-    elif operation == 'ARG':
-        pass
-    elif operation == 'CALL':
-        args = instructions[-4:]
-        del instructions[-4:]
-        instructions.append(
-            AsmCall(args[0],
-                    *map(lambda arg: arg if arg >= 0 else None, args[1:])))
-    else:
-        raise ParseError("Unsupported operation: {}".format(operation))
+            instructions = block.instructions
+        elif operation == 'ARG':
+            pass
+        elif operation == 'CALL':
+            args = instructions[-4:]
+            del instructions[-4:]
+            instructions.append(
+                AsmCall(args[0],
+                        *map(lambda arg: arg if arg >= 0 else None, args[1:])))
+        else:
+            raise ParseError("Unsupported operation: {}".format(operation))
 
-    read()
+        advance()
+    advance()
+    return Function(name, start)
+
+
+advance()
+
+functions = {}
+while line:
+    if line.startswith("proc"):
+        func = parse_function()
+        functions[func.name] = func
+    else:
+        advance()
+
+start = functions['main'].start
 
 # Lower each basic block sizes to single bytes, from start to end.
 
