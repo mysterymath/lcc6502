@@ -12,6 +12,43 @@ def pprint(x):
     print(FormatCode(repr(x))[0], end='')
 
 
+def blocks_dfs(start):
+    blocks = []
+    block = start
+    while block not in blocks:
+        blocks.append(block)
+        if isinstance(block.terminator, Return):
+            break
+        block = block.terminator.destination
+    return blocks
+
+
+def print_blocks(start):
+    print()
+    blocks = blocks_dfs(start)
+    block_ids = {block: i for i, block in enumerate(blocks)}
+    def print_node(node, indent):
+        if isinstance(node, BasicBlock):
+            print('  ' * indent + "_{}".format(block_ids[node]))
+            return
+
+        try:
+            fields = attr.fields(type(node))
+            print('  ' * indent + type(node).__name__)
+            indent += 1
+            for field in fields:
+                print('  ' * indent + field.name + ':')
+                print_node(getattr(node, field.name), indent + 1)
+        except attr.exceptions.NotAnAttrsClassError:
+            print('  ' * indent + str(node))
+    for block in blocks:
+        print("_{}:".format(block_ids[block]))
+        for instruction in block.instructions:
+            print_node(instruction, indent=0)
+    print()
+
+
+
 def replace_nodes(x, fn):
     try:
         for field in attr.fields(type(x)):
@@ -194,17 +231,6 @@ while line:
 functions = {v for v in labels.values() if isinstance(v, Function)}
 
 
-def blocks_dfs(start):
-    blocks = []
-    block = start
-    while block not in blocks:
-        blocks.append(block)
-        if isinstance(block.terminator, Return):
-            break
-        block = block.terminator.destination
-    return blocks
-
-
 def is_leaf_function(value):
     if not isinstance(value, Function):
         return False
@@ -281,6 +307,7 @@ for block in blocks_dfs(start):
         else:
             instructions.append(instruction)
     block.instructions = instructions
+
 
 # Select instructions for each basic block, from start to end.
 
