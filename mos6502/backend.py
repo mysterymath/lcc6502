@@ -64,55 +64,59 @@ def parse_function():
     block = BasicBlock(instructions)
     start = block
     advance()
-    while not line.startswith("endproc"):
-        if not line:
-            raise ParseError(
-                "Expected: 'endproc {}...'. Found: EOF".format(name))
-        components = line.split()
-        match = re.match("(\w+)(\D)(\d)?", components[0])
-        operation = match[1]
-        size = match[3] and int(match[3])
+    try:
+        while not line.startswith("endproc"):
+            if not line:
+                raise ParseError(
+                    "Expected: 'endproc {}...'. Found: EOF".format(name))
+            components = line.split()
+            match = re.match("(\w+)(\D)(\d)?", components[0])
+            operation = match[1]
+            size = match[3] and int(match[3])
 
-        if operation == 'CNST':
-            instructions.append(int(components[1]))
-        elif operation == 'ASGN':
-            value = instructions.pop()
-            address = instructions.pop()
-            if not size:
-                raise ParseError("ASGN requires a size; found none.")
-            instructions.append(Store(address, value, size))
-        elif operation == 'LABEL':
-            label = components[1]
-            if label in labels:
-                block = labels[block]
-            else:
+            if operation == 'CNST':
+                instructions.append(int(components[1]))
+            elif operation == 'ASGN':
+                value = instructions.pop()
+                address = instructions.pop()
+                if not size:
+                    raise ParseError("ASGN requires a size; found none.")
+                instructions.append(Store(address, value, size))
+            elif operation == 'LABEL':
+                label = components[1]
+                if label in labels:
+                    block = labels[block]
+                else:
+                    block = BasicBlock([])
+                    labels[label] = block
+                instructions.append(Jump(block))
+                instructions = block.instructions
+            elif operation == 'ADDRG':
+                label = components[1]
+                if label != '__asm_call':
+                    if label not in labels:
+                        labels[label] = BasicBlock([])
+                    instructions.append(labels[label])
+            elif operation == 'JUMP':
+                destination = instructions.pop()
+                instructions.append(Jump(destination))
                 block = BasicBlock([])
-                labels[label] = block
-            instructions.append(Jump(block))
-            instructions = block.instructions
-        elif operation == 'ADDRG':
-            label = components[1]
-            if label != '__asm_call':
-                if label not in labels:
-                    labels[label] = BasicBlock([])
-                instructions.append(labels[label])
-        elif operation == 'JUMP':
-            destination = instructions.pop()
-            instructions.append(Jump(destination))
-            block = BasicBlock([])
-            instructions = block.instructions
-        elif operation == 'ARG':
-            pass
-        elif operation == 'CALL':
-            args = instructions[-4:]
-            del instructions[-4:]
-            instructions.append(
-                AsmCall(args[0],
+                instructions = block.instructions
+            elif operation == 'ARG':
+                pass
+            elif operation == 'CALL':
+                args = instructions[-4:]
+                del instructions[-4:]
+                instructions.append(
+                    AsmCall(
+                        args[0],
                         *map(lambda arg: arg if arg >= 0 else None, args[1:])))
-        else:
-            raise ParseError("Unsupported operation: {}".format(operation))
+            else:
+                raise ParseError("Unsupported operation: {}".format(operation))
 
-        advance()
+            advance()
+    except ParseError as e:
+        raise ParseError("Could not parse function {}".format(name)) from e
     advance()
     return Function(name, start)
 
