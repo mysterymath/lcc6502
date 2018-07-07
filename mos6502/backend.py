@@ -23,12 +23,33 @@ class Jump(object):
     destination = attrib()
 
 
-@attrs
+@attrs(frozen=True)
+class Return(object):
+    pass
+
+
+@attrs(cmp=False)
+class Call(object):
+    destination = attrib()
+    arguments = attrib()
+
+
+@attrs(cmp=False)
 class AsmCall(object):
     address = attrib()
     A = attrib()
     X = attrib()
     Y = attrib()
+
+
+@attrs(frozen=True)
+class Parameter(object):
+    index = attrib()
+
+
+@attrs(cmp=False)
+class Argument(object):
+    value = attrib()
 
 
 @attrs(cmp=False)
@@ -79,9 +100,11 @@ def parse_function():
             elif operation == 'ASGN':
                 value = instructions.pop()
                 address = instructions.pop()
-                if not size:
-                    raise ParseError("ASGN requires a size; found none.")
-                instructions.append(Store(address, value, size))
+                # Assignments to formal parameters are not yet handled.
+                if not isinstance(address, Parameter):
+                    if not size:
+                        raise ParseError("ASGN requires a size; found none.")
+                    instructions.append(Store(address, value, size))
             elif operation == 'LABEL':
                 label = components[1]
                 if label in labels:
@@ -91,9 +114,13 @@ def parse_function():
                     labels[label] = block
                 instructions.append(Jump(block))
                 instructions = block.instructions
+            elif operation == 'ADDRF':
+                instructions.append(Parameter(int(components[1])))
             elif operation == 'ADDRG':
                 label = components[1]
-                if label != '__asm_call':
+                if label == '__asm_call':
+                    instructions.append(label)
+                else:
                     if label not in labels:
                         labels[label] = BasicBlock([])
                     instructions.append(labels[label])
@@ -102,15 +129,32 @@ def parse_function():
                 instructions.append(Jump(destination))
                 block = BasicBlock([])
                 instructions = block.instructions
+            elif operation == 'INDIR':
+                pass
             elif operation == 'ARG':
+                instructions.append(Argument(instructions.pop()))
+            elif operation.startswith('CV'):
                 pass
             elif operation == 'CALL':
-                args = instructions[-4:]
-                del instructions[-4:]
-                instructions.append(
-                    AsmCall(
-                        args[0],
-                        *map(lambda arg: arg if arg >= 0 else None, args[1:])))
+                destination = instructions.pop()
+
+                arguments = []
+                while instructions and isinstance(instructions[-1], Argument):
+                    arguments.append(instructions.pop().value)
+                arguments.reverse()
+
+                if destination == '__asm_call':
+
+                    def ArgFn(arg):
+                        if not isinstance(arg, Number):
+                            return arg
+                        if arg >= 0:
+                            return arg
+
+                    instructions.append(
+                        AsmCall(arguments[0], *map(ArgFn, arguments[1:])))
+                else:
+                    instructions.append(Call(destination, arguments))
             else:
                 raise ParseError("Unsupported operation: {}".format(operation))
 
@@ -118,6 +162,11 @@ def parse_function():
     except ParseError as e:
         raise ParseError("Could not parse function {}".format(name)) from e
     advance()
+
+    # If the block does not already have a terminator, add a Return.
+    if not instructions or not isinstance(block.terminator, Jump):
+        instructions.append(Return())
+
     return Function(name, start)
 
 
@@ -130,6 +179,10 @@ while line:
         functions[func.name] = func
     else:
         advance()
+
+pprint(functions)
+
+# TODO: Inline all functions into main.
 
 start = functions['main'].start
 
