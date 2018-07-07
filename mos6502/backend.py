@@ -12,6 +12,15 @@ def pprint(x):
     print(FormatCode(repr(x))[0], end='')
 
 
+def replace_nodes(x, fn):
+    try:
+        for field in attr.fields(type(x)):
+            setattr(x, field.name, replace_nodes(getattr(x, field.name), fn))
+    except attr.exceptions.NotAnAttrsClassError:
+        pass
+    return fn(x)
+
+
 @attrs(cmp=False)
 class Store(object):
     address = attrib()
@@ -24,7 +33,7 @@ class Jump(object):
     destination = attrib()
 
 
-@attrs(frozen=True)
+@attrs(cmp=False)
 class Return(object):
     pass
 
@@ -43,7 +52,7 @@ class AsmCall(object):
     Y = attrib()
 
 
-@attrs(frozen=True)
+@attrs(cmp=False)
 class Parameter(object):
     index = attrib()
 
@@ -210,14 +219,16 @@ def is_leaf_function(value):
 def inline_call(call, next_block):
     start = deepcopy(call.destination.start)
 
+    def replace(x):
+        if isinstance(x, Parameter):
+            return call.arguments[x.index]
+        if isinstance(x, Return):
+            return Jump(next_block)
+        return x
+
     for block in blocks_dfs(start):
-        for instruction in block.instructions:
-            # TODO: This should modify everywhere a parameter can appear. Need a real visitor.
-            if isinstance(instruction, AsmCall):
-                if isinstance(instruction.A, Parameter):
-                    instruction.A = call.arguments[instruction.A.index]
-        if isinstance(block.terminator, Return):
-            block.instructions[-1] = Jump(next_block)
+        for i in range(len(block.instructions)):
+            block.instructions[i] = replace_nodes(block.instructions[i], replace)
     return start
 
 
