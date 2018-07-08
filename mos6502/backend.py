@@ -18,6 +18,9 @@ def pprint(x):
 # Parse LCC bytecode into function IR.
 functions = parser.parse()
 
+# DO NOT SUBMIT: Debug print.
+ir.print_blocks([f for f in functions if f.name == 'main'][0].start)
+
 # Inline leaf functions until none remain.
 inliner.inline(functions)
 start = [f for f in functions if f.name == 'main'][0].start

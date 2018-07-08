@@ -100,12 +100,19 @@ class Function(object):
 
 def blocks_dfs(start):
     blocks = []
-    block = start
-    while block not in blocks:
+    work_list = [start]
+    while work_list:
+        block = work_list.pop()
+        if block in blocks:
+            continue
         blocks.append(block)
+
         if isinstance(block.terminator, Return):
             break
-        block = block.terminator.destination
+        elif isinstance(block.terminator, Branch):
+            work_list += [block.terminator.false, block.terminator.true]
+        else:
+            work_list.append(block.terminator.destination)
     return blocks
 
 
@@ -115,6 +122,9 @@ def print_blocks(start):
     block_ids = {block: i for i, block in enumerate(blocks)}
 
     def print_node(node, indent):
+        if isinstance(node, Function):
+            print('  ' * indent + node.name)
+            return
         if isinstance(node, BasicBlock):
             print('  ' * indent + "_{}".format(block_ids[node]))
             return
