@@ -44,37 +44,33 @@ def parse():
                 operation = match[1]
                 size = match[3] and int(match[3])
 
-                if operation == 'CNST':
+                # 0 children
+                if operation == 'ADDRF':
+                    instructions.append(ir.Parameter(int(components[1])))
+                elif operation == 'ADDRG':
+                    instructions.append(components[1])
+                elif operation == 'ADDRL':
+                    instructions.append(ir.Local(int(components[1])))
+                elif operation == 'CNST':
                     instructions.append(int(components[1]))
+                # 1 child
+                elif operation.startswith('CV'):
+                    pass
+                elif operation == 'INDIR':
+                    pass
+                # 2 children
+                elif operation == 'ADD':
+                    lhs = instructions.pop()
+                    rhs = instructions.pop()
+                    instructions.append(ir.Add(size, lhs, rhs))
+                elif operation == 'ARG':
+                    instructions.append(ir.Argument(instructions.pop()))
                 elif operation == 'ASGN':
                     value = instructions.pop()
                     address = instructions.pop()
                     # Assignments to formal parameters are not yet handled.
                     if not isinstance(address, ir.Parameter):
-                        if not size:
-                            raise ParseError(
-                                "ASGN requires a size; found none.")
                         instructions.append(ir.Store(address, value, size))
-                elif operation == 'LABEL':
-                    block = resolve_block(components[1])
-                    if instructions is not None:
-                        instructions.append(ir.Jump(block))
-                    instructions = block.instructions
-                elif operation == 'ADDRF':
-                    instructions.append(ir.Parameter(int(components[1])))
-                elif operation == 'ADDRG':
-                    instructions.append(components[1])
-                elif operation == 'JUMP':
-                    label = instructions.pop()
-                    instructions.append(ir.Jump(resolve_block(label)))
-                    block = None
-                    instructions = None
-                elif operation == 'INDIR':
-                    pass
-                elif operation == 'ARG':
-                    instructions.append(ir.Argument(instructions.pop()))
-                elif operation.startswith('CV'):
-                    pass
                 elif operation == 'CALL':
                     label = instructions.pop()
 
@@ -100,6 +96,25 @@ def parse():
                             labels[label] = ir.Function(
                                 label, ir.BasicBlock([]))
                         instructions.append(ir.Call(labels[label], arguments))
+                elif operation == 'JUMP':
+                    label = instructions.pop()
+                    instructions.append(ir.Jump(resolve_block(label)))
+                    block = None
+                    instructions = None
+                elif operation == 'LABEL':
+                    block = resolve_block(components[1])
+                    if instructions is not None:
+                        instructions.append(ir.Jump(block))
+                    instructions = block.instructions
+                elif operation == 'NE':
+                    lhs = instructions.pop()
+                    rhs = instructions.pop()
+                    true = resolve_block(components[1])
+                    false = ir.BasicBlock([])
+                    instructions.append(
+                        ir.Branch(ir.NotEqual(size, lhs, rhs), true, false))
+                    block = false
+                    instructions = block.instructions
                 else:
                     raise ParseError(
                         "Unsupported operation: {}".format(operation))

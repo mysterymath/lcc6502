@@ -1,6 +1,8 @@
 import attr
 from attr import attrs, attrib
 
+# Actions
+
 
 @attrs(cmp=False)
 class Store(object):
@@ -9,14 +11,21 @@ class Store(object):
     size = attrib()
 
 
-@attrs(cmp=False)
-class Jump(object):
-    destination = attrib()
+# Operators
 
 
 @attrs(cmp=False)
-class Return(object):
-    pass
+class NotEqual(object):
+    size = attrib()
+    lhs = attrib()
+    rhs = attrib()
+
+
+@attrs(cmp=False)
+class Add(object):
+    size = attrib()
+    lhs = attrib()
+    rhs = attrib()
 
 
 @attrs(cmp=False)
@@ -33,14 +42,45 @@ class AsmCall(object):
     Y = attrib()
 
 
+# Leaves
+
+
 @attrs(cmp=False)
 class Parameter(object):
     index = attrib()
 
 
 @attrs(cmp=False)
+class Local(object):
+    index = attrib()
+
+
+@attrs(cmp=False)
 class Argument(object):
     value = attrib()
+
+
+# Terminators
+
+
+@attrs(cmp=False)
+class Jump(object):
+    destination = attrib()
+
+
+@attrs(cmp=False)
+class Branch(object):
+    condition = attrib()
+    true = attrib()
+    false = attrib()
+
+
+@attrs(cmp=False)
+class Return(object):
+    pass
+
+
+# Composite nodes
 
 
 @attrs(cmp=False)
