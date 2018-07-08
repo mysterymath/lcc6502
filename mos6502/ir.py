@@ -60,6 +60,12 @@ class ZeroExtend(object):
     value = attrib()
 
 
+@attrs(cmp=False)
+class SignExtend(object):
+    size = attrib()
+    value = attrib()
+
+
 # Leaves
 
 

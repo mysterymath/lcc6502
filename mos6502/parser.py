@@ -59,15 +59,24 @@ def parse():
                 elif operation == 'CNST':
                     instructions.append(int(argument))
                 # 1 child
-                elif operation == 'CVU' or operation == 'CVI' and type_ == 'U':
+                elif operation == 'CVU' or operation == 'CVI':
                     target_size = size
                     source_size = int(argument)
+
+                    if type_ not in 'UI':
+                        raise ParseError(
+                            "Could not parse conversion: {}".format(line))
+
                     if target_size < source_size:
                         instructions.append(
                             ir.Truncate(target_size, instructions.pop()))
                     elif target_size > source_size:
-                        instructions.append(
-                            ir.ZeroExtend(target_size, instructions.pop()))
+                        if type_ == 'U':
+                            instructions.append(
+                                ir.ZeroExtend(target_size, instructions.pop()))
+                        else:
+                            instructions.append(
+                                ir.SignExtend(target_size, instructions.pop()))
                 elif operation == 'INDIR':
                     instructions.append(ir.Load(size, instructions.pop()))
                 # 2 children
@@ -126,8 +135,7 @@ def parse():
                     block = false
                     instructions = block.instructions
                 else:
-                    raise ParseError(
-                        "Unsupported operation: {}".format(operation))
+                    raise ParseError("Unsupported operation: {}".format(line))
 
                 advance()
         except ParseError as e:
