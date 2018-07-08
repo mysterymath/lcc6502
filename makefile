@@ -17,12 +17,11 @@ B=$(BUILDDIR)/
 T=$(TSTDIR)/
 
 what:
-	-@echo make all rcc lburg cpp lcc bprint liblcc triple clean clobber
+	-@echo make all rcc cpp lcc bprint liblcc triple clean clobber
 
-all::	rcc lburg cpp lcc bprint liblcc
+all::	rcc cpp lcc bprint liblcc
 
 rcc:	$Brcc$E
-lburg:	$Blburg$E
 cpp:	$Bcpp$E
 lcc:	$Blcc$E
 bprint:	$Bbprint$E
@@ -31,7 +30,6 @@ liblcc:	$Bliblcc$A
 RCCOBJS=$Balloc$O \
 	$Bbind$O \
 	$Bdag$O \
-	$Bdagcheck$O \
 	$Bdecl$O \
 	$Benode$O \
 	$Berror$O \
@@ -96,10 +94,6 @@ $Btree$O:	src/tree.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/tree.c
 $Btypes$O:	src/types.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/types.c
 $Bstab$O:	src/stab.c src/stab.h;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/stab.c
 
-$Bdagcheck$O:	$Bdagcheck.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bdagcheck.c
-
-$Bdagcheck.c:	$Blburg$E src/dagcheck.md; $Blburg src/dagcheck.md $@
-
 $Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
 $Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
 
@@ -118,13 +112,6 @@ $Bliblcc$A:	$(LIBOBJS);	$(AR) $@ $Bassert$O $Bbbexit$O $Byynull$O; $(RANLIB) $@ 
 $Bassert$O:	lib/assert.c;	$(CC) $(CFLAGS) -c -o $@ lib/assert.c
 $Byynull$O:	lib/yynull.c;	$(CC) $(CFLAGS) -c -o $@ lib/yynull.c
 $Bbbexit$O:	lib/bbexit.c;	$(CC) $(CFLAGS) -c -o $@ lib/bbexit.c
-
-$Blburg$E:	$Blburg$O $Bgram$O;	$(LD) $(LDFLAGS) -o $@ $Blburg$O $Bgram$O 
-
-$Blburg$O $Bgram$O:	lburg/lburg.h
-
-$Blburg$O:	lburg/lburg.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/lburg.c
-$Bgram$O:	lburg/gram.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/gram.c
 
 CPPOBJS=$Bcpp$O $Blexer$O $Bnlist$O $Btokens$O $Bmacro$O $Beval$O \
 	$Binclude$O $Bhideset$O $Bgetopt$O $Bunix$O
@@ -205,12 +192,11 @@ testclean:
 
 clean::		testclean
 		$(RM) $B*$O
-		$(RM) $Bdagcheck
 		$(RM) $Brcc1$E $Brcc1$E $B1rcc$E $B2rcc$E
 		$(RM) $B*.ilk
 
 clobber::	clean
-		$(RM) $Brcc$E $Blburg$E $Bcpp$E $Blcc$E $Bcp$E $Bbprint$E $B*$A
+		$(RM) $Brcc$E $Bcpp$E $Blcc$E $Bcp$E $Bbprint$E $B*$A
 		$(RM) $B*.pdb $B*.pch
 
 RCCSRCS=src/alloc.c \
@@ -241,8 +227,7 @@ RCCSRCS=src/alloc.c \
 	src/symbolic.c \
 	src/bytecode.c \
 	src/gen.c \
-	src/stab.c \
-	$Bdagcheck.c
+	src/stab.c
 
 C=$Blcc -A -d0.6 -Wo-lccdir=$(BUILDDIR) -Isrc -I$(BUILDDIR)
 triple:	$B2rcc$E
