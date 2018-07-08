@@ -249,8 +249,8 @@ Interface bytecodeIR = {
 	0, 1, 0,	/* struct */
 	1,		/* little_endian */
 	0,		/* mulops_calls */
-	1,		/* wants_callb */
-	1,		/* wants_argb */
+	0,		/* wants_callb */
+	0,		/* wants_argb */
 	1,		/* left_to_right */
 	0,		/* wants_dag */
 	1,		/* unsigned_char */

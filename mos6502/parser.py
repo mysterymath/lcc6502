@@ -42,22 +42,34 @@ def parse():
                 components = line.split()
                 match = re.match("(\w+)(\D)(\d)?", components[0])
                 operation = match[1]
+                type_ = match[2]
                 size = match[3] and int(match[3])
+                try:
+                    argument = components[1]
+                except IndexError:
+                    pass
 
                 # 0 children
                 if operation == 'ADDRF':
-                    instructions.append(ir.Parameter(int(components[1])))
+                    instructions.append(ir.Parameter(int(argument)))
                 elif operation == 'ADDRG':
-                    instructions.append(components[1])
+                    instructions.append(argument)
                 elif operation == 'ADDRL':
-                    instructions.append(ir.Local(int(components[1])))
+                    instructions.append(ir.Local(int(argument)))
                 elif operation == 'CNST':
-                    instructions.append(int(components[1]))
+                    instructions.append(int(argument))
                 # 1 child
-                elif operation.startswith('CV'):
-                    pass
+                elif operation == 'CVU' or operation == 'CVI' and type_ == 'U':
+                    target_size = size
+                    source_size = int(argument)
+                    if target_size < source_size:
+                        instructions.append(
+                            ir.Truncate(target_size, instructions.pop()))
+                    elif target_size > source_size:
+                        instructions.append(
+                            ir.ZeroExtend(target_size, instructions.pop()))
                 elif operation == 'INDIR':
-                    pass
+                    instructions.append(ir.Load(size, instructions.pop()))
                 # 2 children
                 elif operation == 'ADD':
                     lhs = instructions.pop()
@@ -68,9 +80,7 @@ def parse():
                 elif operation == 'ASGN':
                     value = instructions.pop()
                     address = instructions.pop()
-                    # Assignments to formal parameters are not yet handled.
-                    if not isinstance(address, ir.Parameter):
-                        instructions.append(ir.Store(address, value, size))
+                    instructions.append(ir.Store(size, address, value))
                 elif operation == 'CALL':
                     label = instructions.pop()
 
@@ -102,14 +112,14 @@ def parse():
                     block = None
                     instructions = None
                 elif operation == 'LABEL':
-                    block = resolve_block(components[1])
+                    block = resolve_block(argument)
                     if instructions is not None:
                         instructions.append(ir.Jump(block))
                     instructions = block.instructions
                 elif operation == 'NE':
                     lhs = instructions.pop()
                     rhs = instructions.pop()
-                    true = resolve_block(components[1])
+                    true = resolve_block(argument)
                     false = ir.BasicBlock([])
                     instructions.append(
                         ir.Branch(ir.NotEqual(size, lhs, rhs), true, false))

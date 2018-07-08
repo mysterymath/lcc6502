@@ -16,8 +16,8 @@ def lower(start):
                 address = instruction.address
                 if instruction.size == 2 and isinstance(
                         address, Number) and isinstance(value, Number):
-                    instructions.append(ir.Store(address, value % 256, 1))
-                    instructions.append(ir.Store(address + 1, value // 256, 1))
+                    instructions.append(ir.Store(1, address, value % 256))
+                    instructions.append(ir.Store(1, address + 1, value // 256))
                 else:
                     raise LoweringError(
                         "Could not lower: {}".format(instruction))

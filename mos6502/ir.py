@@ -6,19 +6,12 @@ from attr import attrs, attrib
 
 @attrs(cmp=False)
 class Store(object):
+    size = attrib()
     address = attrib()
     value = attrib()
-    size = attrib()
 
 
 # Operators
-
-
-@attrs(cmp=False)
-class NotEqual(object):
-    size = attrib()
-    lhs = attrib()
-    rhs = attrib()
 
 
 @attrs(cmp=False)
@@ -29,17 +22,42 @@ class Add(object):
 
 
 @attrs(cmp=False)
+class AsmCall(object):
+    address = attrib()
+    A = attrib()
+    X = attrib()
+    Y = attrib()
+
+
+@attrs(cmp=False)
 class Call(object):
     destination = attrib()
     arguments = attrib()
 
 
 @attrs(cmp=False)
-class AsmCall(object):
+class Load(object):
+    size = attrib()
     address = attrib()
-    A = attrib()
-    X = attrib()
-    Y = attrib()
+
+
+@attrs(cmp=False)
+class NotEqual(object):
+    size = attrib()
+    lhs = attrib()
+    rhs = attrib()
+
+
+@attrs(cmp=False)
+class Truncate(object):
+    size = attrib()
+    value = attrib()
+
+
+@attrs(cmp=False)
+class ZeroExtend(object):
+    size = attrib()
+    value = attrib()
 
 
 # Leaves

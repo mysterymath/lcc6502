@@ -19,7 +19,9 @@ def pprint(x):
 functions = parser.parse()
 
 # DO NOT SUBMIT: Debug print.
-ir.print_blocks([f for f in functions if f.name == 'main'][0].start)
+for function in functions:
+    print(function.name + ":")
+    ir.print_blocks(function.start)
 
 # Inline leaf functions until none remain.
 inliner.inline(functions)
