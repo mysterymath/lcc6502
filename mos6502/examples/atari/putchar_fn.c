@@ -2,7 +2,7 @@
 #define PUT_CHARACTERS 0x0B
 #define CIOV ((void*)0xE456)
 
-void __asm_call(void* address, unsigned char a, unsigned char x, unsigned char y);
+void __asm_call(void* address, int a, int x, int y);
 
 typedef struct {
   unsigned char HID;

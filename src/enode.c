@@ -49,9 +49,6 @@ Tree call(Tree f, Type fty, Coordinate src) {
 						error("type error in argument %d to %s; found `%t' expected `%t'\n", n + 1, funcname(f),
 
 							q->type, *proto);
-					if ((isint(q->type) || isenum(q->type))
-					&& q->type->size != inttype->size)
-						q = cast(q, promote(q->type));
 					++proto;
 				}
 			else
