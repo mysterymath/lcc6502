@@ -102,6 +102,8 @@ def parse():
                     if label == '__asm_call':
 
                         def ArgFn(arg):
+                            if isinstance(arg, ir.SignExtend):
+                                return arg.value
                             if not isinstance(arg, Number):
                                 return arg
                             if arg >= 0:
