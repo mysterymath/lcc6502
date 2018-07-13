@@ -1,0 +1,2 @@
+def compute(start):
+    pass

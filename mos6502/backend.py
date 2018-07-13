@@ -9,6 +9,7 @@ import ir
 import iselector
 import lowerer
 import parser
+import stack
 
 
 def pprint(x):
@@ -18,23 +19,29 @@ def pprint(x):
 # Parse LCC bytecode into function IR.
 functions = parser.parse()
 
+# Compute stack addresses
+for function in functions:
+    stack.compute(function.start)
+
+# Lower operation sizes to single bytes.
+for function in functions:
+    lowerer.lower(function.start)
+
 # DO NOT SUBMIT: Debug print.
 for function in functions:
     print(function.name + ":")
     ir.print_blocks(function.start)
 
 # Inline leaf functions until none remain.
-inliner.inline(functions)
-start = [f for f in functions if f.name == 'main'][0].start
+#inliner.inline(functions)
+#start = [f for f in functions if f.name == 'main'][0].start
 
 # Merge basic blocks.
-block_merger.merge(start)
+#block_merger.merge(start)
 
-# Lower operation sizes to single bytes.
-lowerer.lower(start)
 
 # Select assembly instructions.
-iselector.select(start)
+#iselector.select(start)
 
 # Emit code to stdout.
-emitter.emit(start)
+#emitter.emit(start)
