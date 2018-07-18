@@ -22,6 +22,13 @@ class Add(object):
 
 
 @attrs(cmp=False)
+class Subtract(object):
+    size = attrib()
+    lhs = attrib()
+    rhs = attrib()
+
+
+@attrs(cmp=False)
 class AsmCall(object):
     address = attrib()
     A = attrib()
@@ -84,6 +91,17 @@ class Argument(object):
     value = attrib()
 
 
+@attrs(cmp=False)
+class Global(object):
+    name = attrib()
+    size = attrib()
+
+
+@attrs(cmp=False)
+class Constant(Global):
+    value = attrib()
+
+
 # Terminators
 
 
@@ -122,6 +140,23 @@ class Function(object):
     start = attrib()
 
 
+@attrs(cmp=False)
+class Module(object):
+    functions = attrib()
+    globals_ = attrib()
+
+    def print(self):
+        print("# Functions")
+        for function in self.functions:
+            print("## {}:".format(function.name))
+            print_blocks(function.start)
+
+        print()
+        print("# Globals")
+        for global_ in self.globals_:
+            print(global_)
+
+
 def blocks_dfs(start):
     blocks = []
     work_list = [start]
@@ -140,8 +175,25 @@ def blocks_dfs(start):
     return blocks
 
 
+def instructions_dfs(block):
+    instructions = []
+    for instruction in block.instructions:
+        work_list = [instruction]
+        while work_list:
+            instruction = work_list.pop()
+            if instruction in instructions:
+                continue
+            instructions.append(instruction)
+
+            try:
+                for field in attr.fields(type(instruction)):
+                    work_list.append(getattr(instruction, field.name))
+            except attr.exceptions.NotAnAttrsClassError:
+                pass
+    return instructions
+
+
 def print_blocks(start):
-    print()
     blocks = blocks_dfs(start)
     block_ids = {block: i for i, block in enumerate(blocks)}
 
@@ -167,7 +219,6 @@ def print_blocks(start):
         print("_{}:".format(block_ids[block]))
         for instruction in block.instructions:
             print_node(instruction, indent=0)
-    print()
 
 
 def replace(x, fn):

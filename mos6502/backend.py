@@ -17,28 +17,20 @@ def pprint(x):
 
 
 # Parse LCC bytecode into function IR.
-functions = parser.parse()
+module = parser.parse()
 
 # Compute stack addresses
-for function in functions:
-    stack.compute(function.start)
-
-# Lower operation sizes to single bytes.
-for function in functions:
-    lowerer.lower(function.start)
+stack.compute(module)
 
 # DO NOT SUBMIT: Debug print.
-for function in functions:
-    print(function.name + ":")
-    ir.print_blocks(function.start)
+module.print()
 
-# Inline leaf functions until none remain.
-#inliner.inline(functions)
-#start = [f for f in functions if f.name == 'main'][0].start
+# Lower operation sizes to single bytes.
+for function in module.functions:
+    lowerer.lower(function.start)
 
 # Merge basic blocks.
 #block_merger.merge(start)
-
 
 # Select assembly instructions.
 #iselector.select(start)

@@ -156,4 +156,7 @@ def parse():
         else:
             advance()
 
-    return {v for v in labels.values() if isinstance(v, ir.Function)}
+    return ir.Module(
+        functions={v
+                   for v in labels.values() if isinstance(v, ir.Function)},
+        globals_=set())
