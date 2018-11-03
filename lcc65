@@ -1,0 +1,2 @@
+#!/bin/bash
+./lcc $1 | python3 mos6502/backend.py
