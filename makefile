@@ -1,4 +1,5 @@
 # $Id$
+BUILDDIR=build
 A=.a
 O=.o
 E=
@@ -17,7 +18,7 @@ B=$(BUILDDIR)/
 T=$(TSTDIR)/
 
 what:
-	-@echo make all rcc cpp lcc bprint liblcc triple clean clobber
+	-@echo make all rcc cpp lcc bprint liblcc clean clobber
 
 all::	rcc cpp lcc bprint liblcc
 
@@ -52,7 +53,6 @@ RCCOBJS=$Balloc$O \
 	$Btree$O \
 	$Btypes$O \
 	$Bnull$O \
-	$Bsymbolic$O \
 	$Bgen$O \
 	$Bbytecode$O
 
@@ -87,7 +87,6 @@ $Bsimp$O:	src/simp.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/simp.c
 $Bstmt$O:	src/stmt.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/stmt.c
 $Bstring$O:	src/string.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/string.c
 $Bsym$O:	src/sym.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/sym.c
-$Bsymbolic$O:	src/symbolic.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/symbolic.c
 $Bbytecode$O:	src/bytecode.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/bytecode.c
 $Btrace$O:	src/trace.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/trace.c
 $Btree$O:	src/tree.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/tree.c
@@ -132,65 +131,7 @@ $Bhideset$O:	cpp/hideset.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/hideset.c
 $Bgetopt$O:	cpp/getopt.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/getopt.c
 $Bunix$O:	cpp/unix.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/unix.c
 
-test:	$T8q.s \
-	$Tarray.s \
-	$Tcf.s \
-	$Tcq.s \
-	$Tcvt.s \
-	$Tfields.s \
-	$Tfront.s \
-	$Tincr.s \
-	$Tinit.s \
-	$Tlimits.s \
-	$Tparanoia.s \
-	$Tsort.s \
-	$Tspill.s \
-	$Tstdarg.s \
-	$Tstruct.s \
-	$Tswitch.s \
-	$Twf1.s \
-	$Tyacc.s
-
-$T8q.s:	tst/8q.c tst/8q.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tarray.s:	tst/array.c tst/array.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tcf.s:	tst/cf.c tst/cf.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tcq.s:	tst/cq.c tst/cq.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tcvt.s:	tst/cvt.c tst/cvt.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tfields.s:	tst/fields.c tst/fields.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tfront.s:	tst/front.c tst/front.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tincr.s:	tst/incr.c tst/incr.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tinit.s:	tst/init.c tst/init.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tlimits.s:	tst/limits.c tst/limits.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tparanoia.s:	tst/paranoia.c tst/paranoia.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tsort.s:	tst/sort.c tst/sort.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tspill.s:	tst/spill.c tst/spill.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tstdarg.s:	tst/stdarg.c tst/stdarg.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tstruct.s:	tst/struct.c tst/struct.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tswitch.s:	tst/switch.c tst/switch.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Twf1.s:	tst/wf1.c tst/wf1.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-$Tyacc.s:	tst/yacc.c tst/yacc.0 all;	@env BUILDDIR=$(BUILDDIR) TSTDIR=$(TSTDIR) src/run.sh $@
-
-testclean:
-	$(RM) $T8q$E $T8q.s $T8q.2 $T8q.1
-	$(RM) $Tarray$E $Tarray.s $Tarray.2 $Tarray.1
-	$(RM) $Tcf$E $Tcf.s $Tcf.2 $Tcf.1
-	$(RM) $Tcq$E $Tcq.s $Tcq.2 $Tcq.1
-	$(RM) $Tcvt$E $Tcvt.s $Tcvt.2 $Tcvt.1
-	$(RM) $Tfields$E $Tfields.s $Tfields.2 $Tfields.1
-	$(RM) $Tfront$E $Tfront.s $Tfront.2 $Tfront.1
-	$(RM) $Tincr$E $Tincr.s $Tincr.2 $Tincr.1
-	$(RM) $Tinit$E $Tinit.s $Tinit.2 $Tinit.1
-	$(RM) $Tlimits$E $Tlimits.s $Tlimits.2 $Tlimits.1
-	$(RM) $Tparanoia$E $Tparanoia.s $Tparanoia.2 $Tparanoia.1
-	$(RM) $Tsort$E $Tsort.s $Tsort.2 $Tsort.1
-	$(RM) $Tspill$E $Tspill.s $Tspill.2 $Tspill.1
-	$(RM) $Tstdarg$E $Tstdarg.s $Tstdarg.2 $Tstdarg.1
-	$(RM) $Tstruct$E $Tstruct.s $Tstruct.2 $Tstruct.1
-	$(RM) $Tswitch$E $Tswitch.s $Tswitch.2 $Tswitch.1
-	$(RM) $Twf1$E $Twf1.s $Twf1.2 $Twf1.1
-	$(RM) $Tyacc$E $Tyacc.s $Tyacc.2 $Tyacc.1
-
-clean::		testclean
+clean::
 		$(RM) $B*$O
 		$(RM) $Brcc1$E $Brcc1$E $B1rcc$E $B2rcc$E
 		$(RM) $B*.ilk
@@ -224,7 +165,6 @@ RCCSRCS=src/alloc.c \
 	src/tree.c \
 	src/types.c \
 	src/null.c \
-	src/symbolic.c \
 	src/bytecode.c \
 	src/gen.c \
 	src/stab.c

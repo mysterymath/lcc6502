@@ -1,9 +1,6 @@
 #include "c.h"
 #undef yy
 #define yy \
-xx(symbolic/osf, symbolic64IR) \
-xx(symbolic/irix,symbolicIR) \
-xx(symbolic,     symbolicIR) \
 xx(bytecode,     bytecodeIR) \
 xx(null,         nullIR)
 
