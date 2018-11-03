@@ -18,14 +18,12 @@ B=$(BUILDDIR)/
 T=$(TSTDIR)/
 
 what:
-	-@echo make all rcc cpp lcc bprint liblcc clean clobber
+	-@echo make all rcc cpp liblcc clean clobber
 
-all::	rcc cpp lcc bprint liblcc
+all::	rcc cpp liblcc
 
 rcc:	$Brcc$E
 cpp:	$Bcpp$E
-lcc:	$Blcc$E
-bprint:	$Bbprint$E
 liblcc:	$Bliblcc$A
 
 RCCOBJS=$Balloc$O \
@@ -93,17 +91,6 @@ $Btree$O:	src/tree.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/tree.c
 $Btypes$O:	src/types.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/types.c
 $Bstab$O:	src/stab.c src/stab.h;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/stab.c
 
-$Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
-$Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
-
-$Bbprint$O:	etc/bprint.c src/profio.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ etc/bprint.c
-$Bops$O:	etc/ops.c src/ops.h;		$(CC) $(CFLAGS) -c -Isrc -o $@ etc/ops.c
-
-$Blcc$E:	$Blcc$O $Bhost$O;	$(LD) $(LDFLAGS) -o $@ $Blcc$O $Bhost$O 
-
-$Blcc$O:	etc/lcc.c;		$(CC) $(CFLAGS) -c -o $@ etc/lcc.c
-$Bhost$O:	$(HOSTFILE);	$(CC) $(CFLAGS) -c -o $@ $(HOSTFILE)
-
 LIBOBJS=$Bassert$O $Bbbexit$O $Byynull$O
 
 $Bliblcc$A:	$(LIBOBJS);	$(AR) $@ $Bassert$O $Bbbexit$O $Byynull$O; $(RANLIB) $@ || true
@@ -137,7 +124,7 @@ clean::
 		$(RM) $B*.ilk
 
 clobber::	clean
-		$(RM) $Brcc$E $Bcpp$E $Blcc$E $Bcp$E $Bbprint$E $B*$A
+		$(RM) $Brcc$E $Bcpp$E $Bcp$E $B*$A
 		$(RM) $B*.pdb $B*.pch
 
 RCCSRCS=src/alloc.c \
@@ -168,17 +155,3 @@ RCCSRCS=src/alloc.c \
 	src/bytecode.c \
 	src/gen.c \
 	src/stab.c
-
-C=$Blcc -A -d0.6 -Wo-lccdir=$(BUILDDIR) -Isrc -I$(BUILDDIR)
-triple:	$B2rcc$E
-	strip $B1rcc$E $B2rcc$E
-	dd if=$B1rcc$E of=$Brcc1$E bs=512 skip=1
-	dd if=$B2rcc$E of=$Brcc2$E bs=512 skip=1
-	if cmp $Brcc1$E $Brcc2$E; then \
-		mv $B2rcc$E $Brcc$E; \
-		$(RM) $B1rcc$E $Brcc[12]$E; fi
-
-$B1rcc$E:	$Brcc$E $Blcc$E $Bcpp$E
-		$C -o $@ -B$B $(RCCSRCS)
-$B2rcc$E:	$B1rcc$E
-		$C -o $@ -B$B1 $(RCCSRCS)
