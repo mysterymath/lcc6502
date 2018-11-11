@@ -1,0 +1,2 @@
+Program('rcc', Glob('src/*.c'))
+Program('lcpp', Glob('cpp/*.c'))
