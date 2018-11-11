@@ -1,2 +1,0 @@
-#!/bin/bash
-cpp $1 | build/rcc -target=bytecode
