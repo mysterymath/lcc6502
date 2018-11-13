@@ -16,6 +16,7 @@ for the old 800, but I've hesitated, since I know I'd quickly find myself
 missing the niceties of modern software development. Python is probably too
 much to ask for, but a proper C compiler doesn't seem doesn't that
 unreasonable.  
+
 The zeitgeist seems to be that writing a proper C compiler for this CPU (the
 MOS 6502) is difficult to the point of impossibility. Upon hearing this, I knew
 that I immediately had to make an attempt. In a way, I feel a bit like a
