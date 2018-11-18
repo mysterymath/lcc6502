@@ -11,9 +11,10 @@ implemented yet. Check back later for updates.
 Updated November 15, 2018.
 
 # Planned Features
-* ANSI C Compatibility. For all supported targets, the project must meet the
+* ANSI C Compatibility. For each supported target, the project must meet the
   requirements for a hosted implementation set forth in the latest
-freely-availible draft of ANSI X3.159-1989 "Programming Language C."
+[freely-availible draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI
+X3.159-1989 "Programming Language C."
   * C standard compatibility allows running as many libraries as possible
     without modification. Modification may still be required for either
 non-portable or insufficiently performant libraries.
@@ -54,6 +55,19 @@ standards compliance, and excellent documentation. It's backend interface
 [documentation](http://storage.webhop.net/documents/interface4.pdf) is freely
 available.  The relevant parts of the compiler are in the [lcc/](lcc/)
 subdirectory.
+
+Design implications from the ANSI C standard:
+
+1 [INTRODUCTION](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
+  - All implementation-defined behaviors or characteristics in the standard need to be explicitly defined.
+  - All extensions to the standard need to be defined.
+  - No extensions are allowed that would render a strictly conforming program nonconforming.
+
+4.10.4.5 [The system function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
+  - The system function must always return zero, since no command processor is
+    available. 
+  
+        
 
 # For More Details
 ## Prototype ([prototype/](prototype/))
