@@ -11,15 +11,16 @@ implemented yet. Check back later for updates.
 Updated November 15, 2018.
 
 # Planned Features
-* ANSI C Compatibility. The project should meet the requirements set forth in
-  ANSI X3.159-1989 "Programming Language C."
+* ANSI C Compatibility. For all supported targets, the project must meet the
+  requirements for a hosted implementation set forth in the latest
+freely-availible draft of ANSI X3.159-1989 "Programming Language C."
   * C standard compatibility allows running as many libraries as possible
     without modification. Modification may still be required for either
 non-portable or insufficiently performant libraries.
   * ANSI C was the C standard from 1989 to 1999, and is largely
     backwards-compatible with the previous C implementation. Many C libraries
 are written against it.
-  * The project should supply hosted implementations of the language (see the C
+  * The project must supply hosted implementations of the language (see the C
     standard). This allows programs to be written that feel more like writing
 on a personal computer, and less like writing on a microcontroller. These
 platforms largely do have operating systems already, and these OS routines can
@@ -28,14 +29,19 @@ be leveraged to create native hosted implementations.
     implementations support "65535 bytes in an object." This precludes creating
 a hosted implementation for C99 on the 6502, which can address at most 65536
 bytes. Such an object would take up the entire addressible memory space.
-* Atari 800 target. The compiler should produce output capable of running on an
+  * The draft is used since the production standard is "generally known" not to
+    differ from the draft, and the production standard is difficult to obtain.
+No technical corrigenda need be considered, since these were not availible at
+the time of drafting.
+* Atari 800 target. The compiler must produce output capable of running on an
   Atari 800.
-* C64 target. The computer should produce output capable of running on the
+* C64 target. The computer must produce output capable of running on the
   Commodore 64.
 * Fast code. The output produced by the compiler should be within an order of
   magnitude as fast as that written by a human transliterating the C to
-equivalent assembly. High-level optimzations are left to the C author.
-* The rest TBD.
+equivalent assembly. Most high-level optimzations are left to the C author.
+  * Whenever possible, the compiler must perform 8-bit arithmetic operations
+    directly, instead of integral promotions.
 
 # Project Design
 The project is currently gathering requirements; design is TBD.
