@@ -10,9 +10,8 @@ draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
 * C standard compatibility allows running as many libraries as possible without
   modification. Modification may still be required for either non-portable or
   insufficiently performant libraries.
-* ANSI C was the C standard from 1989 to 1999, and is largely
-  backwards-compatible with the previous C implementation. Many C libraries are
-  written against it.
+* C89 was the C standard from 1989 to 1999, and is largely backwards-compatible
+  with the previous C implementation. Many C libraries are written against it.
 * The project must supply hosted implementations of the language (see the C
   standard). This allows programs to be written that feel more like writing on a
   personal computer, and less like writing on a microcontroller. These platforms

@@ -14,9 +14,9 @@ Updated November 15, 2018.
 
 ## Planned Features
 
-* [ANSI C Compatibility](C_Standard_Compliance.md). For each supported target,
-  the project must meet the requirements for a hosted implementation set forth
-  in the latest [freely-availible
+* [C89 Compatibility](C_Standard_Compliance.md). For each supported target, the
+  project must meet the requirements for a hosted implementation set forth in
+  the latest [freely-availible
   draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
   "Programming Language C."
 * Atari 800 target. The compiler must produce output capable of running on an
@@ -36,13 +36,13 @@ The project is currently gathering requirements; design is TBD.
 To understand the problem space and potential solution techniques, start with
 David A. Wheeler's excellent [guide](https://dwheeler.com/6502/).
 
-The LCC compiler has been chosen as a C frontend for its simplicity, ANSI C
-standards compliance, and excellent documentation. It's backend interface
+The LCC compiler has been chosen as a C frontend for its simplicity, standards
+compliance, and excellent documentation. It's backend interface
 [documentation](http://storage.webhop.net/documents/interface4.pdf) is freely
 available.  The relevant parts of the compiler are in the [lcc/](lcc/)
 subdirectory.
 
-Design implications from the ANSI C standard:
+### Design implications from the C89 standard
 
 1 [INTRODUCTION](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
 
@@ -52,11 +52,23 @@ Design implications from the ANSI C standard:
 * No extensions are allowed that would render a strictly conforming program
   nonconforming.
 
+TODO: Sections 2+ of the standard.
+
+### Implementation-Defined Behavior
+
+1.6 [DEFINITIONS OF TERMS](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
+
+* A byte contains 8 bits.
+* TODO: The number, order, and encoding of each byte in an object, except where
+  expliclitly defined by the C spec.
+
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
 
 * The system function must always return zero, since no command processor is
   available.
+
+TODO: Sections 2+ of the standard.
 
 ## For More Details
 
