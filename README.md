@@ -21,8 +21,12 @@ Updated November 15, 2018.
   "Programming Language C."
 * Atari 800 target. The compiler must produce output capable of running on an
   Atari 800.
-* C64 target. The computer must produce output capable of running on the
+* C64 target. The compiler must produce output capable of running on the
   Commodore 64.
+* ROM-compatible. The compiler must produce output capable of running from ROM.
+* POSIX-like standard library. POSIX APIs are not provided, but the C standard
+  library should behave broadly similar to how it would behave on a POSIX
+  system, rather than the bare minimum allowed by the C89 standard.
 * Fast code. The output produced by the compiler should be within an order of
   magnitude as fast as that written by a human transliterating the C to
   equivalent assembly. Most high-level optimzations are left to the C author.
@@ -52,7 +56,43 @@ subdirectory.
 * No extensions are allowed that would render a strictly conforming program
   nonconforming.
 
-TODO: Sections 2+ of the standard.
+2 [ENVIRONMENT](https://port70.net/~nsz/c/c89/c89-draft.html#2.)
+
+2.1 [CONCEPTUAL MODELS](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.)
+
+2.1.1 [Translation
+environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.)
+
+2.1.1.1 [Program structure](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.)
+
+* While it's not necessary to perform traditional separate compilation (i.e.,
+  changing one .c file only requires recompiling that one file), much of the C
+  universe is designed assuming this is the case. This implementation should
+  support it as far as is possible without hindering performance.
+
+2.1.1.3 [Diagnostics](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.3.)
+
+* TODO: Determine whether there are any syntax rule or constraint violations
+  that can only be detected by the backend. The backend will need to produce
+  diagnostic messages for these, if any.
+
+2.1.2 [Execution
+environments](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.)
+
+* Objects in static storage need to be initialized *before* program startup. For
+  ROM output, this means that mutable static objects need to be copied to RAM
+  locations. These would become the canonical locations for the objects.
+
+2.1.2.2 [Hosted
+environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.2.)
+
+* The standard requires only that argc be nonnegative, but C programs generally
+  may not. Since no meaningful program name is available, argc should always be
+  1, and argv[0] should always be "".
+* The string pointed to by argv must be modifiable by the program, so it must be
+  treated like a mutable static object, not a string literal.
+
+TODO: Sections 2.1.2.3+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -68,13 +108,11 @@ function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
 * The system function must always return zero, since no command processor is
   available.
 
-TODO: Sections 2+ of the standard.
-
 ## For More Details
 
 ### Prototype ([prototype/](prototype/))
 
-A basic proof-of-concept prototype for the compiler. 
+A basic proof-of-concept prototype for the compiler.
 
 ### LCC ([lcc/](lcc/))
 
