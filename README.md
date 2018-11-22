@@ -24,6 +24,8 @@ Updated November 15, 2018.
 * C64 target. The compiler must produce output capable of running on the
   Commodore 64.
 * ROM-compatible. The compiler must produce output capable of running from ROM.
+* POSIX-ish-ness. When there's no compelling reason to do otherwise, the C
+  should be like that inside a POSIX environment.
 * Fast code. The output produced by the compiler should be within an order of
   magnitude as fast as that written by a human transliterating the C to
   equivalent assembly. Most high-level optimzations are left to the C author.
@@ -46,6 +48,14 @@ subdirectory.
 ### Design implications from the C89 standard
 
 1 [INTRODUCTION](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
+
+1.7 [COMPLIANCE](http://port70.net/~nsz/c/c89/c89-draft.html#1.7.)
+
+* Freestanding implementations must implement all library features found in:
+  * float.h
+  * limits.h
+  * stdarg.h
+  * stddef.h
 
 * All implementation-defined behaviors or characteristics in the standard need
   to be explicitly defined.
@@ -80,7 +90,13 @@ environments](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.)
   ROM output, this means that mutable static objects need to be copied to RAM
   locations. These would become the canonical locations for the objects.
 
-TODO: Sections 2.1.2.1+ of the standard.
+2.1.2.1 [Freestanding
+environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
+
+* At program startup, the routine with the name "_start" is called. This
+  function must take no arguments and have a void return type.
+
+TODO: Sections 2.1.2.3+ of the standard.
 
 ### Implementation-Defined Behavior
 
