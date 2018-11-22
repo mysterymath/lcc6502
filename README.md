@@ -15,8 +15,8 @@ Updated November 15, 2018.
 ## Planned Features
 
 * [C89 Compatibility](C_Standard_Compliance.md). For each supported target, the
-  project must meet the requirements for a hosted implementation set forth in
-  the latest [freely-availible
+  project must meet the requirements for a freestanding implementation set forth
+  in the latest [freely-availible
   draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
   "Programming Language C."
 * Atari 800 target. The compiler must produce output capable of running on an
@@ -24,9 +24,6 @@ Updated November 15, 2018.
 * C64 target. The compiler must produce output capable of running on the
   Commodore 64.
 * ROM-compatible. The compiler must produce output capable of running from ROM.
-* POSIX-like standard library. POSIX APIs are not provided, but the C standard
-  library should behave broadly similar to how it would behave on a POSIX
-  system, rather than the bare minimum allowed by the C89 standard.
 * Fast code. The output produced by the compiler should be within an order of
   magnitude as fast as that written by a human transliterating the C to
   equivalent assembly. Most high-level optimzations are left to the C author.
@@ -83,16 +80,7 @@ environments](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.)
   ROM output, this means that mutable static objects need to be copied to RAM
   locations. These would become the canonical locations for the objects.
 
-2.1.2.2 [Hosted
-environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.2.)
-
-* The standard requires only that argc be nonnegative, but C programs generally
-  may not. Since no meaningful program name is available, argc should always be
-  1, and argv[0] should always be "".
-* The string pointed to by argv must be modifiable by the program, so it must be
-  treated like a mutable static object, not a string literal.
-
-TODO: Sections 2.1.2.3+ of the standard.
+TODO: Sections 2.1.2.1+ of the standard.
 
 ### Implementation-Defined Behavior
 
