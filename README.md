@@ -104,7 +104,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   suspensions. This implies either keeping them in no-clobber registers or
   saving them on a stack.
 
-TODO: Sections 2.2+ of the standard.
+2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
+
+* Neither  their Atari 800 (ATASCII) or Commodore 64 (PETSCII) character sets
+  contain '{' or '}', which are both required by the standard for both source
+  and execution environments.
+
+* The implementation must provide macros to specify PETSCII character set mode.
+* The implementation must a command line flag for default PETSCII character set mode.
+
+TODO: Sections 2.2.1.1+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -127,6 +136,34 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 2.1.2.3 [Program execution](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.3.)
 
 * This implementation defines no interactive devices.
+
+2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
+
+* For all targets the source character set is ASCII.
+* For the Atari 800 the execution character set is ATASCII.
+  * ASCII '{' is mapped to inverse '['.
+  * ASCII '}' is mapped to inverse ']'.
+  * ASCII '~' is mapped to inverse '-'.
+  * ASCII vertical tab is mapped (arbitrarily) to "Cursor Down".
+  * ASCII form feed is mapped to "Clear Screen".
+  * ASCII alert is mapped to "Buzzer".
+  * ASCII carriage return is mapped (artificially) to "Cursor Left".
+  * All other members of the basic character set take their natural mappings.
+* For the Commodore 64 the execution character set is PETSCII.
+  * ASCII '^' is mapped to up arrow.
+  * ASCII '\' is mapped to the British pound sign.
+  * ASCII '|' is mapped to $DD.
+  * ASCII '~' is mapped to $B2.
+  * ASCII '{' is mapped to $EB.
+  * ASCII '}' is mapped to $F3.
+  * ASCII tab is mapped (arbitrarily) to "Insert".
+  * ASCII vertical tab is mapped (arbitrarily) to "Cursor Down".
+  * ASCII form feed is mapped to "Clear Screen".
+  * ASCII carriage return is mapped (arbitrarily) to "Cursor Left".
+  * ASCII alert is mapped (arbitrarily) to "Cursor Up".
+  * Special macros are provided to allow specifying whether each literal is
+    shifted or unshifted. TODO: Define these macros. The default is specified by
+    a command line flag. TODO: Define this flag.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
