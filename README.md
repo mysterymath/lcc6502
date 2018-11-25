@@ -95,14 +95,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * At program startup, the routine with the name "_start" is called. This
   function must take no arguments and have a void return type.
+* TODO: What other identifiers are reserved?
 
-* No external identifiers other than "_start" may be reserved. This means that
-  if a program defines an external identifier with the same name as a library
-  feature provided by the freestanding implementation, the user definition must
-  take precedence.
-  * The GCC library creates weak symbols for each of its POSIX functions to
-    allow user overrides; the same can be done here.
-
+TODO: Apply technical corrigenda.
 TODO: Sections 2.1.2.3+ of the standard.
 
 ### Implementation-Defined Behavior

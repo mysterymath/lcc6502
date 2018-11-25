@@ -23,6 +23,6 @@ draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
   implementation for C99 on the 6502, which can address at most 65537 bytes.
   Such an object would take up the entire addressible memory space.
 * The draft is used since the production standard is "generally known" not to
-  differ from the draft, and the production standard is difficult to obtain. No
-  technical corrigenda need be considered, since these were not availible at the
-  time of drafting.
+  differ from the draft, and the production standard is difficult to obtain.
+  Both technical corrigenda are included, since they provide essential
+  corrections to errors in the standard.
