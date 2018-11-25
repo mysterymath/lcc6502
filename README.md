@@ -97,7 +97,6 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   function must take no arguments and have a void return type.
 * TODO: What other identifiers are reserved?
 
-TODO: Apply technical corrigenda.
 TODO: Sections 2.1.2.3+ of the standard.
 
 ### Implementation-Defined Behavior
@@ -107,6 +106,16 @@ TODO: Sections 2.1.2.3+ of the standard.
 * A byte contains 8 bits.
 * TODO: The number, order, and encoding of each byte in an object, except where
   expliclitly defined by the C spec.
+
+2.1.2.1 [Freestanding
+environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
+
+* TODO: Define the library routines provided by this implementation.
+* All external identifiers that begin with an underscore are reserved. All other
+  identifiers that begin with an underscore and either an upper-case letter or
+  another underscore are reserved. If the program defines an external identifier
+  with the same name as a reserved external identifier, even in a semantically
+  equivalent form, the behavior is undefined.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
