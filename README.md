@@ -95,9 +95,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * At program startup, the routine with the name "_start" is called. This
   function must take no arguments and have a void return type.
-* TODO: What other identifiers are reserved?
 
-TODO: Sections 2.1.2.3+ of the standard.
+2.1.2.3 [Program execution](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.3.)
+
+* Reads from volatile objects need to be treated differently, so that information needs to
+  be extacted from LCC.
+* Automatic variables need to retain their values across signal handling
+  suspensions. This implies either keeping them in no-clobber registers or
+  saving them on a stack.
+
+TODO: Sections 2.2+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -116,6 +123,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   another underscore are reserved. If the program defines an external identifier
   with the same name as a reserved external identifier, even in a semantically
   equivalent form, the behavior is undefined.
+
+2.1.2.3 [Program execution](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.3.)
+
+* This implementation defines no interactive devices.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
