@@ -10,7 +10,7 @@ assembly.
 This project is gathering requirements, and nothing useful has been designed or
 implemented yet. Check back later for updates.
 
-Updated November 15, 2018.
+Updated November 25, 2018.
 
 ## Planned Features
 
@@ -109,11 +109,36 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Neither  their Atari 800 (ATASCII) or Commodore 64 (PETSCII) character sets
   contain '{' or '}', which are both required by the standard for both source
   and execution environments.
+* At least one target character set, ATASCII, does not contain a null character
+  at zero. This means it cannot simply support null-terminated strings.
+* Neither of the character ROM encodings for ATASCII and PETSCII have a null
+  character at zero.
+* String literals need not be strings (they can contain '\0' anywhere within),
+  but the standard requires their value ends in a null character.
+* The implementation should provide C-style null-terminated string literals,
+  since there's no other way to achieve C89 compatibility.
+* The implementation should also provide macros that wrap string literals. These
+  allow producing non-null-terminated strings, which can include null-valued
+  characters in strings, which are meaningful in some target character sets.
+  * For example:
+    * _ATASCII("\0") would produce a heart in ATASCII.
+    * _ATASCII("Hello") would produce "Hello" in ATASCII, not null-terminated.
+    * _ANTIC("Hello") would produce "Hello" in ANTIC display codes, not null-terminated.
+    * _PETSCII_U("HELLO") would produce "HELLO" in unshifted PETSCII, not null-terminated.
+    * _PETSCII_S("Hello") would produce "Hello" in shifted PETSCII, not null-terminated.
+    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is 6.
+    * Given `const char kHello[] = _ATASCII("Hello");`, the value of `sizeof(kHello)` is 5.
+    * _PETSCII_U("Hello") would produce a compile error, since lowercase letters
+      are unmapped in unshifed PETSCII.
+  * The implementation should provide a way to define such macros and their
+    corresponding ASCII->execution character set mappings.
+  * No mechanism is provided to change the default interpretation of character
+    literals, since such literals would no longer work with routines designed
+    for C strings. This behavior is sufficiently dangerous to require explicit
+    denotation in the source text.
 
-* The implementation must provide macros to specify PETSCII character set mode.
-* The implementation must a command line flag for default PETSCII character set mode.
 
-TODO: Sections 2.2.1.1+ of the standard.
+TODO: Sections 2.2.2+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -139,7 +164,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
 
-* For all targets the source character set is ASCII.
+* The source character set is ASCII for all targets.
 * For the Atari 800 the execution character set is ATASCII.
   * ASCII '{' is mapped to inverse '['.
   * ASCII '}' is mapped to inverse ']'.
@@ -149,6 +174,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * ASCII alert is mapped to "Buzzer".
   * ASCII carriage return is mapped (artificially) to "Cursor Left".
   * All other members of the basic character set take their natural mappings.
+  * An alternative mapping is provided for the internal ROM character mapping.
 * For the Commodore 64 the execution character set is PETSCII.
   * ASCII '^' is mapped to up arrow.
   * ASCII '\' is mapped to the British pound sign.
@@ -161,9 +187,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * ASCII form feed is mapped to "Clear Screen".
   * ASCII carriage return is mapped (arbitrarily) to "Cursor Left".
   * ASCII alert is mapped (arbitrarily) to "Cursor Up".
-  * Special macros are provided to allow specifying whether each literal is
-    shifted or unshifted. TODO: Define these macros. The default is specified by
-    a command line flag. TODO: Define this flag.
+  * An alternative mapping is provided for the internal ROM character mapping.
+* TODO: Define the extension mechanism for custom character mappings and
+  non-null-terminated string literals.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
