@@ -137,8 +137,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     for C strings. This behavior is sufficiently dangerous to require explicit
     denotation in the source text.
 
+2.2.2 [Character display semantics](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.2)
 
-TODO: Sections 2.2.2+ of the standard.
+* Escape characters should not output a printable character.
+* Alert must not change the cursor position.
+* Carriage return should move the cursor to the initial position of the current line.
+
+TODO: Sections 2.2.3+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -169,10 +174,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * ASCII '{' is mapped to inverse '['.
   * ASCII '}' is mapped to inverse ']'.
   * ASCII '~' is mapped to inverse '-'.
-  * ASCII vertical tab is mapped (arbitrarily) to "Cursor Down".
+  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
   * ASCII form feed is mapped to "Clear Screen".
   * ASCII alert is mapped to "Buzzer".
-  * ASCII carriage return is mapped (artificially) to "Cursor Left".
+  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
   * All other members of the basic character set take their natural mappings.
   * An alternative mapping is provided for the internal ROM character mapping.
 * For the Commodore 64 the execution character set is PETSCII.
@@ -182,11 +187,11 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * ASCII '~' is mapped to $B2.
   * ASCII '{' is mapped to $EB.
   * ASCII '}' is mapped to $F3.
-  * ASCII tab is mapped (arbitrarily) to "Insert".
-  * ASCII vertical tab is mapped (arbitrarily) to "Cursor Down".
+  * ASCII tab is mapped (somewhat arbitrarily) to "Cursor Right".
+  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
   * ASCII form feed is mapped to "Clear Screen".
-  * ASCII carriage return is mapped (arbitrarily) to "Cursor Left".
-  * ASCII alert is mapped (arbitrarily) to "Cursor Up".
+  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
+  * ASCII alert is mapped (arbitrarily) to $01 (unused by PETSCII).
   * An alternative mapping is provided for the internal ROM character mapping.
 * TODO: Define the extension mechanism for custom character mappings and
   non-null-terminated string literals.
