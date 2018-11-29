@@ -15,9 +15,12 @@ draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
 * The project supplies freestanding implementations of the language (see the C
   standard). The hosted implementation places expectations on the OS; these are
   frequently not met by the target platforms.
-* The project must provide functionality sufficient to create a hosted
+* The project must provide functionality sufficient to create a (mostly) hosted
   implementation by writing C libraries. Extensions to the C language may be
-  provided to allowing doing so.
+  provided for this.
+  * Deviations from standard hosted implementation:
+    * The requirement to support objects of at least 32767 bytes is lifted, as
+      the target platforms can only address 65536 bytes.
 * The next version of the C standard, C99, requires that hosted implementations
   support "65535 bytes in an object." This precludes creating a hosted
   implementation for C99 on the 6502, which can address at most 65537 bytes.

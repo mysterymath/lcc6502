@@ -143,7 +143,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Alert must not change the cursor position.
 * Carriage return should move the cursor to the initial position of the current line.
 
-2.2.2 [Signals and interrupts](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4)
+2.2.3 [Signals and interrupts](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.3)
 
 * No signals need be provided, but to allow implementing signals, intterupt
   handlers must be writable in pure C.
@@ -158,7 +158,30 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     * Interrupt handlers often need to be extremely timely, so the number of
       locations saved and restored by the handler must be tightly bounded.
 
-TODO: Sections 2.2.4+ of the standard.
+2.2.4.1 [Translation limits](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4.1)
+
+* A hosted implementation cannot be constructed for target platforms, since
+  neither the Atari 800 nor the C64 have 32767 bytes of contiguous RAM. ROM
+  doesn't help either; the max amount typically used is too small.
+* Each function needs to support at least 31 arguments. That's at least 31 bytes
+  of storage.
+* At least 257 case labels need to be supported. This precludes creating a sort
+  of byte-indexed perfect-hashed jump table, since there would be too many
+  entries in the worst case. This is to allow branching on any character as well
+  as EOF.
+* This implementation should avoid any unneccesary limits. For sizes, that means
+  that a program should only be rejected if it cannot be made to fit in the
+  available resources on the target system.
+  * No optimizations (inlining, etc) may be performed unless it can be
+    guaranteed that it will not cause a fitting program to no longer fit.
+  * If a program cannot be made to fit, the compiler should turn parts of the
+    program into compact, slower code, starting with the parts with least
+    performance impact. The program should not be rejected until the compiler
+    has replaced all of it with compact code.
+  * The compiler should aim for the most efficient program that can be made to
+    fit.
+
+TODO: Sections 2.2.4.2+ of the standard.
 
 ### Implementation-Defined Behavior
 
