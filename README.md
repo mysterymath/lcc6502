@@ -153,19 +153,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     and semantics.
   * Any function can be interrupted at any time by an interrupt, which can call
     any C function.
-    * Functions callable by functions marked as interrupt handlers must not
-      overrite memory locations used by previous invocations or by any active functions.
-    * Interrupt handlers must not overwrite any temporary locations used by the
-      function that was interrupted.
-    * This includes CPU registers, flags, and any temporary memory locations
-      used by both the interrupted and interrupting functions.
+    * Interrupt handlers must not overrite any locations (memory or register)
+      used by previous invocations or by any active functions.
     * Interrupt handlers often need to be extremely timely, so the number of
       locations saved and restored by the handler must be tightly bounded.
-      * This can be done by minimizing the number of locations used by the
-        interrupt handler and its callees and by expecting calls to a C function
-        to preserve all resources. Additionally, the routine should attempt to
-        save only the smallest determinable superset of the locations actually
-        used.
 
 TODO: Sections 2.2.4+ of the standard.
 
