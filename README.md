@@ -181,7 +181,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * The compiler should aim for the most efficient program that can be made to
     fit.
 
-TODO: Sections 2.2.4.2+ of the standard.
+2.2.4.2 [Numerical limits](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4.2)
+
+* Sign extending chars is expensive on the 6502, and at least one major POSIX
+  platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
+  defines CHAR_MIN to be 0 and CHAR_MAX to be the same as UCHAR_MAX.
+
+TODO: Sections 2.2.4.2+ of the standard, starting with float.h
 
 ### Implementation-Defined Behavior
 
