@@ -26,6 +26,7 @@
 /* number of base-FLT_RADIX digits in the floating-point significand, p  */
 #define FLT_MANT_DIG 24
 #define DBL_MANT_DIG 53
+#define LDBL_MANT_DIG DBL_MANT_DIG
 
 /*
  * Number of decimal digits, q, such that any floating-point number with q
