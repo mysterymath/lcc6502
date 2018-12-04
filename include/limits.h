@@ -1,4 +1,4 @@
-/* Sizes of ingeral types. */
+/* Sizes of ingteral types. */
 
 /* Maximum number of bits for smallest object that is not a bit-field (byte). */
 #define CHAR_BIT 8
@@ -28,7 +28,7 @@
 #define SHRT_MAX 32767
 
 /* Maximum value for an object of type unsigned short int. */
-#define USHRT_MAX 65535
+#define USHRT_MAX 65535u
 
 /* Minimum value for an object of type int. */
 #define INT_MIN (-32767)
@@ -37,13 +37,13 @@
 #define INT_MAX 32767
 
 /* Maximum value for an object of type unsigned int. */
-#define UINT_MAX 65535
+#define UINT_MAX 65535u
 
 /* Minimum value for an object of type long int. */
-#define LONG_MIN (-2147483648)
+#define LONG_MIN (-2147483648l)
 
 /* Maximum value for an object of type long int. */
-#define LONG_MAX 2147483647
+#define LONG_MAX 2147483647l
 
 /* Maximum value for an object of type unsigned long int. */
-#define ULONG_MAX 4294967295
+#define ULONG_MAX 4294967295ul
