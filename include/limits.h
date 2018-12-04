@@ -28,7 +28,7 @@
 #define SHRT_MAX 32767
 
 /* Maximum value for an object of type unsigned short int. */
-#define USHRT_MAX 65535u
+#define USHRT_MAX (65535u)
 
 /* Minimum value for an object of type int. */
 #define INT_MIN (-32767)
@@ -37,7 +37,7 @@
 #define INT_MAX 32767
 
 /* Maximum value for an object of type unsigned int. */
-#define UINT_MAX 65535u
+#define UINT_MAX (65535u)
 
 /* Minimum value for an object of type long int. */
 #define LONG_MIN (-2147483648l)
@@ -46,4 +46,4 @@
 #define LONG_MAX 2147483647l
 
 /* Maximum value for an object of type unsigned long int. */
-#define ULONG_MAX 4294967295ul
+#define ULONG_MAX (4294967295ul)
