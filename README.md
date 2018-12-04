@@ -187,7 +187,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
   defines CHAR_MIN to be 0 and CHAR_MAX to be the same as UCHAR_MAX.
 
-TODO: Sections 3+ of the standard.
+TODO: Sections 3.1.2.1+ of the standard.
 
 ### Implementation-Defined Behavior
 
@@ -239,6 +239,14 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * An alternative mapping is provided for the internal ROM character mapping.
 * TODO: Define the extension mechanism for custom character mappings and
   non-null-terminated string literals.
+
+3.1.2 [Identifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2)
+
+* Number of significant characters in an internal identifier: limited only by
+  available memory.
+* Number of significant characters in an external identifier: limited only by
+  available memory.
+* External identifiers are case-sensitive.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
