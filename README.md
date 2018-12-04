@@ -187,7 +187,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
   defines CHAR_MIN to be 0 and CHAR_MAX to be the same as UCHAR_MAX.
 
-TODO: Sections 2.2.4.2+ of the standard, starting with float.h
+TODO: Sections 3+ of the standard.
 
 ### Implementation-Defined Behavior
 
