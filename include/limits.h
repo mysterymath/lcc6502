@@ -1,5 +1,11 @@
 /* Sizes of ingteral types. */
 
+/*
+ *  Note: Negative values are parenthesized to ensure macro safety. The parens
+ *  may be able to be removed if it can be proven that no such issues are
+ *  possible.
+ */
+
 /* Maximum number of bits for smallest object that is not a bit-field (byte). */
 #define CHAR_BIT 8
 
