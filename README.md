@@ -187,7 +187,30 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
   defines CHAR_MIN to be 0 and CHAR_MAX to be the same as UCHAR_MAX.
 
-TODO: Sections 3.1.2.1+ of the standard.
+3.1.2.1 [Scopes of identifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.1)
+
+* The backend needs to obtain scoping information from LCC, so that otherwise
+  identical identifiers with different scope in LCC's output do not conflict
+  with one another.
+
+* "{ extern int f(); }" has block scope, even though it refers to an external
+  function. TODO: Determine LCC's behavior in this case.
+
+* Prototypes in library headers may only use identifiers in the reserved
+  namespace (__x or _X). Otherwise, the user could place a #define macro before
+  the header as follows:
+  ```C
+    #define status []
+    void exit(int status);
+  ```
+
+  This becomes:
+
+  ```C
+    void exit(int []);
+  ```
+
+TODO: Sections 3.1.2.2+ of the standard.
 
 ### Implementation-Defined Behavior
 
