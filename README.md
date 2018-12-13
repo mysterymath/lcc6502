@@ -223,7 +223,17 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     function. Otherwise, any goto statements that enter a block need to
     allocate all the space required for that block.
 
-TODO: Section 3.1.2.6+
+3.1.3.4 [Character constants](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.3.4)
+
+* The preprocessor needs to be modified to understand the target character set,
+  since character literals can be used in constant expressions for conditional
+  compilation.
+* This means that the mechanism for controlling character set selection needs to
+  be visible to the preprocessor. Probably some kind of #pragma.
+* TODO: Go through the relevant LCC source, see if this is possible.
+* TODO: Determine what LCC does with wide character literals.
+
+TODO: Section 3.1.4+
 
 ### Implementation-Defined Behavior
 
@@ -290,11 +300,27 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   characters with the high bit set, and all values of characters must be
   positive.
 
+3.1.3.4 [Character constants](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.3.4)
+
+* The preprocessor and compiler both map character literals to the values that
+  they have on the target machine.
+
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
 
 * The system function must always return zero, since no command processor is
   available.
+
+* The compiler evaluates a multi-character character constant by taking the
+  last and second-to-last characters to be the low- and high-order bytes
+  (respectively) of a signed int. If there are more than two characters in the
+  constant the compiler issues a warning, and the excess leading characters are
+  ignored.
+  * For example, 'ab' evaluates to (int)('a'*256 + 'b'). So does 'cab', but
+    with a warning.
+
+* Wide character constants are treated identically to integer character constants,
+  except their value is of type wchar_t.
 
 ## For More Details
 
