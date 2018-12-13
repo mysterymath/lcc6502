@@ -329,6 +329,9 @@ function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
 * Wide character constants are treated identically to integer character constants,
   except their value is of type wchar_t.
 
+* No additional character escape sequences are defined by the implementation
+  beyond those required by the standard.
+
 ## For More Details
 
 ### Prototype ([prototype/](prototype/))
