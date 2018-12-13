@@ -240,13 +240,20 @@ TODO: Section 3.1.4+
 1.6 [DEFINITIONS OF TERMS](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
 
 * A byte contains 8 bits.
-* TODO: The number, order, and encoding of each byte in an object, except where
-  expliclitly defined by the C spec.
+* These platforms have no alignment requirements. No padding is used.
+* An short consists of 2 little-endian bytes.
+* An int consists of 2 little-endian bytes.
+* A long consists of 4 little-endian bytes.
+* A float consists of 4 bytes encoded using the IEEE 754 binary32 format.
+* A double consists of 8 bytes encoded using the IEEE 754 binary64 format.
+* TODO: When selecting a soft float lib, verify that it uses the above formats.
+* Structures elements are laid out sequentially in memory in declaration order,
+  without padding.
 
 2.1.2.1 [Freestanding
 environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
-* TODO: Define the library routines provided by this implementation.
+* TODO: Define any additional library routines provided by this implementation.
 * All external identifiers that begin with an underscore are reserved. All other
   identifiers that begin with an underscore and either an upper-case letter or
   another underscore are reserved. If the program defines an external identifier
