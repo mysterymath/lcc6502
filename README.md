@@ -210,7 +210,20 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     void exit(int []);
   ```
 
-TODO: Sections 3.1.2.2+ of the standard.
+3.1.2.4 [Storage duration of objects](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.4)
+
+* Automatic objects that can be proven never to be present in two
+  simultaneously active invocations can be treated much like static objects.
+  * If the objects were initialized, the initialization still needs to happen
+    each time, unlike statics, which are initialized before program startup.
+  * Values of pointers to auto objects in terminated blocks are indeterminate.
+    This means that objects in blocks that cannot be simultaneously active can
+    have the same pointer value.
+  * It's simplest to only bump the stack pointer once at the beginning of a
+    function. Otherwise, any goto statements that enter a block need to
+    allocate all the space required for that block.
+
+TODO: Section 3.1.2.6+
 
 ### Implementation-Defined Behavior
 
@@ -270,6 +283,12 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Number of significant characters in an external identifier: limited only by
   available memory.
 * External identifiers are case-sensitive.
+
+3.1.2.5 [Types](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.5)
+
+* Chars are defined to be unsigned, since target platform has useful
+  characters with the high bit set, and all values of characters must be
+  positive.
 
 4.10.4.5 [The system
 function](http://port70.net/~nsz/c/c89/c89-draft.html#4.10.4.5)
