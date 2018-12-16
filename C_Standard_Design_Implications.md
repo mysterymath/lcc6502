@@ -197,4 +197,4 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * TODO: Go through the relevant LCC source, see if this is possible.
 * TODO: Determine what LCC does with wide character literals.
 
-TODO: Section 3.1.4+
+TODO: Section 3.2+
