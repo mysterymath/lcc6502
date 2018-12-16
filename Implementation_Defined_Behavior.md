@@ -2,8 +2,8 @@
 
 The C89 standard requires a conforming implementation to document a number of
 "implementation-defined" behaviors and characteristics. All such behaviors
-and characteristics are defined here. Each is organized under the first
-section of the standard that requires it to be implementation-defined.
+and characteristics are defined here. This document is organized in
+parallel to the standard, section for section.
 
 1.6 [DEFINITIONS OF TERMS](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
 
