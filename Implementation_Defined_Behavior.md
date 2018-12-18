@@ -106,3 +106,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   behavior is undefined.
 * The compiler will never place an object at location zero, so it is still true
   that a null pointer will never compare equal to any object.
+
+3.3.2.3 [Structure and union members](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.2.3)
+
+* If a member of a union object is read after a value has been stored in a
+  different member of the object, the bytes of the value are reinterpreted as
+  the new type. If they do not represent a value in the new type, the behavior
+  is undefined.
