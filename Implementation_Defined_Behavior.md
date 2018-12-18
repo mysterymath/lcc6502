@@ -99,7 +99,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 3.2.2.3 [Pointers](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.2.3)
 
-* When any integral value is converted to a pointer, the behavior is as-if an
-  object or function existed at that memory location. This is true even for 0.
-  However, the compiler will never place an object at location zero, so it is
-  still true that a null pointer will never compare equal to any object.
+* When any integral value is converted to a pointer, the behavior is as if an
+  object or function existed at that memory location, with type compatible
+  with the pointer (if not void). This is true even for 0.
+* If the compiler has placed an object or function at that memory location, the
+  behavior is undefined.
+* The compiler will never place an object at location zero, so it is still true
+  that a null pointer will never compare equal to any object.

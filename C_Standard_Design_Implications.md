@@ -208,8 +208,21 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 | Float         | X    | X            | X    | X             | Float | Double |
 | Double        | X    | X            | X    | X             | X     | Double |
 
+3.3.2.2 [Function Calls](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.2.2)
+
+* If a function without a prototype is called, integral promotions occur on
+  each argument and floats are converted to doubles. This also occurs on each
+  argument in a `...` section of a prototype. For this platform, this means
+  that the standard requires that printf() exclusively take 16-bit ints and
+  64-bit doubles.
+* At each call site, the number of arguments to a variable argument call is
+  statically known.
+* Prototyped functions with no "narrow" types and no variable argument list
+  must be callable in translation units without the prototype.
+* Varargs functions may only be called through a prototype.
+
 ## TODO
 
-* [ ] Section 3.3+
+* [ ] Section 3.3.2.3+
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
