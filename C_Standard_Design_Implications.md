@@ -208,4 +208,8 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 | Float         | X    | X            | X    | X             | Float | Double |
 | Double        | X    | X            | X    | X             | X     | Double |
 
-TODO: Section 3.2.2+
+## TODO
+
+* [ ] Section 3.3+
+* [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
+      are defined.
