@@ -197,4 +197,15 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * TODO: Go through the relevant LCC source, see if this is possible.
 * TODO: Determine what LCC does with wide character literals.
 
-TODO: Section 3.2.1.3+
+3.2.1.5 [Usual arithmetic conversions](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.5)
+
+|               | Int  | Unsigned Int | Long | Unsigned Long | Float | Double |
+| ------------- | ---- | ------------ | ---- | ------------- | ----- | ------ |
+| Int           | Int  | Unsigned Int | Long | Unsigned Long | Float | Double |
+| Unsigned Int  | X    | Unsigned Int | Long | Unsigned Long | Float | Double |
+| Long          | X    | X            | Long | Unsigned Long | Float | Double |
+| Unsigned Long | X    | X            | X    | Unsigned Long | Float | Double |
+| Float         | X    | X            | X    | X             | Float | Double |
+| Double        | X    | X            | X    | X             | X     | Double |
+
+TODO: Section 3.2.2+

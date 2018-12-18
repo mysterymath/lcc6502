@@ -86,3 +86,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   its value, the bytes of the source integer are reinterpreted as those of the
   target type. If the target type is smaller, only the lower-order byte(s) are
   considered.
+
+3.2.1.3 [Floating and integral](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.3)
+
+* TODO: Determine whether converting from int to float rounds up or down (or
+  both in some complex way).
+
+3.2.1.4 [Floating types](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.4)
+
+* TODO: Determine whether converting from floating type to smaller floating
+  type rounds up or down (or both in some complex way).
