@@ -79,3 +79,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * The preprocessor and compiler both map character literals to the values that
   they have on the target machine.
+
+3.2.1.2 [Signed and unsigned integers](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.2)
+
+* When an integer is converted to a signed integral type that cannot represent
+  its value, the bytes of the source integer are reinterpreted as those of the
+  target type. If the target type is smaller, only the lower-order byte(s) are
+  considered.
