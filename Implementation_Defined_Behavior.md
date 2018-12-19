@@ -97,15 +97,11 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * TODO: Determine whether converting from floating type to smaller floating
   type rounds up or down (or both in some complex way).
 
-3.2.2.3 [Pointers](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.2.3)
+3.3.2.3 [Expressions](https://port70.net/~nsz/c/c89/c89-draft.html#3.3)
 
-* When any integral value is converted to a pointer, the behavior is as if an
-  object or function existed at that memory location, with type compatible
-  with the pointer (if not void). This is true even for 0.
-* If the compiler has placed an object or function at that memory location, the
-  behavior is undefined.
-* The compiler will never place an object at location zero, so it is still true
-  that a null pointer will never compare equal to any object.
+* Bitwise operators on signed types produce the result of first converting to
+  the corresponding unsigned type, then applying the operator, then converting
+  back to the corresponding signed type.
 
 3.3.2.3 [Structure and union members](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.2.3)
 
@@ -113,3 +109,26 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   different member of the object, the bytes of the value are reinterpreted as
   the new type. If they do not represent a value in the new type, the behavior
   is undefined.
+
+3.3.3.4 [The sizeof operator](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.3.4)
+
+* See section 1.6 for the layout of objects. The behavior of sizeof trivially
+  follows.
+
+3.3.4 [Cast operators](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.4)
+
+* Pointers may be converted to int, unsigned int, long, and unsigned long. The
+  value is the address of the referenced object, expressed as an unsigned int,
+  then converted to the target type.
+* Any integral value may be converted to a pointer. The value is first
+  converted to an unsigned int. Then, the pointer refers to a virtual object
+  at the memory location with corresponding address. This is true even for 0.
+* Virtual objects behave like objects with static storage duration, except:
+  * Virtual objects have undefined value at program startup.
+  * If any non-virtual object's storage overlaps with a virtual object,
+    accessing the virtual object is undefined behavior.
+* The compiler will never place an object at location zero, so it is still true
+  that a null pointer will never compare equal to any object. However, it may
+  equal a virtual object.
+* The above implies that dereferencing a null pointer is *not* undefined
+  behavior on this platform.
