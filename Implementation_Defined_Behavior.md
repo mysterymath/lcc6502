@@ -132,6 +132,10 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   equal a virtual object.
 * The above implies that dereferencing a null pointer is *not* undefined
   behavior on this platform.
+* If an integral value is converted to a function pointer, the pointer type
+  must have void return type and void arguments. The integral value is
+  converted to an unsigned int to determine an address. Calling the pointed-to
+  function is equivalent to issuing a JSR instruction to that address.
 
 3.3.5 [Multiplicative operators](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.5)
 

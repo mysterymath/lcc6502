@@ -224,5 +224,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 ## TODO
 
 * [ ] Section 3.3.6+
+* [ ] Determine precisely when volatiles are accessed. Use GCC as [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
+* [ ] Scan through Embedded C Extensions [ISO/IEC TR 18037](http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1169.pdf)
