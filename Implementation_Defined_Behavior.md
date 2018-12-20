@@ -144,3 +144,15 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   "round towards zero" behavior mimics FORTRAN and the later C99 standard.
 * The result of the ```%``` operator is such that ```(a/b)*b + a%b``` equals
    ```a``` whenever ```a/b``` is representable.
+
+3.3.6 [Additive operators](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.6)
+
+* The size of the result of subtracting two pointers is 2 bytes.
+
+3.3.7 [Bitwise shift operators](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.7)
+
+* Right shifts of signed values are arithmetic, not logical. That is, the sign bit
+  is copied to fill in the empty space left by shifting the other bits right. Though
+  this is not required by the C89 standard, and though it is slower on the 6502 than
+  logical shifts, breaking convention with nearly every other C implementation would
+  burden portability of existing C code.
