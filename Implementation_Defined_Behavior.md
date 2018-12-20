@@ -132,3 +132,11 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   equal a virtual object.
 * The above implies that dereferencing a null pointer is *not* undefined
   behavior on this platform.
+
+3.3.5 [Multiplicative operators](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.5)
+
+* When exactly one of the operators to the ```/``` operator is negative, the
+  result is the smallest integer greater than the algebraic quotient. This
+  "round towards zero" behavior mimics FORTRAN and the later C99 standard.
+* The result of the ```%``` operator is such that ```(a/b)*b + a%b``` equals
+   ```a``` whenever ```a/b``` is representable.
