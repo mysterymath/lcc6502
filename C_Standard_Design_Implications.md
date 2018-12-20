@@ -81,13 +81,18 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * For example:
     * `_ATASCII("\0")` would produce `🖤` in ATASCII.
     * `_ATASCII("Hello")` would produce `Hello` in ATASCII, not null-terminated.
-    * `_ANTIC("Hello")` would produce `Hello` in ANTIC display codes, not null-terminated.
-    * `_PETSCII_U("HELLO")` would produce `HELLO` in unshifted PETSCII, not null-terminated.
-    * `_PETSCII_S("Hello")` would produce `Hello` in shifted PETSCII, not null-terminated.
-    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is 6.
-    * Given `const char kHello[] = _ATASCII("Hello");`, the value of `sizeof(kHello)` is 5.
-    * `_PETSCII_U("Hello")` would produce a compile error, since lowercase letters
-      are unmapped in unshifed PETSCII.
+    * `_ANTIC("Hello")` would produce `Hello` in ANTIC display codes, not
+      null-terminated.
+    * `_PETSCII_U("HELLO")` would produce `HELLO` in unshifted PETSCII, not
+      null-terminated.
+    * `_PETSCII_S("Hello")` would produce `Hello` in shifted PETSCII, not
+      null-terminated.
+    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is
+      6.
+    * Given `const char kHello[] = _ATASCII("Hello");`, the value of
+      `sizeof(kHello)` is 5.
+    * `_PETSCII_U("Hello")` would produce a compile error, since lowercase
+      letters are unmapped in unshifed PETSCII.
   * The implementation should provide a way to define such macros and their
     corresponding mappings from ASCII to execution character sets.
   * No mechanism is provided to change the default interpretation of character
@@ -224,7 +229,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 ## TODO
 
 * [ ] Section 3.3.8+
-* [ ] Determine precisely when volatiles are accessed. Use GCC as [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
+* [ ] Determine precisely when volatiles are accessed. Use GCC as
+      [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
-* [ ] Scan through Embedded C Extensions [ISO/IEC TR 18037](http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1169.pdf)
+* [ ] Scan through Embedded C Extensions
+      [ISO/IEC TR 18037](http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1169.pdf)

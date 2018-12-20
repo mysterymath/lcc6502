@@ -44,7 +44,8 @@ compliance, and excellent documentation. It's backend interface
 available.  The relevant parts of the compiler are in the [lcc/](lcc/)
 subdirectory.
 
-[Design implications](C_Standard_Design_Implications.md) are being collected from the C standard, one section at a time.
+[Design implications](C_Standard_Design_Implications.md) are being collected
+from the C standard, one section at a time.
 
 ## For More Details
 
