@@ -71,34 +71,6 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   at zero. This means it cannot simply support null-terminated strings.
 * Neither of the character ROM encodings for ATASCII and PETSCII have a null
   character at zero.
-* String literals need not be strings (they can contain `'\0'` anywhere within),
-  but the standard requires their value ends in a null character.
-* The implementation should provide C-style null-terminated string literals,
-  since there's no other way to achieve C89 compatibility.
-* The implementation should also provide macros that wrap string literals. These
-  allow producing non-null-terminated strings, which can include null-valued
-  characters in strings, which are meaningful in some target character sets.
-  * For example:
-    * `_ATASCII("\0")` would produce `🖤` in ATASCII.
-    * `_ATASCII("Hello")` would produce `Hello` in ATASCII, not null-terminated.
-    * `_ANTIC("Hello")` would produce `Hello` in ANTIC display codes, not
-      null-terminated.
-    * `_PETSCII_U("HELLO")` would produce `HELLO` in unshifted PETSCII, not
-      null-terminated.
-    * `_PETSCII_S("Hello")` would produce `Hello` in shifted PETSCII, not
-      null-terminated.
-    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is
-      6.
-    * Given `const char kHello[] = _ATASCII("Hello");`, the value of
-      `sizeof(kHello)` is 5.
-    * `_PETSCII_U("Hello")` would produce a compile error, since lowercase
-      letters are unmapped in unshifed PETSCII.
-  * The implementation should provide a way to define such macros and their
-    corresponding mappings from ASCII to execution character sets.
-  * No mechanism is provided to change the default interpretation of character
-    literals, since such literals would no longer work with routines designed
-    for C strings. This behavior is sufficiently dangerous to require explicit
-    denotation in the source text.
 
 2.2.2 [Character display semantics](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.2)
 
@@ -201,6 +173,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   be visible to the preprocessor. Probably some kind of #pragma.
 * TODO: Go through the relevant LCC source, see if this is possible.
 * TODO: Determine what LCC does with wide character literals.
+* String literals need not be strings (they can contain `'\0'` anywhere within),
+  but the standard requires their value ends in a null character.
+* The implementation should provide C-style null-terminated string literals,
+  since there's no other way to achieve C89 compatibility.
+* The implementation should provide a way to define such macros and their
+  corresponding mappings from ASCII to execution character sets.
+* No mechanism is provided to change the default interpretation of character
+  literals, since such literals would no longer work with routines designed
+  for C strings. This behavior is sufficiently dangerous to require explicit
+  denotation in the source text.
 
 3.2.1.5 [Usual arithmetic conversions](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.5)
 

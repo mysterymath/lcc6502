@@ -5,6 +5,10 @@ freestanding implementation set forth in the latest [freely-availible
 draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
 "Programming Language C."
 
+Accordingly, all
+[implementation-defined behaviors](Implementation_Defined_Behavior.md) must be
+documented.
+
 ## Rationale
 
 * C standard compatibility allows running as many libraries as possible without
@@ -37,3 +41,4 @@ draft](http://port70.net/~nsz/c/c89/c89-draft.html) of ANSI X3.159-1989
   * Note: Though this extension applies to the C99 standard, it should be possible
     to backport it to the C89 standard.
   * TODO: Determine whether the above is true.
+  

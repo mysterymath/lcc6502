@@ -35,31 +35,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
 
 * The source character set is ASCII for all targets.
-* For the Atari 800 the execution character set is ATASCII.
-  * ASCII '{' is mapped to inverse '['.
-  * ASCII '}' is mapped to inverse ']'.
-  * ASCII '~' is mapped to inverse '-'.
-  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
-  * ASCII form feed is mapped to "Clear Screen".
-  * ASCII alert is mapped to "Buzzer".
-  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
-  * All other members of the basic character set take their natural mappings.
-  * An alternative mapping is provided for the internal ROM character mapping.
-* For the Commodore 64 the execution character set is PETSCII.
-  * ASCII '^' is mapped to up arrow.
-  * ASCII '\' is mapped to the British pound sign.
-  * ASCII '|' is mapped to $DD.
-  * ASCII '~' is mapped to $B2.
-  * ASCII '{' is mapped to $EB.
-  * ASCII '}' is mapped to $F3.
-  * ASCII tab is mapped (somewhat arbitrarily) to "Cursor Right".
-  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
-  * ASCII form feed is mapped to "Clear Screen".
-  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
-  * ASCII alert is mapped (arbitrarily) to $01 (unused by PETSCII).
-  * An alternative mapping is provided for the internal ROM character mapping.
-* TODO: Define the extension mechanism for custom character mappings and
-  non-null-terminated string literals.
+* For the Atari 800 the execution character set is ATASCII, minus the heart
+  character present at zero.
+* For the Commodore 64 the execution character set is shifted PETSCII.
 
 3.1.2 [Identifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2)
 
@@ -80,6 +58,57 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * The preprocessor and compiler both map character literals to the values that
   they have on the target machine.
 
+* For the Atari 800 characters are mapped naturally, except the following:
+  * ASCII '{' is mapped to inverse '['.
+  * ASCII '}' is mapped to inverse ']'.
+  * ASCII '~' is mapped to inverse '-'.
+  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
+  * ASCII form feed is mapped to "Clear Screen".
+  * ASCII alert is mapped to "Buzzer".
+  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
+* For the Commodore 64 characters are mapped naturally, except the following:
+  * ASCII '^' is mapped to up arrow.
+  * ASCII '\' is mapped to the British pound sign.
+  * ASCII '|' is mapped to $7D.
+  * ASCII '~' is mapped to $AE.
+  * ASCII '{' is mapped to $AB.
+  * ASCII '}' is mapped to $B3.
+  * ASCII tab is mapped (somewhat arbitrarily) to "Cursor Right".
+  * ASCII vertical tab is mapped (somewhat arbitrarily) to "Cursor Down".
+  * ASCII form feed is mapped to "Clear Screen".
+  * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
+  * ASCII alert is mapped (arbitrarily) to $01 (unused by PETSCII).
+* Some desirable execution character sets do not meet the minimum requirement
+  given by the standard. ATASCII, ANTIC ROM, and C64 ROM character sets have a
+  meaningful character (a heart) at zero, which is not representable using
+  null-terminated strings. Unshifted PETSCII does not have any lowercase
+  letters. To support these character sets more fully, the C language is
+  extended using a set of "magic" macros.
+  * Each supported character set gets a macro that wraps string or character
+    literals.
+  * The macros for character sets (e.g., ATASCII, ANTIC ROM, and C64 ROM) with
+    meaningful characters at zero do not null-terminate the resulting strings.
+  * Any source characters that are not naturally present in the target
+    character set produce a compile-time error, instead of being mapped via the
+    exceptions given above.
+  * For example:
+    * `_ATASCII("\0")` would produce `🖤` in ATASCII, not null-terminated.
+    * `_ATASCII("Hello")` would produce `Hello` in ATASCII, not null-terminated.
+    * `_ANTIC("Hello")` would produce `Hello` in ANTIC display codes, not
+      null-terminated.
+    * `_PETSCII_U("HELLO")` would produce `HELLO` in unshifted PETSCII, not
+      null-terminated.
+    * `_PETSCII_S("Hello")` would produce `Hello` in shifted PETSCII, not
+      null-terminated.
+    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is
+      6.
+    * Given `const char kHello[] = _ATASCII("Hello");`, the value of
+      `sizeof(kHello)` is 5.
+    * `_PETSCII_U("Hello")` would produce a compile error, since lowercase
+      letters cannot be naturally mapped in unshifed PETSCII.
+  * TODO: Define an extension mechanism that allows such macros to be defined
+    in C.
+ 
 3.2.1.2 [Signed and unsigned integers](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.2)
 
 * When an integer is converted to a signed integral type that cannot represent
