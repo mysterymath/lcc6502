@@ -148,7 +148,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * Pointers may be converted to int, unsigned int, long, and unsigned long. The
   value is the address of the referenced object, expressed as an unsigned int,
-  then converted to the target type.
+  then converted to the target type. Null pointers produce zero values.
 * Any integral value may be converted to a pointer. The value is first
   converted to an unsigned int. Then, the pointer refers to a virtual object
   at the memory location with corresponding address. This is true even for 0.
