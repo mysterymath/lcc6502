@@ -185,3 +185,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   this is not required by the C89 standard, and though it is slower on the 6502 than
   logical shifts, breaking convention with nearly every other C implementation would
   burden portability of existing C code.
+
+3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
+
+* The high-order bit of a "plain" `int` bitfield is treated as a sign bit.
+* Since the 6502 has no alignment requirements, space is allocated one byte at
+  a time.
+* If insufficient space remains in a byte for a bit field, the bit field is
+  allocated to the beginning of the next byte.
+* Following the convention of little-endian machines like the 6502, bit fields
+  are allocated from low-order bits to high-order bits within a byte.

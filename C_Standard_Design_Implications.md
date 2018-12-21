@@ -208,6 +208,15 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   must be callable in translation units without the prototype.
 * Varargs functions may only be called through a prototype.
 
+3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
+
+* TODO: What does LCC produce for bitfields? Compare with the
+  ideal implementation-defined behavior given for this section. Particularly:
+  * Does its plain int bitfield default to signed or unsigned?
+  * Does it insert padding?
+  * Does it allocate from least significant bit to most significant, or vice versa?
+  * Do zero width bitfields move to the next byte?
+
 ## TODO
 
 * [ ] Section 3.3.15+
