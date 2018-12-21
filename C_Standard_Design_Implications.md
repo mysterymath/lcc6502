@@ -210,10 +210,14 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
 
+* From the LCC Manual:
+  * Plain int bitfields are signed.
 * TODO: What does LCC produce for bitfields? Compare with the
   ideal implementation-defined behavior given for this section. Particularly:
-  * Does its plain int bitfield default to signed or unsigned?
+  * What happens if other types (short, char, long) are used for the bitfields?
+  * Can a bitfield struct fit in one byte?
   * Does it insert padding?
+  * Can a bitfield span multiple units?
   * Does it allocate from least significant bit to most significant, or vice versa?
   * Do zero width bitfields move to the next byte?
 
