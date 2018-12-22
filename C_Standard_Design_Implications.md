@@ -157,6 +157,8 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   simultaneously active invocations can be treated much like static objects.
   * If the objects were initialized, the initialization still needs to happen
     each time, unlike statics, which are initialized before program startup.
+  * If the value of such an object is used, it was set in some currently-active
+    procedure.
   * Values of pointers to auto objects in terminated blocks are indeterminate.
     This means that objects in blocks that cannot be simultaneously active can
     have the same pointer value.
@@ -221,9 +223,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * Does it allocate from least significant bit to most significant, or vice versa?
   * Do zero width bitfields move to the next byte?
 
+3.4 [CONSTANT EXPRESSIONS](https://port70.net/~nsz/c/c89/c89-draft.html#3.4)
+
+* Address constant expressions may be used in static initializers, and they
+  refer to part or all of other static objects or functions.
+* Constant expression evaluation is free to use the host arithmetic, so long as
+  it is more precise than the target (not hard.)
+
 ## TODO
 
-* [ ] Section 3.4+
+* [ ] Section 3.5+
 * [ ] Determine precisely when volatiles are accessed. Use GCC as
       [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
