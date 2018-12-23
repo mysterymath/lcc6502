@@ -200,3 +200,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   allocated to the beginning of the next byte.
 * Following the convention of little-endian machines like the 6502, bit fields
   are allocated from low-order bits to high-order bits within a byte.
+
+3.5.2.2 [Enumeration specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.2)
+
+* An enumerated type is compatible with the first integer type in the following
+  list that can represent every value in the enumeration:
+  unsigned char, char, unsigned short, short, unsigned int, int
