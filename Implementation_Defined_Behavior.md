@@ -206,3 +206,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * An enumerated type is compatible with the first integer type in the following
   list that can represent every value in the enumeration:
   unsigned char, char, unsigned short, short, unsigned int, int
+
+3.5.3 [Type qualifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.3)
+
+* Any evaluation involving the value of a volatile object constitutes an access.
+* Reads/writes to volatile objects are only guaranteed to be atomic if one
+  byte is accessed.

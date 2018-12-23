@@ -230,9 +230,19 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Constant expression evaluation is free to use the host arithmetic, so long as
   it is more precise than the target (not hard.)
 
+3.5.3 [Type qualifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.3)
+
+* Non-`volatile` `const` objects with statically-known values may be placed in
+  ROM, and if their address is never used, they need not be allocated at all.
+  This is actually true of any objects that has a statically-known value that
+  can be proven never to be modified (const just ensures this).
+* `volatile const` objects should not be placed in ROM and must be allocated,
+  since the intent is that ASM code or hardware unknown to the C compiler should
+  be able to modify the value.
+
 ## TODO
 
-* [ ] Section 3.5.2.3+
+* [ ] Section 3.5.4+
 * [ ] Determine precisely when volatiles are accessed. Use GCC as
       [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
