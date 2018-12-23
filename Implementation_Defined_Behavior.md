@@ -186,6 +186,11 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   logical shifts, breaking convention with nearly every other C implementation would
   burden portability of existing C code.
 
+3.5.1 [Storage-class specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.1)
+
+* The `register` storage class has no effect on the output of the compiler
+  beyond that mandated by the standard.
+
 3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
 
 * The high-order bit of a "plain" `int` bitfield is treated as a sign bit.
