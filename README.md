@@ -30,8 +30,9 @@ Updated December 13, 2018.
   equivalent assembly. Most high-level optimzations are left to the C author.
   * Whenever possible, the compiler must perform 8-bit arithmetic operations
     directly, instead of integral promotions.
-* Unoptimized mode. Debuggers exist for the target platform, so this should
-  allow fast compilation and easy debugging.
+* Debug mode. Debuggers exist for the target platform, so this should allow easy
+  debugging. Compiler speed is not an issue, so all optimizations that do not
+  interfere with debugging should still occur.
 
 ## Project Design
 
