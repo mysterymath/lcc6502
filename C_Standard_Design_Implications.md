@@ -240,11 +240,19 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   since the intent is that ASM code or hardware unknown to the C compiler should
   be able to modify the value.
 
+3.5.7 [Initialization](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.7)
+
+* Aggregate types (arrays, structs, and unions) may only be initialized with
+  constant expressions. This means that the byte sequence they are initialized
+  to can always be determined at compile time.
+* Unnamed struct or union fields need not be initialized.
+* Static storage duration objects are intialized to zero if no other initializer
+  is given.
+* TODO: Determine how LCC performs initialization of structs.
+
 ## TODO
 
-* [ ] Section 3.5.7+
-* [ ] Determine precisely when volatiles are accessed. Use GCC as
-      [reference](https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles).
+* [ ] Section 3.6+
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
 * [ ] Scan through Embedded C Extensions
