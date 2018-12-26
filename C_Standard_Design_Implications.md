@@ -250,9 +250,14 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   is given.
 * TODO: Determine how LCC performs initialization of structs.
 
+3.6.6.4 [The return statement](https://port70.net/~nsz/c/c89/c89-draft.html#3.6.6.4)
+
+* Return statements with no value are legal in functions with return values, so long
+  as the return value is never used by the caller.
+
 ## TODO
 
-* [ ] Section 3.6+
+* [ ] Section 3.7+
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
 * [ ] Scan through Embedded C Extensions
