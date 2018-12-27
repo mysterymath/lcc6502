@@ -257,7 +257,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 ## TODO
 
-* [ ] Section 3.9+
+* [ ] Section 4.1+
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
 * [ ] Scan through Embedded C Extensions
