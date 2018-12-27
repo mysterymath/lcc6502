@@ -212,3 +212,19 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Any evaluation involving the value of a volatile object constitutes an access.
 * Reads/writes to volatile objects are only guaranteed to be atomic if one
   byte is accessed.
+
+3.8.2 [Source file inclusion](https://port70.net/~nsz/c/c89/c89-draft.html#3.8.2)
+
+* Include directives using angle brackets are resolved by searching for the
+  given path relative to the `include` subdirectory of the directory to which
+  the compiler is installed.
+
+* Include directives using double quotes are resolved by searching relative to
+  the directory containing the source file containing the directive. As given
+  in the standard, if this fails, the search continues as if the directive had
+  been written in angle brackets.
+
+* The -I option of the compiler allows the specification of additional
+  directories to search for includes. Such directories are searched before the
+  compiler's `include` directory, and if more than one is present, they are
+  searched from left to right.
