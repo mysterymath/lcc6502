@@ -78,36 +78,6 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * ASCII form feed is mapped to "Clear Screen".
   * ASCII carriage return is mapped (somewhat arbitrarily) to "Cursor Left".
   * ASCII alert is mapped (arbitrarily) to $01 (unused by PETSCII).
-* Some desirable execution character sets do not meet the minimum requirement
-  given by the standard. ATASCII, ANTIC ROM, and C64 ROM character sets have a
-  meaningful character (a heart) at zero, which is not representable using
-  null-terminated strings. Unshifted PETSCII does not have any lowercase
-  letters. To support these character sets more fully, the C language is
-  extended using a set of "magic" macros.
-  * Each supported character set gets a macro that wraps string or character
-    literals.
-  * The macros for character sets (e.g., ATASCII, ANTIC ROM, and C64 ROM) with
-    meaningful characters at zero do not null-terminate the resulting strings.
-  * Any source characters that are not naturally present in the target
-    character set produce a compile-time error, instead of being mapped via the
-    exceptions given above.
-  * For example:
-    * `_ATASCII("\0")` would produce `🖤` in ATASCII, not null-terminated.
-    * `_ATASCII("Hello")` would produce `Hello` in ATASCII, not null-terminated.
-    * `_ANTIC("Hello")` would produce `Hello` in ANTIC display codes, not
-      null-terminated.
-    * `_PETSCII_U("HELLO")` would produce `HELLO` in unshifted PETSCII, not
-      null-terminated.
-    * `_PETSCII_S("Hello")` would produce `Hello` in shifted PETSCII, not
-      null-terminated.
-    * Given `const char kHello[] = "Hello";`, the value of `sizeof(kHello)` is
-      6.
-    * Given `const char kHello[] = _ATASCII("Hello");`, the value of
-      `sizeof(kHello)` is 5.
-    * `_PETSCII_U("Hello")` would produce a compile error, since lowercase
-      letters cannot be naturally mapped in unshifed PETSCII.
-  * TODO: Define an extension mechanism that allows such macros to be defined
-    in C.
  
 3.2.1.2 [Signed and unsigned integers](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.2)
 
