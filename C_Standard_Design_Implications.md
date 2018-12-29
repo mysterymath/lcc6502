@@ -291,7 +291,21 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Setjmp and longjmp can be slow, but they can't be so slow that they save and
   restore every single usable zero page address each time they are called.
 
-* TODO: Determine how longjmp/setjmp interact with signal handling and interrupts.
+* Longjmp needs to all return addresses (and anything else) off of the stack until
+  the stack is restored to its state at the time of setjmp. Nothing need actually
+  be changed, but the stack register must change. This is true for any soft stacks
+  used as well; these soft stack pointers need to be reset.
+
+* Longjmp provides an alternative way that an invocation of a function can be
+  terminated. All invocations on the logical stack between the caller of setjmp
+  and the call of longjmp are terminated. If an interrupt handler is terminated
+  in this way, the computation that was occurring no longer matters; it can be
+  considered abandoned. Thus, the flags that were pushed onto the stack by the
+  interrupt handler no longer matter.
+
+* Setjmp can only occur "up" the stack, never "down". Thus, the only way to
+  longjmp into an interrupt handler is from inside a handler. This does not
+  create any additional troubles.
 
 ## TODO
 
