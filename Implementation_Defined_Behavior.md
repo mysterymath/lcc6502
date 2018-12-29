@@ -221,5 +221,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * Any resources used by the function or any of its descendants must be saved
     on entry and restored on exit, since the interrupted function cannot know
     that it needs to save them.
+  * Interrupts are disabled by default within an interrupt handler. They can be
+    reenabled by clearing the interrupt disable flag.
 
 * TODO: Define the syntax of the interrupt annotation.
