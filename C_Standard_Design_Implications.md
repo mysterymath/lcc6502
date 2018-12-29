@@ -255,9 +255,47 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Return statements with no value are legal in functions with return values, so long
   as the return value is never used by the caller.
 
+4.6 [NON-LOCAL JUMPS](https://port70.net/~nsz/c/c89/c89-draft.html#4.6)
+
+* This implementation needs to define <setjmp.h>, since it may need significant
+  compiler support to implement.
+
+* Unlike other library functions, setjmp can be a only a macro. Trying to access
+  it as a function (taking its address, etc.) is undefined behavior.
+
+* The following forms are the only defined uses of setjmp:
+
+  ```if/while/do-while (setjmp(<...>)) ```
+
+  ```if/while/do-while (!setjmp(<...>)) ```
+
+  ```if/while/do-while (setjmp(<...>) ==/!= <int const>) ```
+
+  ```setjmp(<...>);```
+
+* Life goes on after setjmp is called; various changes can be made to automatic
+  variables in the setjmp-containing function. It's desirable that each variable
+  has the exact value it had when longjmp was called, but this is difficult to
+  achieve. If any of those automatic variables is in a register, then that
+  register may have been saved and reused by some intervening function. But
+  longjmp can't easily restore the saved value for that register, since it may
+  be in an even deeper function. Most setjmp/longjmp implementations just save
+  the values when *setjmp* was called, and restore those. This restores the
+  value to that at the time *longjmp* was called, so long as they haven't
+  changed since setjmp was called. The standard specifically allows this, so
+  long as the automatic variables are not marked `volatile`. Volatile and static
+  objects must have their values at the time of the longjmp, even if they have
+  changed since the setjmp; with this approach, it usually means they cannot be
+  stored in a register.
+
+* Setjmp and longjmp can be slow, but they can't be so slow that they save and
+  restore every single usable zero page address each time they are called.
+
+* TODO: Determine how longjmp/setjmp interact with signal handling and interrupts.
+
 ## TODO
 
-* [ ] Section 4.1.6+
+* [ ] Section 4.7+
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
       are defined.
 * [ ] Scan through Embedded C Extensions

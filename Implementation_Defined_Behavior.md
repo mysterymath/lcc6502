@@ -22,6 +22,7 @@ parallel to the standard, section for section.
 environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * TODO: Define any additional library routines provided by this implementation.
+
 * All external identifiers that begin with an underscore are reserved. All other
   identifiers that begin with an underscore and either an upper-case letter or
   another underscore are reserved. If the program defines an external identifier
