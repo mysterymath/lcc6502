@@ -208,3 +208,18 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 3.8.6 [Pragma directive](https://port70.net/~nsz/c/c89/c89-draft.html#3.8.6)
 
 * TODO: Define the syntax and semantics of any `#pragma` directives.
+
+4.7 [SIGNAL HANDLING](https://port70.net/~nsz/c/c89/c89-draft.html#4.7)
+
+* Only one byte can be read or written in one instruction (atomically).
+  Equivalently, `sig_atomic_t` would be defined as `char`, even though no
+  `<signal.h>` implementation is provided.
+
+* A function annotation should be provided to mark a function as an interrupt
+  handler. This alters the generation of the function such that:
+  * `RTI` is issued for each return instead of `RTS`.
+  * Any resources used by the function or any of its descendants must be saved
+    on entry and restored on exit, since the interrupted function cannot know
+    that it needs to save them.
+
+* TODO: Define the syntax of the interrupt annotation.
