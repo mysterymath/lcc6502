@@ -35,12 +35,6 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.)
   universe is designed assuming this is the case. This implementation should
   support it as far as is possible without hindering performance.
 
-2.1.1.3 [Diagnostics](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.3.)
-
-* TODO: Determine whether there are any syntax rule or constraint violations
-  that can only be detected by the backend. The backend will need to produce
-  diagnostic messages for these, if any.
-
 2.1.2 [Execution
 environments](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.)
 
@@ -82,10 +76,8 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * No signals need be provided, but to allow implementing signals, intterupt
   handlers must be writable in pure C.
-  * A function should be markable as an interrupt handler. TODO: Define syntax
-    and semantics.
-  * It must be possible to enable and disable interrupts. TODO: Define syntax
-    and semantics.
+  * A function should be markable as an interrupt handler.
+  * It must be possible to enable and disable interrupts.
   * Any function can be interrupted at any time by an interrupt, which can call
     any C function.
     * Interrupt handlers must not overrite any locations (memory or register)
@@ -135,7 +127,6 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     extern int f();
   }
   ```
-  TODO: Determine LCC's behavior in this case.
 
 * Prototypes in library headers may only use identifiers in the reserved
   namespace (`__x` or `_X`). Otherwise, the user could place a #define macro before
