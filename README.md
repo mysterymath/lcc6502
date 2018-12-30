@@ -50,6 +50,11 @@ subdirectory.
 [Design implications](C_Standard_Design_Implications.md) are being collected
 from the C standard, one section at a time.
 
+### TODO
+
+* [ ] Define the mechanism for specifying the target architecture and output format.
+* [ ] Document the interfaces to allow adding new targets.
+
 ## For More Details
 
 ### [Implementation-Defined Behavior](Implementation_Defined_Behavior.md)

@@ -162,20 +162,19 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * The preprocessor needs to be modified to understand the target character set,
   since character literals can be used in constant expressions for conditional
   compilation.
-* This means that the mechanism for controlling character set selection needs to
-  be visible to the preprocessor. Probably some kind of #pragma.
-* TODO: Go through the relevant LCC source, see if this is possible.
+* This means that the mechanism for controlling execution character sets needs
+  to be visible to the preprocessor.
+* LCC's preprocessor just uses the source character set, but it's easy to change in
+  `cpp/eval.c` (line 502).
+* A warning about long character constants in `cpp/eval.c` should be removed.
 * TODO: Determine what LCC does with wide character literals.
 * String literals need not be strings (they can contain `'\0'` anywhere within),
   but the standard requires their value ends in a null character.
 * The implementation should provide C-style null-terminated string literals,
   since there's no other way to achieve C89 compatibility.
-* The implementation should provide a way to define such macros and their
-  corresponding mappings from ASCII to execution character sets.
 * No mechanism is provided to change the default interpretation of character
   literals, since such literals would no longer work with routines designed
-  for C strings. This behavior is sufficiently dangerous to require explicit
-  denotation in the source text.
+  for C strings.
 
 3.2.1.5 [Usual arithmetic conversions](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.5)
 
@@ -324,8 +323,8 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * [ ] Resolve all outstanding TODO's.
 * [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
-      are defined.
+      are defined. Reorder them according to the Appendix.
+* [ ] Group, reorder, and summarize the design implications by topic rather than
+       by standard section.
 * [ ] Scan through Embedded C Extensions
       [ISO/IEC TR 18037](http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1169.pdf)
-* [ ] Define the mechanism for specifying the target architecture and output format.
-* [ ] Document the interfaces to allow adding new targets.
