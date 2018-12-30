@@ -16,7 +16,7 @@ typedef struct {int i;} va_list;
  * Expands to an expression with the type and value of the next argument in the
  * call.
  */
-#define va_arg(VA_LIST, TYPE) (__builtin_va_arg(&VA_LIST, TYPE))
+#define va_arg(VA_LIST, TYPE) (*(TYPE*)__builtin_va_arg(&VA_LIST, sizeof(TYPE)))
 
 /* Facilitates normal return from a function that invoked va_start. */
 #define va_end(VA_LIST) 

@@ -321,9 +321,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * The argument list can be scanned more than once, so the arguments need to be
   preserved, even after a traversal completes. The arguments need not be kept if
   the compiler can prove that no more than one traversal occurs.
-* Each of these can be implemented in terms of magic compiler builtins. A
-  special form will be needed for `va_arg`, since it takes a type as argument
-  and produces the same type as its value.
+* Each of these can be implemented in terms of magic compiler builtins.
+  __builtin_va_arg returns a void* pointer that is cast to the corresponding
+  type and indirected through in a macro. This pointer is not real; it will be
+  completely removed by the code generator. The compiler will emit a warning if
+  a void pointer is cast to a function type; this should be suppressed in this
+  case, since the pointers don't actually "exist". This complexity saves
+  creating a special compiler form, which is even more complex.
 
 ## TODO
 
