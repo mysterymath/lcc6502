@@ -10,7 +10,7 @@ assembly.
 This project is gathering requirements, and nothing useful has been designed or
 implemented yet. Check back later for updates.
 
-Updated December 13, 2018.
+Updated December 30, 2018.
 
 ## Planned Features
 
@@ -27,9 +27,11 @@ Updated December 13, 2018.
   should be like that inside a POSIX environment.
 * Fast code. The output produced by the compiler should be within an order of
   magnitude as fast as that written by a human transliterating the C to
-  equivalent assembly. Most high-level optimzations are left to the C author.
+  equivalent assembly.
   * Whenever possible, the compiler must perform 8-bit arithmetic operations
     directly, instead of integral promotions.
+  * Loop optimizations and strength reductions must be performed, since the
+    target platform cannot multiply or divide in hardware.
 * Debug mode. Debuggers exist for the target platform, so this should allow easy
   debugging. Compiler speed is not an issue, so all optimizations that do not
   interfere with debugging should still occur.

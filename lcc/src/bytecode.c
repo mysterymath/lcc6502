@@ -243,8 +243,8 @@ Interface bytecodeIR = {
 	4, 1, 0,	/* long */
 	4, 1, 0,	/* long long */
 	4, 1, 0,	/* float */
-	4, 1, 0,	/* double */
-	4, 1, 0,	/* long double */
+	8, 1, 0,	/* double */
+	8, 1, 0,	/* long double */
 	2, 1, 0,	/* T* */
 	0, 1, 0,	/* struct */
 	1,		/* little_endian */

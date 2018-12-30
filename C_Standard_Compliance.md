@@ -39,5 +39,5 @@ lifted, as the target platforms may not have 32767 contiguous bytes of free RAM.
   * Named Registers (including Status)
   * Note: Though this extension applies to the C99 standard, it should be possible
     to backport it to the C89 standard.
-  * TODO: Determine whether the above is true.
+  * TODO: Determine whether the above is actually possible.
   

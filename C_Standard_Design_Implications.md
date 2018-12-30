@@ -167,7 +167,8 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * LCC's preprocessor just uses the source character set, but it's easy to change in
   `cpp/eval.c` (line 502).
 * A warning about long character constants in `cpp/eval.c` should be removed.
-* TODO: Determine what LCC does with wide character literals.
+* The LCC compiler should be set so that wide characters are the same size as
+  regular characters.
 * String literals need not be strings (they can contain `'\0'` anywhere within),
   but the standard requires their value ends in a null character.
 * The implementation should provide C-style null-terminated string literals,
