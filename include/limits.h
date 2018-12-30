@@ -1,4 +1,6 @@
 /* Sizes of ingteral types. */
+#ifndef _LIMITS_H
+#define _LIMITS_H
 
 /* Maximum number of bits for smallest object that is not a bit-field (byte). */
 #define CHAR_BIT 8
@@ -47,3 +49,5 @@
 
 /* Maximum value for an object of type unsigned long int. */
 #define ULONG_MAX (4294967295ul)
+
+#endif /* !defined(_LIMITS_H) */

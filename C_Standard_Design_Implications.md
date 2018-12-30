@@ -307,6 +307,24 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   longjmp into an interrupt handler is from inside a handler. This does not
   create any additional troubles.
 
+4.8 [VARIABLE ARGUMENTS <stdarg.h>](https://port70.net/~nsz/c/c89/c89-draft.html#4.8)
+
+* `va_start` and `va_arg` are macros, not functions.
+* Variable argument functions can only be called in the presence of a prototype, so the compiler
+  is always aware that such calls involve variable arguments. Thus, a totally different calling
+  convention can be used.
+* `va_start` includes the first non-variable argument as a parameter, but its use is totally optional.
+* For efficiency, like with regular functions, the arguments should probably be passed in registers.
+  * `va_start` can copy any registers used by the function to a register save area in the `va_list`.
+  * The number of registers used can be passed as well, to allow only saving passed values.
+  * Values that are not used need not be saved.
+* The argument list can be scanned more than once, so the arguments need to be
+  preserved, even after a traversal completes. The arguments need not be kept if
+  the compiler can prove that no more than one traversal occurs.
+* Each of these can be implemented in terms of magic compiler builtins. A
+  special form will be needed for `va_arg`, since it takes a type as argument
+  and produces the same type as its value.
+
 ## TODO
 
 * [ ] Section 4.8+

@@ -1,4 +1,6 @@
 /* Common definitions. */
+#ifndef _STDDEF_H
+#define _STDDEF_H
 
 /* The type of the result of subtracting two pointers. */
 typedef int ptrdiff_t;
@@ -22,3 +24,5 @@ typedef char wchar_t;
  * so it does not matter what is actually present at location zero.
  */
  #define offsetof(TYPE, MEMBER_DESIGNATOR) ((size_t)(&(((TYPE *)0)->MEMBER_DESIGNATOR)))
+
+#endif /* !defined(_STDDEF_H) */

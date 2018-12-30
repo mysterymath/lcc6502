@@ -1,4 +1,6 @@
 /* Characteristics of floating types. */
+#ifndef _FLOAT_H
+#define _FLOAT_H
 
 /*
  * These values were pulled straight from the C89 draft standard as being
@@ -92,3 +94,5 @@
 #define FLT_MIN (1.17549435e-38f)
 #define DBL_MIN (2.2250738585072016e-308)
 #define LDBL_MIN DBL_MIN
+
+#endif /* !defined(_FLOAT_H) */

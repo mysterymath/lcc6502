@@ -215,6 +215,9 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   Equivalently, `sig_atomic_t` would be defined as `char`, even though no
   `<signal.h>` implementation is provided.
 
+* It is well-defined to both read and write a static volatile `sig_atomic_t`
+  object in a signal handler (the standard guarantees only writes).
+
 * A function annotation should be provided to mark a function as an interrupt
   handler. This alters the generation of the function such that:
   * `RTI` is issued for each return instead of `RTS`.
