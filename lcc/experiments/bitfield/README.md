@@ -30,3 +30,19 @@ This experiment measures whether LCC inserts padding to align integers.
 #### Result
 
 No padding is inserted.
+
+### [span.c](span.c)
+
+This experiment measures whether LCC allows bitfields to span byte boundaries.
+
+#### Result
+
+LCC allows bit fields to span byte boundaries.
+
+### [zero_width.c](zero_width.c)
+
+This experiment tests the semantics of zero-width bitfields.
+
+#### Result
+
+Zero width bitfields force moving to the next byte, as required by the standard.

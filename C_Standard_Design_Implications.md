@@ -207,9 +207,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * Plain int bitfields are signed.
 * TODO: What does LCC produce for bitfields? Compare with the
   ideal implementation-defined behavior given for this section. Particularly:
-  * Can a bitfield span multiple units?
   * Does it allocate from least significant bit to most significant, or vice versa?
-  * Do zero width bitfields move to the next byte?
 
 3.4 [CONSTANT EXPRESSIONS](https://port70.net/~nsz/c/c89/c89-draft.html#3.4)
 
