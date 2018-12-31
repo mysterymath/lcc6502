@@ -205,9 +205,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 * From the LCC Manual:
   * Plain int bitfields are signed.
-* TODO: What does LCC produce for bitfields? Compare with the
-  ideal implementation-defined behavior given for this section. Particularly:
-  * Does it allocate from least significant bit to most significant, or vice versa?
+* See the [LCC bitfield experiments](lcc/experiments/bitfield/README.md) for
+  LCC's behavior regarding bitfields.
+  * In particular, LCC generates bit operations necessary to implement bitfields
+    over arbitrary bytes. The compiler either needs to be altered or these need
+    to be parsed to produce clear and set flag instructions whenever a bitfield
+    associated with the processor flags register is accessed or mutated.
+  * The compiler allocates bits little-endian (LSB first).
+  * The compiler promotes bit-containing structs to ints when made an automatic
+    variable (and possibly other cases), even though their sizeof is 1. This
+    behavior should be altered, since 2 byte arithmetic is far more expensive.
 
 3.4 [CONSTANT EXPRESSIONS](https://port70.net/~nsz/c/c89/c89-draft.html#3.4)
 

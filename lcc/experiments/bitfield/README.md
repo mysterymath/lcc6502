@@ -46,3 +46,13 @@ This experiment tests the semantics of zero-width bitfields.
 #### Result
 
 Zero width bitfields force moving to the next byte, as required by the standard.
+
+### [manip.c](manip.c)
+
+This experiment measures how bit-fields are accessed and mutated, including
+their bit order.
+
+#### Result
+
+The bit-order is little-endian (LSB first). Bit fields are accessed entirely
+through shifting and bitwise operations.
