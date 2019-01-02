@@ -54,6 +54,11 @@ from the C standard, one section at a time.
 
 ### TODO
 
+* [ ] Resolve all outstanding TODO's.
+* [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
+      are defined. Reorder them according to the Appendix.
+* [ ] Group, reorder, and summarize the design implications by topic rather than
+       by standard section.
 * [ ] Scan through Atari 800 reference manual for target-specific considerations.
 * [ ] Scan through Commodore 64 reference manual for target-specific considerations.
 * [ ] Are there any cases where a value *must* be located in the zero page, say,

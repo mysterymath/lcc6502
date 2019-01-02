@@ -321,11 +321,3 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   a void pointer is cast to a function type; this should be suppressed in this
   case, since the pointers don't actually "exist". This complexity saves
   creating a special compiler form, which is even more complex.
-
-## TODO
-
-* [ ] Resolve all outstanding TODO's.
-* [ ] Ensure that all implementation-defined behaviors in the Appendix (A.6.3)
-      are defined. Reorder them according to the Appendix.
-* [ ] Group, reorder, and summarize the design implications by topic rather than
-       by standard section.
