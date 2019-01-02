@@ -32,12 +32,3 @@ lifted, as the target platforms may not have 32767 contiguous bytes of free RAM.
   differ from the draft, and the production standard is difficult to obtain.
   Both technical corrigenda are included, since they provide essential
   corrections to errors in the standard.
-* Given that the target platform is by modern standards much like an "embedded
-  system", the following parts of the ISO/IEC TR 18037 "Extensions to support
-  embedded processors" must be implemented:
-  * Multiple address spaces (Zero Page)
-  * Named Registers (including Status)
-  * Note: Though this extension applies to the C99 standard, it should be possible
-    to backport it to the C89 standard.
-  * TODO: Determine whether the above is actually possible.
-  

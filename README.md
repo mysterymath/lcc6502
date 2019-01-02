@@ -54,6 +54,11 @@ from the C standard, one section at a time.
 
 ### TODO
 
+* [ ] Scan through Atari 800 reference manual for target-specific considerations.
+* [ ] Scan through Commodore 64 reference manual for target-specific considerations.
+* [ ] Are there any cases where a value *must* be located in the zero page, say,
+      to make a system call? This would require the named address extension.
+* [ ] What kinds of calling conventions are needed to call OS routines in C?
 * [ ] Define the mechanism for specifying the target architecture and output format.
 * [ ] Document the interfaces to allow adding new targets.
 

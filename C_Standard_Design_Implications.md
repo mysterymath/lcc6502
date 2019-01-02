@@ -329,5 +329,3 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
       are defined. Reorder them according to the Appendix.
 * [ ] Group, reorder, and summarize the design implications by topic rather than
        by standard section.
-* [ ] Scan through Embedded C Extensions
-      [ISO/IEC TR 18037](http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1169.pdf)
