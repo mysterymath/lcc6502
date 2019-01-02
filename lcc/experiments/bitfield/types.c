@@ -1,8 +1,3 @@
-/*
- * This experiment measures whether LCC supports non-int types for bitfields.
- * Result: It does not.
- */
-
 struct bf {
     char a : 1;
     short b : 1;

@@ -1,9 +1,9 @@
 # LCC Bitfield Experiments
 
 This directory contains a number of experiments used to investigate
-underspecified aspects of how LCC generates code for bitfields. A brief summary of
-each experiment is given below. All results are produced with the custom frontend
-configuration found in [src/bytecode.c](../../src/bytecode.c).
+underspecified aspects of how LCC generates code for bitfields. All results are
+produced with the custom frontend configuration found in
+[src/bytecode.c](../../src/bytecode.c).
 
 ## Experiments
 
@@ -54,5 +54,11 @@ their bit order.
 
 #### Result
 
-The bit-order is little-endian (LSB first). Bit fields are accessed entirely
-through shifting and bitwise operations.
+Bit-fields are allocated least significant bit first within a byte
+(little-endian bit order).
+
+It seems even though sizeof(bf) is 1, it promotes an automatic variable of that
+type to an int (2 bytes).
+
+Code effectively equivalent to the following C is emitted: int s; s |= 1; return
+(s << 15) >> 15;
