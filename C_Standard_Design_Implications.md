@@ -58,7 +58,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
 
-* Neither  their Atari 800 (ATASCII) or Commodore 64 (PETSCII) character sets
+* Neither the Atari 800 (ATASCII) nor Commodore 64 (PETSCII) character sets
   contain `'{'` or `'}'`, which are both required by the standard for both source
   and execution environments.
 * At least one target character set, ATASCII, does not contain a null character
