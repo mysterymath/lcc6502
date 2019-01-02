@@ -241,7 +241,13 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 * Unnamed struct or union fields need not be initialized.
 * Static storage duration objects are intialized to zero if no other initializer
   is given.
-* TODO: Determine how LCC performs initialization of structs.
+* LCC performs struct initialization much like character array initialization.
+  Space for the initializer is statically allocated, and an assignment is issued
+  at the beginning of the block from the static location to the variable. LCC
+  does not combine identical initializers; instead, it creates one initializer
+  per struct literal instance in the source text.
+* Identical initializers can be easily detected in the backend. This should be
+  done, since it will save precious space.
 
 3.6.6.4 [The return statement](https://port70.net/~nsz/c/c89/c89-draft.html#3.6.6.4)
 
