@@ -114,6 +114,15 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
   defines `CHAR_MIN` to be `0` and `CHAR_MAX` to be the same as `UCHAR_MAX`.
 
+* The impelementation should probably use Berkely SoftFloat v2, since:
+  * It's very easy to port to new platforms, even those with odd int sizes.
+  * It's IEEE 754 compliant, and supports binary32 and binary64.
+  * It has a sufficiently permissive license.
+    * A notice must be included somewhere in the standard library source that
+      the standard library is a deriviative work of the Berkeley SoftFloat
+      library.
+  * SoftFloat v3 requires the target support 64-bit integers.
+
 3.1.2.1 [Scopes of identifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.1)
 
 * The backend needs to obtain scoping information from LCC, so that otherwise

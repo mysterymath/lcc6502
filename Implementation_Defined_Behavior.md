@@ -14,14 +14,14 @@ parallel to the standard, section for section.
 * A long consists of 4 little-endian bytes.
 * A float consists of 4 bytes encoded using the IEEE 754 binary32 format.
 * A double consists of 8 bytes encoded using the IEEE 754 binary64 format.
-* TODO: When selecting a soft float lib, verify that it uses the above formats.
 * Structures elements are laid out sequentially in memory in declaration order,
   without padding.
 
 2.1.2.1 [Freestanding
 environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
-* TODO: Define any additional library routines provided by this implementation.
+* No additional library routines are provided beyond those required by the
+  standard for a freestanding implementation.
 
 * All external identifiers that begin with an underscore are reserved. All other
   identifiers that begin with an underscore and either an upper-case letter or
@@ -89,13 +89,19 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 3.2.1.3 [Floating and integral](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.3)
 
-* TODO: Determine whether converting from int to float rounds up or down (or
-  both in some complex way).
+* The rounding mode is round-to-nearest, even. That is, if an integral type is
+  converted to a floating point type, and the value cannot be represented
+  exactly, it is rounded to the nearest representable value. If it is
+  equidistant between two such values, it is rounded to the one that is even
+  (i.e., the lowest order bit is zero).
 
 3.2.1.4 [Floating types](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.4)
 
-* TODO: Determine whether converting from floating type to smaller floating
-  type rounds up or down (or both in some complex way).
+* The rounding mode is round-to-nearest, even. That is, if an integral type is
+  converted to a floating point type, and the value cannot be represented
+  exactly, it is rounded to the nearest representable value. If it is
+  equidistant between two such values, it is rounded to the one that is even
+  (i.e., the lowest order bit is zero).
 
 3.3.2.3 [Expressions](https://port70.net/~nsz/c/c89/c89-draft.html#3.3)
 
@@ -207,7 +213,7 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
 
 3.8.6 [Pragma directive](https://port70.net/~nsz/c/c89/c89-draft.html#3.8.6)
 
-* TODO: Define the syntax and semantics of any `#pragma` directives.
+* No `#pragma` directives are defined.
 
 4.7 [SIGNAL HANDLING](https://port70.net/~nsz/c/c89/c89-draft.html#4.7)
 
