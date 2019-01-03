@@ -233,4 +233,16 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
   * Interrupts are disabled by default within an interrupt handler. They can be
     reenabled by clearing the interrupt disable flag.
 
-* TODO: Define the syntax of the interrupt annotation.
+  * Functions are marked as interrupt handlers by calling the fake function
+    `__interrupt_handler()` immediately after entry to the block defining the
+    function. Interrupt handlers must return void and take no arguments. For
+    example:
+
+    ```C
+
+    void my_handler(void) {
+        __interrupt_handler();
+        < rest of function >
+    }
+
+    ```
