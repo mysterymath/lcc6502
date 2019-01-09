@@ -21,7 +21,7 @@ This experiment measures the minimum size of a struct containing a bitfield.
 
 #### Result
 
-A struct containing a bitfield can be as small as one byte.
+A struct containing a bitfield can be as small as one byte. LCC seems to allocate 2 bytes at a time, though.
 
 ### [padding.c](padding.c)
 
@@ -33,11 +33,11 @@ No padding is inserted.
 
 ### [span.c](span.c)
 
-This experiment measures whether LCC allows bitfields to span byte boundaries.
+This experiment measures whether LCC allows bitfields to span storage boundaries.
 
 #### Result
 
-LCC allows bit fields to span byte boundaries.
+LCC does not allows bit fields to span storage boundaries. LCC *does* allocate 2 bytes at a time though.
 
 ### [zero_width.c](zero_width.c)
 

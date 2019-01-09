@@ -1,6 +1,6 @@
 struct bf {
-    int a : 7;
-    int b : 8;
+    int a : 15;
+    int b : 16;
     int c : 1;
 };
 
