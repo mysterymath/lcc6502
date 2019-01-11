@@ -54,8 +54,6 @@ from the C standard, one section at a time.
 
 ### TODO
 
-* [ ] Figure out why LCC bitfields can have sizeof 1, but are allocated and
-      accessed 2 bytes at a time.
 * [ ] Group, reorder, and summarize the design implications by topic rather than
       by standard section.
 * [ ] Scan through Atari 800 reference manual for target-specific considerations.
