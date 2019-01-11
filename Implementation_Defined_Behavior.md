@@ -225,7 +225,7 @@ that is even (i.e., the lowest order bit is zero).
 
 * Whether a bit-field can straddle a storage-unit boundary (3.5.2.1).
 
-  * TODO: I think this experiment might be wrong.  Figure out how LCC really works.
+  * They cannot.
 
 * The integer type chosen to represent the values of an enumeration type (3.5.2.2).
 

@@ -37,7 +37,7 @@ This experiment measures whether LCC allows bitfields to span storage boundaries
 
 #### Result
 
-LCC does not allows bit fields to span storage boundaries. LCC *does* allocate 2 bytes at a time though.
+LCC does not allows bit fields to span storage boundaries.
 
 ### [zero_width.c](zero_width.c)
 
@@ -57,8 +57,18 @@ their bit order.
 Bit-fields are allocated least significant bit first within a byte
 (little-endian bit order).
 
-It seems even though sizeof(bf) is 1, it promotes an automatic variable of that
-type to an int (2 bytes).
+Even though sizeof(bf) is 1, bit fields are accessed 2 bytes at a time. Only 1
+bit is ever truly modified; the other 15 bits are left alone (given a 1 bit
+field). This is (amazingly) standards compliant, even if the other bits are
+volatile.Volatile merely means that all accesses and mutations given by the
+program occur according to the semantics of the abstract machine, not that the
+compiler makes no other accesses or mutations to the objects. (Linus had words
+about this).
 
-Code effectively equivalent to the following C is emitted: int s; s |= 1; return
-(s << 15) >> 15;
+Code equivalent to the following C is emitted: 
+```C
+  char s;
+  unsigned *s_ptr = (unsigned*)&s;
+  *s_ptr |= 1;
+  return (*s_ptr << 15) >> 15;
+```
