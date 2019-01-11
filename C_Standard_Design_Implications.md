@@ -221,9 +221,17 @@ environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
     to be parsed to produce clear and set flag instructions whenever a bitfield
     associated with the processor flags register is accessed or mutated.
   * The compiler allocates bits little-endian (LSB first).
-  * The compiler promotes bit-containing structs to ints when made an automatic
-    variable (and possibly other cases), even though their sizeof is 1. This
-    behavior should be altered, since 2 byte arithmetic is far more expensive.
+  * The compiler promotes always accesses bit-fields as 2-byte ints. This is
+    true even if the struct is only one byte long. When a bit-field is
+modified, all data outside the bitfield is read and written back unmodified.
+This means that writing to a bit-field can modify data outside of the struct,
+even if that data is marked volatile. Volatile just means that the compiler
+must access the value whenever the program says to, not that the compiler must
+ensure that it never touches such an object except when the program says so.
+This has been a point of contention in the C community. The backend should
+always be able to lower such accesses to 1 byte. This is both faster and less
+surprising. The issue can still occur if a volatile bitfield is next to a
+non-volatile one in the same struct, but this is rarer case to be sure.
 
 3.4 [CONSTANT EXPRESSIONS](https://port70.net/~nsz/c/c89/c89-draft.html#3.4)
 
