@@ -2,94 +2,52 @@
 
 The standard will impose a number of constraints for the design of a compiler
 for the 6502. When they can be directly derived from some requirement of the
-standard, those constraints are listed here. This document is organized in
-parallel to the standard, section for section.
+standard, those constraints are listed here. 
 
-1 [INTRODUCTION](http://port70.net/~nsz/c/c89/c89-draft.html#1.)
+## Static storage
 
-1.7 [COMPLIANCE](http://port70.net/~nsz/c/c89/c89-draft.html#1.7.)
+Objects in static storage need to be initialized *before* program startup
+(2.1.2). For ROM output, this means that mutable static objects need to be
+copied to RAM locations. These would become the canonical locations for the
+objects.
 
-* Freestanding implementations must implement all library features found in:
-  * float.h
-  * limits.h
-  * stdarg.h
-  * stddef.h
+## Volatile
 
-* All implementation-defined behaviors or characteristics in the standard need
-  to be explicitly defined.
-* All extensions to the standard need to be defined.
-* No extensions are allowed that would render a strictly conforming program
-  nonconforming.
+Reads from volatile objects need to be treated differently than regular reads,
+so that information needs to be extacted from LCC (2.1.2.3).
+
+## Signals/Interrupts
+
+Automatic variables need to retain their values across signal handling
+suspensions (2.1.2.3). This implies either keeping them in no-clobber registers
+or saving them on a stack.
+
+No signals need be provided, but to allow implementing signals, intterupt
+handlers must be writable in pure C. Any function can be interrupted at any time by an interrupt, which can call any C function.
+
+Interrupt handlers must not overrite any locations (memory or register) used by
+previous invocations or by any active functions.
+
+Interrupt handlers often need to be extremely timely, so the number of
+locations saved and restored by the handler must be tightly bounded.
+
+## Characters
+
+Escape characters should not output a printable character.
+
+Alert must not change the cursor position.
+
+Carriage return should move the cursor to the initial position of the current
+line.
+
+## End new content
 
 2 [ENVIRONMENT](https://port70.net/~nsz/c/c89/c89-draft.html#2.)
 
 2.1 [CONCEPTUAL MODELS](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.)
 
-2.1.1 [Translation
-environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.)
-
-2.1.1.1 [Program structure](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.1.)
-
-* While it's not necessary to perform traditional separate compilation (i.e.,
-  changing one `.c` file only requires recompiling that one file), much of the C
-  universe is designed assuming this is the case. This implementation should
-  support it as far as is possible without hindering performance.
-
-2.1.2 [Execution
-environments](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.)
-
-* Objects in static storage need to be initialized *before* program startup. For
-  ROM output, this means that mutable static objects need to be copied to RAM
-  locations. These would become the canonical locations for the objects.
-
-2.1.2.1 [Freestanding
-environment](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.1.)
-
-* At program startup, the routine with the name `_start` is called. This
-  function must take no arguments and have a void return type.
-
-2.1.2.3 [Program execution](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.2.3.)
-
-* Reads from volatile objects need to be treated differently, so that information needs to
-  be extacted from LCC.
-* Automatic variables need to retain their values across signal handling
-  suspensions. This implies either keeping them in no-clobber registers or
-  saving them on a stack.
-
-2.2.1 [Character sets](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.1)
-
-* Neither the Atari 800 (ATASCII) nor Commodore 64 (PETSCII) character sets
-  contain `'{'` or `'}'`, which are both required by the standard for both source
-  and execution environments.
-* At least one target character set, ATASCII, does not contain a null character
-  at zero. This means it cannot simply support null-terminated strings.
-* Neither of the character ROM encodings for ATASCII and PETSCII have a null
-  character at zero.
-
-2.2.2 [Character display semantics](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.2)
-
-* Escape characters should not output a printable character.
-* Alert must not change the cursor position.
-* Carriage return should move the cursor to the initial position of the current line.
-
-2.2.3 [Signals and interrupts](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.3)
-
-* No signals need be provided, but to allow implementing signals, intterupt
-  handlers must be writable in pure C.
-  * A function should be markable as an interrupt handler.
-  * It must be possible to enable and disable interrupts.
-  * Any function can be interrupted at any time by an interrupt, which can call
-    any C function.
-    * Interrupt handlers must not overrite any locations (memory or register)
-      used by previous invocations or by any active functions.
-    * Interrupt handlers often need to be extremely timely, so the number of
-      locations saved and restored by the handler must be tightly bounded.
-
 2.2.4.1 [Translation limits](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4.1)
 
-* A hosted implementation cannot be constructed for target platforms, since
-  neither the Atari 800 nor the C64 have 32767 bytes of contiguous RAM. ROM
-  doesn't help either; the max amount typically used is too small.
 * Each function needs to support at least 31 arguments. That's at least 31 bytes
   of storage.
 * At least 257 case labels need to be supported. This precludes creating a sort

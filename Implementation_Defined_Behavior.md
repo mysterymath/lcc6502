@@ -327,6 +327,12 @@ void my_handler(void) {
 
 ```
 
+Interrupts can be enabled by calling `__enable_interrupts()` and disabled by
+calling `__disable_interrupts()`. Interrupts are automatically disabled upon
+entry to an interrupt handler. Upon exit from an interrupt handler, all
+processor flags are restored to their value before the interrupt, including
+whether interrupts are enabled or disabled.
+
 ### Signal Handling
 
 It is well-defined to both read and write a static volatile `sig_atomic_t`
