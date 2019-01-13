@@ -6,12 +6,29 @@ standard, those constraints are listed here.
 
 ## Data
 
-### Static storage
+### Static Storage
 
 Objects in static storage need to be initialized *before* program startup
 (2.1.2). For ROM output, this means that mutable static objects need to be
 copied to RAM locations. These would become the canonical locations for the
 objects.
+
+### Automatic Storage
+
+Automatic objects that can be proven never to be present in two simultaneously
+active invocations can be treated much like static objects.  If the objects
+were initialized, the initialization still needs to happen each time, unlike
+other statics, which are initialized before program startup.  If the value of
+such an object is used, it was set in some currently-active procedure; such
+values cannot by their nature persist between calls.
+
+Values of pointers to auto objects in terminated blocks are indeterminate.
+This means that objects in blocks that cannot be simultaneously active can
+safely share the same pointer value.
+
+It's simplest to only bump the stack pointer once at the beginning of a
+function. Otherwise, any goto statements that enter a block need to allocate
+all the space required for that block.
 
 ### Volatile
 
@@ -30,6 +47,19 @@ line.
 Sign extending chars is expensive on the 6502, and at least one major POSIX
 platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
 defines `CHAR_MIN` to be `0` and `CHAR_MAX` to be the same as `UCHAR_MAX`.
+
+The preprocessor needs to be modified to understand the target character set,
+since character literals can be used in constant expressions for conditional
+compilation. This means that the mechanism for controlling execution character
+sets needs to be visible to the preprocessor.
+
+LCC's preprocessor currently just uses the source character set, but it's easy
+to change in `cpp/eval.c` (line 502).  A warning about long character constants
+in `cpp/eval.c` should also be removed.
+
+The LCC compiler should be set so that wide characters are the same size as
+regular characters, since nobody is going to care about wide characters on this
+platform.
 
 ## Floating Point
 
@@ -82,6 +112,11 @@ program that can be made to fit.
 Each function needs to support at least 31 arguments (2.2.4.1). That's at least
 31 bytes of storage.
 
+Prototyped functions with no "narrow" types (smaller than int) and no variable
+argument list must be callable in translation units without the prototype.
+
+Varargs functions may only be called through a prototype.
+
 ### Switch Statements
 
 At least 257 case labels need to be supported (2.2.4.1). This precludes
@@ -107,67 +142,6 @@ void exit(int []);
 ```
 
 ## End new content
-
-2 [ENVIRONMENT](https://port70.net/~nsz/c/c89/c89-draft.html#2.)
-
-3.1.2.4 [Storage duration of objects](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.4)
-
-* Automatic objects that can be proven never to be present in two
-  simultaneously active invocations can be treated much like static objects.
-  * If the objects were initialized, the initialization still needs to happen
-    each time, unlike statics, which are initialized before program startup.
-  * If the value of such an object is used, it was set in some currently-active
-    procedure.
-  * Values of pointers to auto objects in terminated blocks are indeterminate.
-    This means that objects in blocks that cannot be simultaneously active can
-    have the same pointer value.
-  * It's simplest to only bump the stack pointer once at the beginning of a
-    function. Otherwise, any goto statements that enter a block need to
-    allocate all the space required for that block.
-
-3.1.3.4 [Character constants](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.3.4)
-
-* The preprocessor needs to be modified to understand the target character set,
-  since character literals can be used in constant expressions for conditional
-  compilation.
-* This means that the mechanism for controlling execution character sets needs
-  to be visible to the preprocessor.
-* LCC's preprocessor just uses the source character set, but it's easy to change in
-  `cpp/eval.c` (line 502).
-* A warning about long character constants in `cpp/eval.c` should be removed.
-* The LCC compiler should be set so that wide characters are the same size as
-  regular characters.
-* String literals need not be strings (they can contain `'\0'` anywhere within),
-  but the standard requires their value ends in a null character.
-* The implementation should provide C-style null-terminated string literals,
-  since there's no other way to achieve C89 compatibility.
-* No mechanism is provided to change the default interpretation of character
-  literals, since such literals would no longer work with routines designed
-  for C strings.
-
-3.2.1.5 [Usual arithmetic conversions](https://port70.net/~nsz/c/c89/c89-draft.html#3.2.1.5)
-
-|               | Int  | Unsigned Int | Long | Unsigned Long | Float | Double |
-| ------------- | ---- | ------------ | ---- | ------------- | ----- | ------ |
-| Int           | Int  | Unsigned Int | Long | Unsigned Long | Float | Double |
-| Unsigned Int  | X    | Unsigned Int | Long | Unsigned Long | Float | Double |
-| Long          | X    | X            | Long | Unsigned Long | Float | Double |
-| Unsigned Long | X    | X            | X    | Unsigned Long | Float | Double |
-| Float         | X    | X            | X    | X             | Float | Double |
-| Double        | X    | X            | X    | X             | X     | Double |
-
-3.3.2.2 [Function Calls](https://port70.net/~nsz/c/c89/c89-draft.html#3.3.2.2)
-
-* If a function without a prototype is called, integral promotions occur on
-  each argument and floats are converted to doubles. This also occurs on each
-  argument in a `...` section of a prototype. For this platform, this means
-  that the standard requires that printf() exclusively take 16-bit ints and
-  64-bit doubles.
-* At each call site, the number of arguments to a variable argument call is
-  statically known.
-* Prototyped functions with no "narrow" types and no variable argument list
-  must be callable in translation units without the prototype.
-* Varargs functions may only be called through a prototype.
 
 3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
 
