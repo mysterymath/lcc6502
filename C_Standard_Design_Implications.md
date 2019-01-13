@@ -4,34 +4,21 @@ The standard will impose a number of constraints for the design of a compiler
 for the 6502. When they can be directly derived from some requirement of the
 standard, those constraints are listed here. 
 
-## Static storage
+## Data
+
+### Static storage
 
 Objects in static storage need to be initialized *before* program startup
 (2.1.2). For ROM output, this means that mutable static objects need to be
 copied to RAM locations. These would become the canonical locations for the
 objects.
 
-## Volatile
+### Volatile
 
 Reads from volatile objects need to be treated differently than regular reads,
 so that information needs to be extacted from LCC (2.1.2.3).
 
-## Signals/Interrupts
-
-Automatic variables need to retain their values across signal handling
-suspensions (2.1.2.3). This implies either keeping them in no-clobber registers
-or saving them on a stack.
-
-No signals need be provided, but to allow implementing signals, intterupt
-handlers must be writable in pure C. Any function can be interrupted at any time by an interrupt, which can call any C function.
-
-Interrupt handlers must not overrite any locations (memory or register) used by
-previous invocations or by any active functions.
-
-Interrupt handlers often need to be extremely timely, so the number of
-locations saved and restored by the handler must be tightly bounded.
-
-## Characters
+### Characters
 
 Escape characters should not output a printable character.
 
@@ -40,74 +27,88 @@ Alert must not change the cursor position.
 Carriage return should move the cursor to the initial position of the current
 line.
 
+Sign extending chars is expensive on the 6502, and at least one major POSIX
+platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
+defines `CHAR_MIN` to be `0` and `CHAR_MAX` to be the same as `UCHAR_MAX`.
+
+## Floating Point
+
+The impelementation should probably use Berkely SoftFloat v2, since:
+* It's very easy to port to new platforms, even those with odd int sizes.
+* It's IEEE 754 compliant, and supports binary32 and binary64.
+* It has a sufficiently permissive license.
+  * TODO: A notice must be included somewhere in the standard library source
+    that the standard library is a deriviative work of the Berkeley SoftFloat
+    library.
+* The later versions (v3) require the target to support 64-bit integers.
+
+## Code
+
+### Signals/Interrupts
+
+Automatic variables need to retain their values across signal handling
+suspensions (2.1.2.3). This implies either keeping them in no-clobber registers
+or saving them on a stack.
+
+No signals need be provided, but to allow implementing signals, intterupt
+handlers must be writable in pure C. Any function can be interrupted at any
+time by an interrupt, which can call any C function.
+
+Interrupt handlers must not overrite any locations (memory or register) used by
+previous invocations or by any active functions.
+
+Interrupt handlers often need to be extremely timely, so the number of
+locations saved and restored by the handler must be tightly bounded.
+
+### Code Size
+
+For many practical programs, it may be difficult to fit the program and its
+data into available RAM. A program may reserve space for data using static
+variables.
+
+Since the target machines do not have Memory Management Units, much of the
+address space is unavailable for use by the program. The compiler should pack
+the program and its data into the available RAM as tightly as possible. Some
+programs may still be too big to fit; these may be rejected.
+
+No optimizations (inlining, etc) may be performed unless it can be guaranteed
+that it will not cause a program to no longer fit into RAM. Note that many
+optimizations tend to reduce both code size and execution time. When
+optimization is enabled, the compiler should always aim for the most efficient
+program that can be made to fit.
+
+### Functions
+
+Each function needs to support at least 31 arguments (2.2.4.1). That's at least
+31 bytes of storage.
+
+### Switch Statements
+
+At least 257 case labels need to be supported (2.2.4.1). This precludes
+creating a sort of byte-indexed perfect-hashed jump table, since there would be
+too many entries in the worst case. This is to allow branching on any character
+as well as EOF.
+
+## Libraries
+
+Prototypes in library headers may only use identifiers in the reserved
+namespace (`__x` or `_X`). Otherwise, the user could place a #define macro
+before the header as follows:
+
+```C
+#define status []
+void exit(int status);
+```
+
+This becomes:
+
+```C
+void exit(int []);
+```
+
 ## End new content
 
 2 [ENVIRONMENT](https://port70.net/~nsz/c/c89/c89-draft.html#2.)
-
-2.1 [CONCEPTUAL MODELS](https://port70.net/~nsz/c/c89/c89-draft.html#2.1.)
-
-2.2.4.1 [Translation limits](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4.1)
-
-* Each function needs to support at least 31 arguments. That's at least 31 bytes
-  of storage.
-* At least 257 case labels need to be supported. This precludes creating a sort
-  of byte-indexed perfect-hashed jump table, since there would be too many
-  entries in the worst case. This is to allow branching on any character as well
-  as EOF.
-* This implementation should avoid any unneccesary limits. For sizes, that means
-  that a program should only be rejected if it cannot be made to fit in the
-  available resources on the target system.
-  * No optimizations (inlining, etc) may be performed unless it can be
-    guaranteed that it will not cause a fitting program to no longer fit.
-  * If a program cannot be made to fit, the compiler should turn parts of the
-    program into compact, slower code, starting with the parts with least
-    performance impact. The program should not be rejected until the compiler
-    has replaced all of it with compact code.
-  * The compiler should aim for the most efficient program that can be made to
-    fit.
-
-2.2.4.2 [Numerical limits](https://port70.net/~nsz/c/c89/c89-draft.html#2.2.4.2)
-
-* Sign extending chars is expensive on the 6502, and at least one major POSIX
-  platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
-  defines `CHAR_MIN` to be `0` and `CHAR_MAX` to be the same as `UCHAR_MAX`.
-
-* The impelementation should probably use Berkely SoftFloat v2, since:
-  * It's very easy to port to new platforms, even those with odd int sizes.
-  * It's IEEE 754 compliant, and supports binary32 and binary64.
-  * It has a sufficiently permissive license.
-    * A notice must be included somewhere in the standard library source that
-      the standard library is a deriviative work of the Berkeley SoftFloat
-      library.
-  * SoftFloat v3 requires the target support 64-bit integers.
-
-3.1.2.1 [Scopes of identifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.1)
-
-* The backend needs to obtain scoping information from LCC, so that otherwise
-  identical identifiers with different scope in LCC's output do not conflict
-  with one another.
-
-* The following declaration has block scope, even though it refers to an external
-  function:
-  ```C
-  {
-    extern int f();
-  }
-  ```
-
-* Prototypes in library headers may only use identifiers in the reserved
-  namespace (`__x` or `_X`). Otherwise, the user could place a #define macro before
-  the header as follows:
-  ```C
-  #define status []
-  void exit(int status);
-  ```
-
-  This becomes:
-
-  ```C
-  void exit(int []);
-  ```
 
 3.1.2.4 [Storage duration of objects](https://port70.net/~nsz/c/c89/c89-draft.html#3.1.2.4)
 
