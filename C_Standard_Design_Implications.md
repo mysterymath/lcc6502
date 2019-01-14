@@ -6,12 +6,31 @@ standard, those constraints are listed here.
 
 ## Data
 
-### Static Storage
+### ROM
 
 Objects in static storage need to be initialized *before* program startup
 (2.1.2). For ROM output, this means that mutable static objects need to be
 copied to RAM locations. These would become the canonical locations for the
 objects.
+
+Non-`volatile` `const` objects with statically-known values may be placed in
+ROM, and if their address is never used, they need not be allocated at all.
+This is actually true of any objects that has a statically-known value that can
+be proven never to be modified (`const` just ensures this).
+
+`volatile const` objects should not be placed in ROM and must be allocated,
+since the intent is that ASM code or hardware unknown to the C compiler should
+be able to modify the value.
+
+### Constant Expressions
+
+Address constant expressions may be used in static initializers, and they refer
+to part or all of other static objects or functions. These may even be
+self-referential; for instance, a static struct with a recursive pointer can
+refer to its own address.
+
+Constant expression evaluation is free to use the host arithmetic, so long as
+it is more precise than the target (not hard.)
 
 ### Automatic Storage
 
@@ -30,7 +49,7 @@ It's simplest to only bump the stack pointer once at the beginning of a
 function. Otherwise, any goto statements that enter a block need to allocate
 all the space required for that block.
 
-### Volatile
+## Volatile
 
 Reads from volatile objects need to be treated differently than regular reads,
 so that information needs to be extacted from LCC (2.1.2.3).
@@ -71,6 +90,26 @@ The impelementation should probably use Berkely SoftFloat v2, since:
     that the standard library is a deriviative work of the Berkeley SoftFloat
     library.
 * The later versions (v3) require the target to support 64-bit integers.
+
+### Bit-Fields
+
+See the [LCC bit-field experiments](lcc/experiments/bitfield/README.md) for
+LCC's behavior regarding bit-field.
+
+In particular, LCC generates bit operations necessary to implement bit-field
+over arbitrary bytes. The compiler always accesses bit-fields as
+2-byte ints, even if the entire struct is only one byte long. When a
+bit-field is modified, all data outside the bit-field is read and written back
+unmodified. This means that writing to a bit-field can modify data outside of
+the struct, even if that data is marked volatile.
+
+Volatile just means that the compiler must access the value whenever the
+program says to, not that the compiler must ensure that it never touches such
+an object except when the program says so. This has been a point of contention
+in the C community. The backend should always be able to lower such accesses to
+1 byte. This is both faster and less surprising. The confusing behavior can
+still occur if a volatile bit-field is next to a non-volatile one in the same
+struct.
 
 ## Code
 
@@ -142,46 +181,6 @@ void exit(int []);
 ```
 
 ## End new content
-
-3.5.2.1 [Struct and union specifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.2.1)
-
-* From the LCC Manual:
-  * Plain int bitfields are signed.
-* See the [LCC bitfield experiments](lcc/experiments/bitfield/README.md) for
-  LCC's behavior regarding bitfields.
-  * In particular, LCC generates bit operations necessary to implement bitfields
-    over arbitrary bytes. The compiler either needs to be altered or these need
-    to be parsed to produce clear and set flag instructions whenever a bitfield
-    associated with the processor flags register is accessed or mutated.
-  * The compiler allocates bits little-endian (LSB first).
-  * The compiler promotes always accesses bit-fields as 2-byte ints. This is
-    true even if the struct is only one byte long. When a bit-field is
-modified, all data outside the bitfield is read and written back unmodified.
-This means that writing to a bit-field can modify data outside of the struct,
-even if that data is marked volatile. Volatile just means that the compiler
-must access the value whenever the program says to, not that the compiler must
-ensure that it never touches such an object except when the program says so.
-This has been a point of contention in the C community. The backend should
-always be able to lower such accesses to 1 byte. This is both faster and less
-surprising. The issue can still occur if a volatile bitfield is next to a
-non-volatile one in the same struct, but this is rarer case to be sure.
-
-3.4 [CONSTANT EXPRESSIONS](https://port70.net/~nsz/c/c89/c89-draft.html#3.4)
-
-* Address constant expressions may be used in static initializers, and they
-  refer to part or all of other static objects or functions.
-* Constant expression evaluation is free to use the host arithmetic, so long as
-  it is more precise than the target (not hard.)
-
-3.5.3 [Type qualifiers](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.3)
-
-* Non-`volatile` `const` objects with statically-known values may be placed in
-  ROM, and if their address is never used, they need not be allocated at all.
-  This is actually true of any objects that has a statically-known value that
-  can be proven never to be modified (const just ensures this).
-* `volatile const` objects should not be placed in ROM and must be allocated,
-  since the intent is that ASM code or hardware unknown to the C compiler should
-  be able to modify the value.
 
 3.5.7 [Initialization](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.7)
 
