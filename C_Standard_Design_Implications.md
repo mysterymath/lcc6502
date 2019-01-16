@@ -91,7 +91,19 @@ The impelementation should probably use Berkely SoftFloat v2, since:
     library.
 * The later versions (v3) require the target to support 64-bit integers.
 
-### Bit-Fields
+### Structs and Unions
+
+LCC performs struct initialization much like character array initialization.
+Space for the initializer is statically allocated, and an assignment is issued
+at the beginning of the block from the static location to the variable. This
+works because aggregate types can only be initialized with compile-time
+constants. LCC does not combine identical initializers; instead, it creates one
+initializer per struct literal instance in the source text.
+
+Identical initializers can be easily detected in the backend. This should be
+done, since it will save precious space.
+
+#### Bit-Fields
 
 See the [LCC bit-field experiments](lcc/experiments/bitfield/README.md) for
 LCC's behavior regarding bit-field.
@@ -156,6 +168,9 @@ argument list must be callable in translation units without the prototype.
 
 Varargs functions may only be called through a prototype.
 
+Return statements with no value are legal in functions with non-void return
+types, so long as the return value is never used by the caller.
+
 ### Switch Statements
 
 At least 257 case labels need to be supported (2.2.4.1). This precludes
@@ -181,27 +196,6 @@ void exit(int []);
 ```
 
 ## End new content
-
-3.5.7 [Initialization](https://port70.net/~nsz/c/c89/c89-draft.html#3.5.7)
-
-* Aggregate types (arrays, structs, and unions) may only be initialized with
-  constant expressions. This means that the byte sequence they are initialized
-  to can always be determined at compile time.
-* Unnamed struct or union fields need not be initialized.
-* Static storage duration objects are intialized to zero if no other initializer
-  is given.
-* LCC performs struct initialization much like character array initialization.
-  Space for the initializer is statically allocated, and an assignment is issued
-  at the beginning of the block from the static location to the variable. LCC
-  does not combine identical initializers; instead, it creates one initializer
-  per struct literal instance in the source text.
-* Identical initializers can be easily detected in the backend. This should be
-  done, since it will save precious space.
-
-3.6.6.4 [The return statement](https://port70.net/~nsz/c/c89/c89-draft.html#3.6.6.4)
-
-* Return statements with no value are legal in functions with return values, so long
-  as the return value is never used by the caller.
 
 4.6 [NON-LOCAL JUMPS](https://port70.net/~nsz/c/c89/c89-draft.html#4.6)
 
