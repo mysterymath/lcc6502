@@ -49,24 +49,31 @@ compliance, and excellent documentation. It's backend interface
 available.  The relevant parts of the compiler are in the [lcc/](lcc/)
 subdirectory.
 
-[Design implications](C_Standard_Design_Implications.md) are being collected
-from the C standard, one section at a time.
+[Requirements](Requirements.md) are currently being collected. Once the a
+stable picture of these requirements is formed, design will begin.
 
 ### TODO
 
-* [ ] Group, reorder, and summarize the design implications by topic rather than
+* [ ] Group, reorder, and summarize the requirements by topic rather than
       by standard section.
-* [ ] Scan through Atari 800 reference manual for target-specific considerations.
-* [ ] Scan through Commodore 64 reference manual for target-specific considerations.
+* [ ] Scan through the processor instruction set for requirements.
+* [ ] Scan through Atari 800 reference manual for requirements.
+* [ ] Scan through Commodore 64 reference manual for requirements.
 * [ ] Are there any cases where a value *must* be located in the zero page, say,
       to make a system call? This would require the named address extension.
 * [ ] What kinds of calling conventions are needed to call OS routines in C?
-* [ ] Define the mechanism for specifying the target architecture and output format.
-* [ ] Document the interfaces to allow adding new targets.
+* [ ] Define the User Experience of the compiler.
 
 ## For More Details
 
+### [Requirements](Requirements.md)
+
+The C standard, the nature of the processor, and the nature of each target
+platform will place specific requirements on the implementation. Any
+non-trivial requirements are collected here.
+
 ### [Implementation-Defined Behavior](Implementation_Defined_Behavior.md)
+
 The C89 standard requires a conforming implementation to document a number of
 "implementation-defined" behaviors and characteristics. All such definitions
 can be found at the link above.

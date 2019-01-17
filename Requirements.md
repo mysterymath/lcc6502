@@ -1,15 +1,14 @@
-# Design Implications from the C89 Standard
+# Requirements
 
-The standard will impose a number of constraints for the design of a compiler
-for the 6502. When they can be directly derived from some requirement of the
-standard, those constraints are listed here. 
+The C standard, the nature of the 6502, and the nature of each target platform
+will impose a number of requirements for the design of a compiler. These requirements are gathered here, organized by topic.
 
 ## Data
 
 ### ROM
 
 Objects in static storage need to be initialized *before* program startup
-(2.1.2). For ROM output, this means that mutable static objects need to be
+(C89 2.1.2). For ROM output, this means that mutable static objects need to be
 copied to RAM locations. These would become the canonical locations for the
 objects.
 
@@ -52,7 +51,7 @@ all the space required for that block.
 ## Volatile
 
 Reads from volatile objects need to be treated differently than regular reads,
-so that information needs to be extacted from LCC (2.1.2.3).
+so that information needs to be extacted from LCC (C89 2.1.2.3).
 
 ### Characters
 
@@ -128,7 +127,7 @@ struct.
 ### Signals/Interrupts
 
 Automatic variables need to retain their values across signal handling
-suspensions (2.1.2.3). This implies either keeping them in no-clobber registers
+suspensions (C89 2.1.2.3). This implies either keeping them in no-clobber registers
 or saving them on a stack.
 
 No signals need be provided, but to allow implementing signals, intterupt
@@ -160,7 +159,7 @@ program that can be made to fit.
 
 ### Functions
 
-Each function needs to support at least 31 arguments (2.2.4.1). That's at least
+Each function needs to support at least 31 arguments (C89 2.2.4.1). That's at least
 31 bytes of storage.
 
 Prototyped functions with no "narrow" types (smaller than int) and no variable
@@ -173,7 +172,7 @@ types, so long as the return value is never used by the caller.
 
 ### Switch Statements
 
-At least 257 case labels need to be supported (2.2.4.1). This precludes
+At least 257 case labels need to be supported (C89 2.2.4.1). This precludes
 creating a sort of byte-indexed perfect-hashed jump table, since there would be
 too many entries in the worst case. This is to allow branching on any character
 as well as EOF.
