@@ -54,8 +54,6 @@ stable picture of these requirements is formed, design will begin.
 
 ### TODO
 
-* [ ] Group, reorder, and summarize the requirements by topic rather than
-      by standard section.
 * [ ] Scan through the processor instruction set for requirements.
 * [ ] Scan through Atari 800 reference manual for requirements.
 * [ ] Scan through Commodore 64 reference manual for requirements.

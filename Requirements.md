@@ -165,17 +165,90 @@ Each function needs to support at least 31 arguments (C89 2.2.4.1). That's at le
 Prototyped functions with no "narrow" types (smaller than int) and no variable
 argument list must be callable in translation units without the prototype.
 
-Varargs functions may only be called through a prototype.
-
 Return statements with no value are legal in functions with non-void return
 types, so long as the return value is never used by the caller.
 
-### Switch Statements
+### Variable-Sized Argument Lists
+
+`va_start` and `va_arg` are macros, not functions.
+
+Variable argument functions can only be called in the presence of a prototype,
+so the compiler is always aware that such calls involve variable arguments.
+Thus, a totally different calling convention can be used.
+
+`va_start` includes the first non-variable argument as a parameter, but its use
+is totally optional.
+
+For efficiency, like with regular functions, the arguments should probably be passed in registers.
+
+va_start can copy any registers used by the function to a register save area
+in the `va_list`. The number of registers used can be passed as well, to allow
+only saving passed values. Values that are not used need not be saved.
+
+The argument list can be scanned more than once, so the arguments need to be
+preserved, even after a traversal completes.
+
+Each of these can be implemented in terms of magic compiler builtins.
+__builtin_va_arg returns a void* pointer that is cast to the corresponding type
+and indirected through in a macro. This pointer is not real; it will be
+completely removed by the code generator. The compiler will emit a warning if a
+void pointer is cast to a function type; this must be suppressed in this
+case, since the pointers don't actually "exist". This complexity saves creating
+a special compiler form, which is even more complex.
+
+### switch Statements
 
 At least 257 case labels need to be supported (C89 2.2.4.1). This precludes
 creating a sort of byte-indexed perfect-hashed jump table, since there would be
 too many entries in the worst case. This is to allow branching on any character
 as well as EOF.
+
+### setjmp/longjmp
+
+This implementation needs to define <setjmp.h>, since it may need significant
+compiler support to implement.
+
+Unlike other library functions, setjmp can be a macro without a corresponding
+external identifier. Trying to access it as a function (taking its address,
+etc.) is undefined behavior. Additionally, the following forms are the only
+defined uses of setjmp:
+* ```if/while/do-while (setjmp(<...>))```
+* ```if/while/do-while (!setjmp(<...>))```
+* ```if/while/do-while (setjmp(<...>) ==/!= <int const>)```
+* ```setjmp(<...>);```
+
+Life goes on after setjmp is called; various changes can be made to automatic
+variables in the setjmp-containing function. It's desirable that each variable
+has the exact value it had when longjmp was called, but this is difficult to
+achieve. If any of those automatic variables is in a register, then that
+register may have been saved and reused by some intervening function. But
+longjmp can't easily restore the saved value for that register, since it may be
+in an even deeper function.
+
+To solve the this dilemma, most setjmp/longjmp implementations just save the
+values when *setjmp* was called, and restore those. This is correct if and only
+if the values have not changed since setjmp was called. The standard
+specifically allows this, so long as the automatic variables are not marked
+`volatile`. Volatile automatic objects and static objects must have their
+values at the time of the longjmp, even if they have changed since the setjmp;
+accordingly, they cannot easily be stored in a register in any function that
+can call setjmp.
+
+It's OK for setjmp and longjmp to be fairly slow, but they can't be so slow
+that they save and restore every single usable zero page address each time they
+are called. This complicates naively using zero page addresses as registers.
+
+Longjmp needs to pop all return addresses (and anything else) off of the stack
+until the stack is restored to its state at the time of setjmp. Nothing need
+actually be changed, but the stack register must change. This is true for any
+soft stacks used as well; these soft stack pointers need to be reset.
+
+Longjmp provides an alternative way that an invocation of a function can be
+terminated. All invocations on the logical stack between the caller of setjmp
+and the call of longjmp are terminated. If an interrupt handler is terminated
+in this way, the computation that was occurring no longer matters; it can be
+considered abandoned. Thus, the flags that were pushed onto the stack by the
+interrupt handler no longer matter. The processor should remain in the state it was in when the longjmp was issued; including the interrupt enable flag.
 
 ## Libraries
 
@@ -194,78 +267,3 @@ This becomes:
 void exit(int []);
 ```
 
-## End new content
-
-4.6 [NON-LOCAL JUMPS](https://port70.net/~nsz/c/c89/c89-draft.html#4.6)
-
-* This implementation needs to define <setjmp.h>, since it may need significant
-  compiler support to implement.
-
-* Unlike other library functions, setjmp can be a only a macro. Trying to access
-  it as a function (taking its address, etc.) is undefined behavior.
-
-* The following forms are the only defined uses of setjmp:
-
-  ```if/while/do-while (setjmp(<...>)) ```
-
-  ```if/while/do-while (!setjmp(<...>)) ```
-
-  ```if/while/do-while (setjmp(<...>) ==/!= <int const>) ```
-
-  ```setjmp(<...>);```
-
-* Life goes on after setjmp is called; various changes can be made to automatic
-  variables in the setjmp-containing function. It's desirable that each variable
-  has the exact value it had when longjmp was called, but this is difficult to
-  achieve. If any of those automatic variables is in a register, then that
-  register may have been saved and reused by some intervening function. But
-  longjmp can't easily restore the saved value for that register, since it may
-  be in an even deeper function. Most setjmp/longjmp implementations just save
-  the values when *setjmp* was called, and restore those. This restores the
-  value to that at the time *longjmp* was called, so long as they haven't
-  changed since setjmp was called. The standard specifically allows this, so
-  long as the automatic variables are not marked `volatile`. Volatile and static
-  objects must have their values at the time of the longjmp, even if they have
-  changed since the setjmp; with this approach, it usually means they cannot be
-  stored in a register.
-
-* Setjmp and longjmp can be slow, but they can't be so slow that they save and
-  restore every single usable zero page address each time they are called.
-
-* Longjmp needs to all return addresses (and anything else) off of the stack until
-  the stack is restored to its state at the time of setjmp. Nothing need actually
-  be changed, but the stack register must change. This is true for any soft stacks
-  used as well; these soft stack pointers need to be reset.
-
-* Longjmp provides an alternative way that an invocation of a function can be
-  terminated. All invocations on the logical stack between the caller of setjmp
-  and the call of longjmp are terminated. If an interrupt handler is terminated
-  in this way, the computation that was occurring no longer matters; it can be
-  considered abandoned. Thus, the flags that were pushed onto the stack by the
-  interrupt handler no longer matter.
-
-* Setjmp can only occur "up" the stack, never "down". Thus, the only way to
-  longjmp into an interrupt handler is from inside a handler. This does not
-  create any additional troubles.
-
-4.8 [VARIABLE ARGUMENTS <stdarg.h>](https://port70.net/~nsz/c/c89/c89-draft.html#4.8)
-
-* `va_start` and `va_arg` are macros, not functions.
-* Variable argument functions can only be called in the presence of a prototype, so the compiler
-  is always aware that such calls involve variable arguments. Thus, a totally different calling
-  convention can be used.
-* `va_start` includes the first non-variable argument as a parameter, but its use is totally optional.
-* For efficiency, like with regular functions, the arguments should probably be passed in registers.
-  * `va_start` can copy any registers used by the function to a register save area in the `va_list`.
-  * The number of registers used can be passed as well, to allow only saving passed values.
-  * Values that are not used need not be saved.
-* The argument list can be scanned more than once, so the arguments need to be
-  preserved, even after a traversal completes. The arguments need not be kept if
-  the compiler can prove that no more than one traversal occurs.
-* Each of these can be implemented in terms of magic compiler builtins.
-  __builtin_va_arg returns a void* pointer that is cast to the corresponding
-  type and indirected through in a macro. This pointer is not real; it will be
-  completely removed by the code generator. The compiler will emit a warning if
-  a void pointer is cast to a function type; this should be suppressed in this
-  case, since the pointers don't actually "exist". This complexity saves
-  creating a special compiler form, which is even more complex.
