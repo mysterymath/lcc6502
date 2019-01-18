@@ -54,7 +54,6 @@ stable picture of these requirements is formed, design will begin.
 
 ### TODO
 
-* [ ] Scan through the processor instruction set for requirements.
 * [ ] Scan through Atari 800 reference manual for requirements.
 * [ ] Scan through Commodore 64 reference manual for requirements.
 * [ ] Are there any cases where a value *must* be located in the zero page, say,
@@ -84,6 +83,14 @@ A basic proof-of-concept prototype for the compiler.
 
 The relevant parts of the LCC compiler. Currently just the C preprocessor and C
 compiler proper. All other backends except "bytecode" have been removed.
+
+### Other Resources
+
+For a very detailed description of the behavior of the 6510 processor (the
+variation of the 6502 used in the Commodore 64), see
+[64doc.txt](http://www.atarihq.com/danb/files/64doc.txt). The 6510's instuction
+set and behavior is essentially the same as the 6502 for the purposes of this
+compiler.
 
 ## Other Approaches
 

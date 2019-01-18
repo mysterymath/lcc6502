@@ -334,6 +334,10 @@ processor flags are restored to their value before the interrupt, including
 whether interrupts are enabled or disabled. If an interrupt is exited any other
 way (e.g., longjmp), this restoration does not occur.
 
+BCD mode is not cleared when an interrupt is entered. Behavior is undefined if
+an interrupt occurs while BCD mode is enabled. The compiler provides no support
+for enabling or disabling BCD mode, due to insufficient utility.
+
 ### Signal Handling
 
 It is well-defined to both read and write a static volatile `sig_atomic_t`
