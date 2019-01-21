@@ -3,9 +3,40 @@
 The C standard, the nature of the 6502, and the nature of each target platform
 will impose a number of requirements for the design of a compiler. These requirements are gathered here, organized by topic.
 
+## Target Memory
+
+The addresses that are safe for a program to use may differ from system to
+system, even within the same product type. There are two ways to deal with
+this: restrict the program to only operate correctly on a particular system, or
+target a conservative version of the system, and use autodetection to take
+advantage of bigger systems. The compiler should support both: automatic
+allocation of and use of more RAM and conservative allocation that is
+guaranteed to work on a set of systems, no matter how they are configured.
+
+### Atari 800
+
+Various memory regions are reserved for aspects of the operating system, but various aspects of the operating system may not be used, and the operating system can be disabled entirely. The compiler should support generating code to operate in any plausible environment.
+
+Note that disabling the OS must be done after startup. Thus, some memory
+locations may only be free after a part of the program has run. Furthermore,
+the part of the program that disables the OS cannot use those locations. It
+must instead run in a restricted environment.
+
+If the OS is disabled, it's non-trivial to reenable it. Accordingly, the
+compiler should provide a mode that permanently disables the OS before program
+initialization. The disable code can be made sure not to conflict with the OS,
+and after it runs, the compiler has free reign to use the full resources of the
+system.
+
+Such pre-initialization code should be customizable, and should necessarily be
+written in assembly language. This code would take the system from its power-on
+state to the state expected by the compiler. After it executes, the compiler
+would run its own initialization routines.
+
 ## Address Sensitivity
 
-A number of 6502 constructs depend on the location in which code or data is stored in the address space of the processor.
+A number of 6502 constructs depend on the location in which code or data is
+stored in the address space of the processor.
 
 All zero page addressing modes can only deal with entries in the first 256
 memory locations. In many ways, these locations are special, must like
