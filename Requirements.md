@@ -15,23 +15,16 @@ guaranteed to work on a set of systems, no matter how they are configured.
 
 ### Atari 800
 
-Various memory regions are reserved for aspects of the operating system, but various aspects of the operating system may not be used, and the operating system can be disabled entirely. The compiler should support generating code to operate in any plausible environment.
-
-Note that disabling the OS must be done after startup. Thus, some memory
-locations may only be free after a part of the program has run. Furthermore,
-the part of the program that disables the OS cannot use those locations. It
-must instead run in a restricted environment.
-
-If the OS is disabled, it's non-trivial to reenable it. Accordingly, the
-compiler should provide a mode that permanently disables the OS before program
-initialization. The disable code can be made sure not to conflict with the OS,
-and after it runs, the compiler has free reign to use the full resources of the
-system.
-
-Such pre-initialization code should be customizable, and should necessarily be
-written in assembly language. This code would take the system from its power-on
-state to the state expected by the compiler. After it executes, the compiler
-would run its own initialization routines.
+The program is booted by the OS; thus the compiler cannot load at boot any
+resources that are used by the OS. The program may be able to free up
+additional resources after boot. Such resources can be made accessible as
+automatic program space, including zero page registers, additional memory
+locations, and stack space. To allow this, the compiler should optionally run a
+user-provided initialization routine after boot. This routine would run under
+the boot configuration of the system and would place the system into a new
+configuration. A description of the new configuration would be provided
+alongside the routine; after the routine is run, the compiler assumes the
+system is in the state described.
 
 ## Address Sensitivity
 
