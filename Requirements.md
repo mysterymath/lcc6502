@@ -270,36 +270,6 @@ Negative of the processor reflect the value in the Y register. The IOCB
 memory locations are also updated to reflect the number of bytes written,
 status, etc.
 
-The IOCB layout is as follows:
-
-```C
-struct IOCB {
-    /* Handler ID */
-    unsigned char HID;
-
-    /* Device Number */
-    unsigned char DNO;
-
-    /* Command Byte */
-    unsigned char CMD;
-
-    /* Status */
-    unsigned char STA;
-
-    /* Buffer Address */
-    const void *BA;
-
-    /* PUT Address */
-    const void *PT;
-
-    /* Buffer Length/Byte Count */
-    unsigned int BL;
-
-    /* Auxiliary Information */
-    unsigned char AX[6];
-} *IOCB = (struct IOCB*)0x340;
-```
-
 #### Variable-Sized Argument Lists
 
 `va_start` and `va_arg` are macros, not functions.
