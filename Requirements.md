@@ -297,7 +297,7 @@ struct IOCB {
 
     /* Auxiliary Information */
     unsigned char AX[6];
-}
+} *IOCB = (struct IOCB*)0x340;
 ```
 
 #### Variable-Sized Argument Lists
