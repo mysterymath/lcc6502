@@ -45,24 +45,26 @@ this automatically, since a branch followed by a jump is twice as expensive as
 a branch, and the distinction should be incorporated into the compilers' cost
 model.
 
-If an indirect jump (JMP (<address>)) is issued where xxFF, for any xx, the
-address to jump to will be read from xxFF and xx00, rather than from the
-logically correct location, xxFF and xxFF+1. The processor essentially forgets
-to add 1 to the high-order byte. The compiler should prevent this from
-occurring; this allows easy compatibility with the CMOS version of the chip at almost no cost.
+If an indirect jump is issued where *xx*FF, for any *xx*, the address to jump
+to will be read from *xx*FF and *xx*00, rather than from the logically
+correct location, *xx*FF and *xx*FF+1. The processor essentially forgets to
+add 1 to the high-order byte. The compiler should prevent this from
+occurring; this allows easy compatibility with the CMOS version of the chip
+at almost no cost.
 
-Indexed zero page accesses are also vulnerable to this wrap-around. If X=1 and
-`LDA $FF,X` is issued, the A register will be loaded with the value from
-address 0, not from $100. Zero page indexing should thus be considered to use
-modular arithmetic. The compiler should instead use the absolute indexed addressing modes whenever there is a risk of wrap-around.
+Indexed zero page accesses are also vulnerable to this wrap-around. If X=1
+and `LDA $FF,X` is issued, the A register will be loaded with the value from
+address 0, not from 0x100. Zero page indexing should thus be considered to use
+modular arithmetic. The compiler should instead use the absolute indexed
+addressing modes whenever there is a risk of wrap-around.
 
-Wrap-around also occurs for the indexed modes; for example, `LDA ($FF),Y` with
-Y=0 loads A with the value at the address stored at the addresses $FF and 0.
-The compiler should avoid placing any addresses that will be indirected through
-on the $FF $100 boundary. Any tables using the ($xx,X) addressing mode must be
-ensured to fit entirely on the zero page. This wrap-around behavior may be used
-to subtract X from the address instead of adding it via 2's complement
-behavior.
+Wrap-around also occurs for the indexed modes; for example, `LDA ($FF),Y`
+with Y=0 loads A with the value at the address stored at the addresses 0xFF
+and 0. The compiler should avoid placing any addresses that will be
+indirected through on the 0xFF-0x100 boundary. Any tables using the ($*xx*,X)
+addressing mode must be ensured to fit entirely on the zero page. This
+wrap-around behavior may be used to subtract X from the address instead of
+adding it via 2's complement behavior.
 
 A number of instructions are more expensive when page boundaries are crossed;
 this should be incorporated into the compiler's cost model.
@@ -252,7 +254,21 @@ argument list must be callable in translation units without the prototype.
 Return statements with no value are legal in functions with non-void return
 types, so long as the return value is never used by the caller.
 
-### Variable-Sized Argument Lists
+#### System Calls
+
+The Atari 800 provides a number of OS routines with their own calling
+conventions. The compiler should allow C code to call these somehow.
+
+TODO: Determine the mechanism once all examples have been collected.
+
+Calling CIO routines involves first setting up a set of IOCB memory locations
+to the proper value, then setting the X register IOCB number times 16 in the
+X register, and then possibly setting the A register a data byte. A JSR to
+the CIO entry point is then issued. Afterward, the X register is unchanged,
+but the Y register is set to an error status. The condition flags Zero and
+Negative of the processor reflect the value in the Y register.
+
+#### Variable-Sized Argument Lists
 
 `va_start` and `va_arg` are macros, not functions.
 
@@ -280,14 +296,14 @@ void pointer is cast to a function type; this must be suppressed in this
 case, since the pointers don't actually "exist". This complexity saves creating
 a special compiler form, which is even more complex.
 
-### switch Statements
+#### switch Statements
 
 At least 257 case labels need to be supported (C89 2.2.4.1). This precludes
 creating a sort of byte-indexed perfect-hashed jump table, since there would be
 too many entries in the worst case. This is to allow branching on any character
 as well as EOF.
 
-### setjmp/longjmp
+#### setjmp/longjmp
 
 This implementation needs to define <setjmp.h>, since it may need significant
 compiler support to implement.
