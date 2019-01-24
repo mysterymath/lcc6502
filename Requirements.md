@@ -266,7 +266,39 @@ to the proper value, then setting the X register IOCB number times 16 in the
 X register, and then possibly setting the A register a data byte. A JSR to
 the CIO entry point is then issued. Afterward, the X register is unchanged,
 but the Y register is set to an error status. The condition flags Zero and
-Negative of the processor reflect the value in the Y register.
+Negative of the processor reflect the value in the Y register. The IOCB
+memory locations are also updated to reflect the number of bytes written,
+status, etc.
+
+The IOCB layout is as follows:
+
+```C
+struct IOCB {
+    /* Handler ID */
+    unsigned char HID;
+
+    /* Device Number */
+    unsigned char DNO;
+
+    /* Command Byte */
+    unsigned char CMD;
+
+    /* Status */
+    unsigned char STA;
+
+    /* Buffer Address */
+    const void *BA;
+
+    /* PUT Address */
+    const void *PT;
+
+    /* Buffer Length/Byte Count */
+    unsigned int BL;
+
+    /* Auxiliary Information */
+    unsigned char AX[6];
+}
+```
 
 #### Variable-Sized Argument Lists
 
