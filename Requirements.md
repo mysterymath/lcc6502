@@ -270,6 +270,15 @@ Negative of the processor reflect the value in the Y register. The IOCB
 memory locations are also updated to reflect the number of bytes written,
 status, etc.
 
+Calling resident I/O handlers without going through CIO requires jumping to
+an address given by an entry in a table of addresses provided by the OS.
+However, each address is one less than it should be. This is to facilitate
+pushing the address on the stack, then using RTS to jump to the address.
+(This is smaller but slower than loading the address into the zero page and
+using an indirect JMP.) RTS adds one to the address it takes off the stack to
+move the PC to the instruction after the corresponding JSR. The compiler
+needs to support using RTS to execute this kind of indirect jump.
+
 #### Variable-Sized Argument Lists
 
 `va_start` and `va_arg` are macros, not functions.
