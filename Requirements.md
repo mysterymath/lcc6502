@@ -104,10 +104,6 @@ also occurs on warm-start.
 TODO: Figure out what should happen if a DOS-loaded program clobbers RAM
 initialized by the cartridge. How does BASIC handle this?
 
-Vectors DOSINI and CASINI are JSRed to in case of a warm-start, in lieu of
-booting from disk and cassette, respectively. These should be set to the pre-main
-initialization routine at program initialization time.
-
 ## Data
 
 ### ROM
