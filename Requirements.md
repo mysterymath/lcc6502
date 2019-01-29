@@ -101,8 +101,14 @@ also occurs on warm-start.
  `main()` should still correspond to the cartridge boot vector; the user can
  still boot the cartridge using DOS, for example.
 
-TODO: Figure out what should happen if a DOS-loaded program clobbers RAM
-initialized by the cartridge. How does BASIC handle this?
+TODO: Determine if the "Load Cartridge" option in DOS runs the cartridge
+initializer.
+
+If the DOS menu runs, it will clobber all the low-memory regions used by DOS.
+If present, a MEM.SAV file is used to save and restore the region from MEMLO
+to MEMTOP.
+
+If DOS is resident, MEMLO will differ depending on the number of drives present.
 
 ## Data
 

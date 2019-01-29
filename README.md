@@ -54,7 +54,7 @@ stable picture of these requirements is formed, design will begin.
 
 ### TODO
 
-* [ ] Scan through Atari 800 reference manual for requirements.
+* [ ] Determine all load and execution scenarios for the Atari 800 (file formats, combinations, etc.)
 * [ ] Scan through Commodore 64 reference manual for requirements.
 * [ ] Are there any cases where a value *must* be located in the zero page, say,
       to make a system call? This would require the named address extension.
