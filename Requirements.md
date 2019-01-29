@@ -84,14 +84,33 @@ Even though it is permissible by the standard, the compiler should not use
 these instructions for volatile types, since the behavior is quite surprising
 and is not necessary.
 
-## Data
-
-### ROM
+## Initialization
 
 Objects in static storage need to be initialized *before* program startup
 (C89 2.1.2). For ROM output, this means that mutable static objects need to be
 copied to RAM locations. These would become the canonical locations for the
 objects.
+
+### Atari 800
+
+A JSR to cartridge locations occur before boot is complete. This is intended
+to "initialize" the cartridge. This may be useful, since a diskette boot may
+still occur (if requested by a flag in the cartridge). The initialization
+also occurs on warm-start.
+
+ `main()` should still correspond to the cartridge boot vector; the user can
+ still boot the cartridge using DOS, for example.
+
+TODO: Figure out what should happen if a DOS-loaded program clobbers RAM
+initialized by the cartridge. How does BASIC handle this?
+
+Vectors DOSINI and CASINI are JSRed to in case of a warm-start, in lieu of
+booting from disk and cassette, respectively. These should be set to the pre-main
+initialization routine at program initialization time.
+
+## Data
+
+### ROM
 
 Non-`volatile` `const` objects with statically-known values may be placed in
 ROM, and if their address is never used, they need not be allocated at all.
@@ -226,6 +245,21 @@ occurs while one is being fetched. This was corrected in the CMOS
 implementation. To avoid this complexity, and due to insufficient utility, the
 BRK instruction should not be used by the compiler.
 
+IRQ handlers already have the A register saved, but not the X or Y registers.
+To allow C functions to be called by the OS, customizable callee-save
+register sets are required.
+
+Given the above, an interrupt handler also needs to restore registers it did
+not save (A) before executing a RTI.
+
+The system timers are called in the context of an interrupt via a JSR. These
+must end in an RTS, but all registers are already saved. Note that these do
+not need to restore the other registers before RTS, unlike the above. They
+still must not clobber anything in use by an interrupted function. Thus
+customizable calling conventions are needed for "regular" functions too.
+
+TODO: Redefine the __interrupt() mechanism to accomodate this.
+
 ### Code Size
 
 For many practical programs, it may be difficult to fit the program and its
@@ -278,6 +312,9 @@ pushing the address on the stack, then using RTS to jump to the address.
 using an indirect JMP.) RTS adds one to the address it takes off the stack to
 move the PC to the instruction after the corresponding JSR. The compiler
 needs to support using RTS to execute this kind of indirect jump.
+
+Implementing a CIO handler requires taking arguments from a number of places:
+the A, X, and Y registers, as well as an IOCB in page 0 named ZIOCB.
 
 #### Variable-Sized Argument Lists
 

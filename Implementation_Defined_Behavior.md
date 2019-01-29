@@ -302,6 +302,11 @@ that is even (i.e., the lowest order bit is zero).
 
 ### Interrupt Handlers
 
+TODO: This mechanism needs to be accomodated to incorporate the wide variety
+of interrupt handler calling conventions used by the Atari OS (A saved, all
+regs saved, RTS expected, restore and RTI expected, they have it all,
+really.)
+
 A function annotation is provided to mark a function as an interrupt
 handler. This alters the generation of the function such that:
 
