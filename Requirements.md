@@ -101,12 +101,14 @@ also occurs on warm-start.
  `main()` should still correspond to the cartridge boot vector; the user can
  still boot the cartridge using DOS, for example.
 
-TODO: Determine if the "Load Cartridge" option in DOS runs the cartridge
-initializer.
+The "Load Cartridge" option in DOS does not run the cartridge initializer.
+Furthermore, it issues a JMP to the start address, not a JSR like the OS.
 
 If the DOS menu runs, it will clobber all the low-memory regions used by DOS.
 If present, a MEM.SAV file is used to save and restore the region from MEMLO
-to MEMTOP.
+to MEMTOP. This means the cartridge initializer can only safely be divorced
+from the cartridge start routine if MEM.SAV is being used; otherwise the setup
+performed by the init routine will be clobbered by DOS.
 
 If DOS is resident, MEMLO will differ depending on the number of drives present.
 
