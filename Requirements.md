@@ -13,8 +13,6 @@ advantage of bigger systems. The compiler should support both: automatic
 allocation of and use of more RAM and conservative allocation that is
 guaranteed to work on a set of systems, no matter how they are configured.
 
-### Atari 800
-
 The program is booted by the OS; thus the compiler cannot load at boot any
 resources that are used by the OS. The program may be able to free up
 additional resources after boot. Such resources can be made accessible as
@@ -25,6 +23,20 @@ the boot configuration of the system and would place the system into a new
 configuration. A description of the new configuration would be provided
 alongside the routine; after the routine is run, the compiler assumes the
 system is in the state described.
+
+Part of the program or its may occupy a different page than others; they may
+share the same memory locations, but they would require a paging instruction
+to be issued to disambiguate. This can be handled much like in an assembler;
+logical symbols are used by the compiler to trace the flow of the program,
+but the actual addresses occupied by those symbols may overlap.
+
+On the face of it, this conflicts with the C89 requirement that any two
+pointers that compare equal point to the same object. Accordingly:
+
+* This functionality should be considered an extension of the standard and
+  must be explicitly requested by the user.
+* Comparing two pointers that refer to objects in regions with overlapping
+  memory assignments is undefined behavior.
 
 ## Address Sensitivity
 
@@ -111,6 +123,16 @@ from the cartridge start routine if MEM.SAV is being used; otherwise the setup
 performed by the init routine will be clobbered by DOS.
 
 If DOS is resident, MEMLO will differ depending on the number of drives present.
+
+### Commodore 64
+
+Unlike the Atari, the Commodore 64 only boots to either a cartridge or BASIC.
+
+Disk software written in assembly language typically has a very small
+tokenized BASIC header, containing `SYS <start address>`. Thus, after a
+`LOAD` to the appropriate address, when the program is `RUN`, BASIC
+immediately hands control to the program. This also means that such programs
+either need to be contiguous or impelement their own loading.
 
 ## Data
 
@@ -319,6 +341,18 @@ needs to support using RTS to execute this kind of indirect jump.
 
 Implementing a CIO handler requires taking arguments from a number of places:
 the A, X, and Y registers, as well as an IOCB in page 0 named ZIOCB.
+
+When calling KERNAL routines, the Commodore 64 uses the CARRY bit to indicate
+whether a error occurred. The A register contains the error number if set.
+
+The A, X, and Y registers are variously used for input and output of KERNAL
+routines.
+
+As far as can be determined, neither the OS of the Commodore 64 nor the Atari
+800 require passing zero page locations to routines. Thus, no special C
+support need be provided for zero-page-only variables. If necessary, these
+can be done in assembly language. (Save the contents of a zero page location,
+use it, and restore. C is none the wiser.)
 
 #### Variable-Sized Argument Lists
 
