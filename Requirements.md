@@ -21,12 +21,21 @@ compiler. These requirements are gathered here, organized by topic.
     program that minimally boots from an Atari 800 diskette, loads the rest of
     itself, then runs the code that it loaded.
 
+* In concert with an assembler, the compiler should be capable of producing a
+    program that `RUN`s when `LOAD`ed from a Commodore 64 disk.
+
+* In concert with an assembler, the compiler should be capable of producing a
+    program that boots from a Commodore 64 cartridge.
+
 * The compiler must provide a means for the user to specify what address
     regions (including Zero Page) are available for use by the compiler. This
     must include which address regions are RAM or ROM and the number of banks
     available at various address regions. The compiler must produce code and
     data that resides in those address regions, such that the code produced
     can be included into an assembly program that describes the full program.
+
+* The compiler should produce code that runs correctly on either a NMOS or CMOS
+    6502.
 
 ## DESIGN
 
@@ -51,8 +60,6 @@ description of the resource specification mechanism.
 
 * A number of instructions are one cycle more expensive when they cross page
     boundaries; this should be incorporated into the cost model.
-
-## Wrap-around
 
 * The system should not emit any indirect JMPs through a vector ending with FF,
     since the NMOS versions of the 6502 have a bug. Avoiding the scenario
@@ -84,26 +91,6 @@ description of the resource specification mechanism.
 ## END DESIGN
 
 ## OLD REQUIREMENTS
-
-### Atari 800
-
-If the DOS menu runs, it will clobber all the low-memory regions used by DOS.
-If present, a MEM.SAV file is used to save and restore the region from MEMLO
-to MEMTOP. This means the cartridge initializer can only safely be divorced
-from the cartridge start routine if MEM.SAV is being used; otherwise the setup
-performed by the init routine will be clobbered by DOS.
-
-If DOS is resident, MEMLO will differ depending on the number of drives present.
-
-### Commodore 64
-
-Unlike the Atari, the Commodore 64 only boots to either a cartridge or BASIC.
-
-Disk software written in assembly language typically has a very small
-tokenized BASIC header, containing `SYS <start address>`. Thus, after a
-`LOAD` to the appropriate address, when the program is `RUN`, BASIC
-immediately hands control to the program. This also means that such programs
-either need to be contiguous or impelement their own loading.
 
 ## Data
 
