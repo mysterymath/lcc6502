@@ -12,21 +12,21 @@ compiler. These requirements are gathered here, organized by topic.
   * OSS one-chip 16 KB cartridge (Atari800 type 15)
 
 * In concert with an assembler, the compiler should be capable of producing a
-  program that boots from an Atari 800 cassette.
+    program that boots from an Atari 800 cassette.
 
 * In concert with an assembler, the compiler should be capable of producing a
-  program that boots from an Atari 800 diskette.
+    program that boots from an Atari 800 diskette.
 
 * In concert with an assembler, the compiler should be capable of producing a
-  program that minimally boots from an Atari 800 diskette, loads the rest of
-  itself, then runs the code that it loaded.
+    program that minimally boots from an Atari 800 diskette, loads the rest of
+    itself, then runs the code that it loaded.
 
 * The compiler must provide a means for the user to specify what address
-  regions (including Zero Page) are available for use by the compiler. This
-  must include which address regions are RAM or ROM and the number of banks
-  available at various address regions. The compiler must produce code and data
-  that resides in those address regions, such that the code produced can be
-  included into an assembly program that describes the full program.
+    regions (including Zero Page) are available for use by the compiler. This
+    must include which address regions are RAM or ROM and the number of banks
+    available at various address regions. The compiler must produce code and
+    data that resides in those address regions, such that the code produced
+    can be included into an assembly program that describes the full program.
 
 ## DESIGN
 
@@ -34,78 +34,58 @@ On the face of it, paging conflicts with the C89 requirement that any two
 pointers that compare equal point to the same object. Accordingly:
 
 * Paging functionality should be considered an extension of the standard and
-  must be explicitly requested by the user.
+    must be explicitly requested by the user.
 
 * Comparing two pointers that refer to objects in regions with overlapping
-  memory assignments is undefined behavior.
+    memory assignments is undefined behavior.
 
 TODO: Add both of these to Implementation-Defined behavior, along with a
 description of the resource specification mechanism.
 
 * The compiler should emit a branch to an absolute JMP if a branch needs to
-  travel more than 127 bytes forward or more than 128 bytes backward. This
-  should be incorporated into the cost model.
+    travel more than 127 bytes forward or more than 128 bytes backward. This
+    should be incorporated into the cost model.
 
 * The compiler should consider branches taken one cycle more expensive than
-  branches not taken in its cost model.
+    branches not taken in its cost model.
 
 * A number of instructions are one cycle more expensive when they cross page
-  boundaries; this should be incorporated into the cost model.
+    boundaries; this should be incorporated into the cost model.
 
 ## Wrap-around
 
 * The system should not emit any indirect JMPs through a vector ending with FF,
-  since the NMOS versions of the 6502 have a bug. Avoiding the scenario entirely
-  allows easy compatibility with both the NMOS and CMOS versions of the chip.
+    since the NMOS versions of the 6502 have a bug. Avoiding the scenario
+    entirely allows easy compatibility with both the NMOS and CMOS versions
+    of the chip.
 
 * Indexed zero page accesses are vulnerable to 8-bit wraparound. If this would
-  produce incorrect behavior, the compiler should use the absolute address
-  mode and update the cost model accordingly.
+    produce incorrect behavior, the compiler should use the absolute address
+    mode and update the cost model accordingly.
 
 * The compiler should avoid placing any addresses that will be indirected
-  through on the 0xFF-0x100 boundary.
+    through on the 0xFF-0x100 boundary.
 
 * Any tables using the `(,X)` addressing mode must be ensured to fit entirely
-  on the zero page.
+    on the zero page.
+
+* Indexed addressing modes that cross page boundaries (start address + index is
+    not at the same 256-byte page as the start address) issue an erroneous
+    read from the old page, exactly 256 bytes prior to the correct address.
+    The compiler must ensure that only addresses controlled by the compiler
+    are accessed in such a way.
+
+* The compiler should not use read-modify-write instructions like INC with
+    volatile types.
+
+* Mutable static objects need to be copied from ROM to RAM locations. These RAM
+    locations would be the canonical locations for the objects.
 
 ## END DESIGN
 
 ## OLD REQUIREMENTS
 
-## Spurious Reads and Writes
-
-Indexed addressing modes that cross page boundaries (start address + index is
-not at the same 256-byte page as the start address), the processor first issues
-an erroneous read from the old page, exactly 256 bytes prior to the correct
-address. Then the read/write occurs at the correct location. CMOS versions do
-not have this behavior. The compiler must ensure that no addresses with I/O
-behavior triggered on a read are accessed in such a way.
-
-Read-modify-write instructions like INC first write the unmodified data, then
-the modified data. CMOS versions instead issue two reads, but only one write.
-Even though it is permissible by the standard, the compiler should not use
-these instructions for volatile types, since the behavior is quite surprising
-and is not necessary.
-
-## Initialization
-
-Objects in static storage need to be initialized *before* program startup
-(C89 2.1.2). For ROM output, this means that mutable static objects need to be
-copied to RAM locations. These would become the canonical locations for the
-objects.
-
 ### Atari 800
-
-A JSR to cartridge locations occur before boot is complete. This is intended
-to "initialize" the cartridge. This may be useful, since a diskette boot may
-still occur (if requested by a flag in the cartridge). The initialization
-also occurs on warm-start.
-
- `main()` should still correspond to the cartridge boot vector; the user can
- still boot the cartridge using DOS, for example.
-
-The "Load Cartridge" option in DOS does not run the cartridge initializer.
-Furthermore, it issues a JMP to the start address, not a JSR like the OS.
 
 If the DOS menu runs, it will clobber all the low-memory regions used by DOS.
 If present, a MEM.SAV file is used to save and restore the region from MEMLO
