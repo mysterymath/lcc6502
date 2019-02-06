@@ -88,54 +88,38 @@ description of the resource specification mechanism.
 * Mutable static objects need to be copied from ROM to RAM locations. These RAM
     locations would be the canonical locations for the objects.
 
+* Objects with statically-known constant values whose addresses are never used
+    need not be allocated.
+
+* Static-lifetime objects that can be proven to neither be accessed using
+    `volatile` nor mutated can be allocated in ROM.
+
+* Address constant expressions may be used in static initializers, and they
+    refer to part or all of other static objects or functions. These may even
+    be self-referential; for instance, a static struct with a recursive
+    pointer can refer to its own address.
+
+* Automatic objects that can be proven never to be present in two
+    simultaneously active invocations can be treated like static objects, with
+    one exception. If the objects were initialized, the initialization still
+    needs to happen each time, unlike other statics, which are initialized before
+    program startup.
+
+* Values of pointers to auto objects in terminated blocks are indeterminate.
+    This means that objects in blocks that cannot be simultaneously active
+    can safely share the same pointer value. This includes if they are
+    treated like statics via the above.
+
+* When a stack is used, it's simplest (and fastest) to only bump the stack
+    pointer once at the beginning of a function. Otherwise, any goto
+    statements that enter a block need to allocate all the space required for
+    that block.
+
 ## END DESIGN
 
 ## OLD REQUIREMENTS
 
 ## Data
-
-### ROM
-
-Non-`volatile` `const` objects with statically-known values may be placed in
-ROM, and if their address is never used, they need not be allocated at all.
-This is actually true of any objects that has a statically-known value that can
-be proven never to be modified (`const` just ensures this).
-
-`volatile const` objects should not be placed in ROM and must be allocated,
-since the intent is that ASM code or hardware unknown to the C compiler should
-be able to modify the value.
-
-### Constant Expressions
-
-Address constant expressions may be used in static initializers, and they refer
-to part or all of other static objects or functions. These may even be
-self-referential; for instance, a static struct with a recursive pointer can
-refer to its own address.
-
-Constant expression evaluation is free to use the host arithmetic, so long as
-it is more precise than the target (not hard.)
-
-### Automatic Storage
-
-Automatic objects that can be proven never to be present in two simultaneously
-active invocations can be treated much like static objects.  If the objects
-were initialized, the initialization still needs to happen each time, unlike
-other statics, which are initialized before program startup.  If the value of
-such an object is used, it was set in some currently-active procedure; such
-values cannot by their nature persist between calls.
-
-Values of pointers to auto objects in terminated blocks are indeterminate.
-This means that objects in blocks that cannot be simultaneously active can
-safely share the same pointer value.
-
-It's simplest to only bump the stack pointer once at the beginning of a
-function. Otherwise, any goto statements that enter a block need to allocate
-all the space required for that block.
-
-## Volatile
-
-Reads from volatile objects need to be treated differently than regular reads,
-so that information needs to be extacted from LCC (C89 2.1.2.3).
 
 ### Characters
 

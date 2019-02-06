@@ -33,3 +33,7 @@ is organized in parallel with the requirements document, section for section.
    not use these instructions for volatile types, since the behavior is quite
    surprising and is not necessary. It may cause issues with interrupts or
    system registers.
+
+* The expectation is that objects accessed using `volatile` can be modified
+   outside the program, so it doesn't make sense to put them in ROM, even if
+   the C compiler never observes changes.
