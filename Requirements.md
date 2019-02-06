@@ -37,6 +37,8 @@ compiler. These requirements are gathered here, organized by topic.
 * The compiler should produce code that runs correctly on either a NMOS or CMOS
     6502.
 
+* The system should be ANSI C compliant for a freestanding implementation.
+
 ## DESIGN
 
 On the face of it, paging conflicts with the C89 requirement that any two
@@ -115,48 +117,35 @@ description of the resource specification mechanism.
     statements that enter a block need to allocate all the space required for
     that block.
 
+* The preprocessor needs to be modified to understand the target character set,
+    since character literals can be used in constant expressions for conditional
+    compilation.
+
+  * LCC's preprocessor currently just uses the source character set, but it's
+    easy to change in `cpp/eval.c` (line 502).
+
+* An LCC warning about long character constants in `cpp/eval.c` should be
+    removed.
+
+* The implementation should probably use Berkely SoftFloat v2, since:
+
+    * It's very easy to port to new platforms, even those with odd int sizes.
+
+    * It's IEEE 754 compliant, and supports binary32 and binary64.
+
+    * It has a sufficiently permissive license.
+
+    * TODO: A notice must be included somewhere in the standard library source
+        that the standard library is a deriviative work of the Berkeley SoftFloat
+        library.
+
+    * The later versions (v3) require the target to support 64-bit integers.
+
 ## END DESIGN
 
 ## OLD REQUIREMENTS
 
 ## Data
-
-### Characters
-
-Escape characters should not output a printable character.
-
-Alert must not change the cursor position.
-
-Carriage return should move the cursor to the initial position of the current
-line.
-
-Sign extending chars is expensive on the 6502, and at least one major POSIX
-platform (ARM) does not sign extend chars. Thus, the implementation, like ARM,
-defines `CHAR_MIN` to be `0` and `CHAR_MAX` to be the same as `UCHAR_MAX`.
-
-The preprocessor needs to be modified to understand the target character set,
-since character literals can be used in constant expressions for conditional
-compilation. This means that the mechanism for controlling execution character
-sets needs to be visible to the preprocessor.
-
-LCC's preprocessor currently just uses the source character set, but it's easy
-to change in `cpp/eval.c` (line 502).  A warning about long character constants
-in `cpp/eval.c` should also be removed.
-
-The LCC compiler should be set so that wide characters are the same size as
-regular characters, since nobody is going to care about wide characters on this
-platform.
-
-## Floating Point
-
-The impelementation should probably use Berkely SoftFloat v2, since:
-* It's very easy to port to new platforms, even those with odd int sizes.
-* It's IEEE 754 compliant, and supports binary32 and binary64.
-* It has a sufficiently permissive license.
-  * TODO: A notice must be included somewhere in the standard library source
-    that the standard library is a deriviative work of the Berkeley SoftFloat
-    library.
-* The later versions (v3) require the target to support 64-bit integers.
 
 ### Structs and Unions
 

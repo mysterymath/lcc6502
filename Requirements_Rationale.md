@@ -22,6 +22,8 @@ is organized in parallel with the requirements document, section for section.
    them as a separate program with a smaller execution environment. The two
    programs would then be linked together by the assembler.
 
+## Design
+
 * Erroneous reads could trigger undesirable behavior if they access I/O
    registers that perform actions on reads. To avoid creating a class of
    particularly nasty bugs, the compiler must ensure that if such spurious reads
