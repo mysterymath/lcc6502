@@ -141,6 +141,16 @@ description of the resource specification mechanism.
 
     * The later versions (v3) require the target to support 64-bit integers.
 
+* Automatic structure variable initializers are static objects emitted by LCC.
+    Identical versions of these objects should be coalesced into one to save
+    space.
+
+* Zero initializers for automatic structure variables should be replaced with a
+    memset or equivalent.
+
+* Bit-field operations that involve 8 or fewer bits should be strenth-reduced
+    to one byte from LCC's full integer operations.
+
 ## END DESIGN
 
 ## OLD REQUIREMENTS
@@ -148,36 +158,6 @@ description of the resource specification mechanism.
 ## Data
 
 ### Structs and Unions
-
-LCC performs struct initialization much like character array initialization.
-Space for the initializer is statically allocated, and an assignment is issued
-at the beginning of the block from the static location to the variable. This
-works because aggregate types can only be initialized with compile-time
-constants. LCC does not combine identical initializers; instead, it creates one
-initializer per struct literal instance in the source text.
-
-Identical initializers can be easily detected in the backend. This should be
-done, since it will save precious space.
-
-#### Bit-Fields
-
-See the [LCC bit-field experiments](lcc/experiments/bitfield/README.md) for
-LCC's behavior regarding bit-field.
-
-In particular, LCC generates bit operations necessary to implement bit-field
-over arbitrary bytes. The compiler always accesses bit-fields as
-2-byte ints, even if the entire struct is only one byte long. When a
-bit-field is modified, all data outside the bit-field is read and written back
-unmodified. This means that writing to a bit-field can modify data outside of
-the struct, even if that data is marked volatile.
-
-Volatile just means that the compiler must access the value whenever the
-program says to, not that the compiler must ensure that it never touches such
-an object except when the program says so. This has been a point of contention
-in the C community. The backend should always be able to lower such accesses to
-1 byte. This is both faster and less surprising. The confusing behavior can
-still occur if a volatile bit-field is next to a non-volatile one in the same
-struct.
 
 ## Code
 

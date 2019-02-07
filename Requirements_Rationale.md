@@ -39,3 +39,8 @@ is organized in parallel with the requirements document, section for section.
 * The expectation is that objects accessed using `volatile` can be modified
    outside the program, so it doesn't make sense to put them in ROM, even if
    the C compiler never observes changes.
+
+* Reducing bit-field strength improves performances and prevents a confusing
+   corner case where writes to bit-fields may overwrite asynchronous changes
+   to neighboring structure fields, even those declared volatile. This
+   behavior is allowed by the standard, but many people find it surprising.
