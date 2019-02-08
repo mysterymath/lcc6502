@@ -44,3 +44,8 @@ is organized in parallel with the requirements document, section for section.
    corner case where writes to bit-fields may overwrite asynchronous changes
    to neighboring structure fields, even those declared volatile. This
    behavior is allowed by the standard, but many people find it surprising.
+
+* The BRK instruction can be swallowed in NMOS chips if a hardware interrupt
+   occurs while one is being fetched. This was corrected in the CMOS
+   implementation. To avoid this complexity, and due to insufficient utility, the
+   BRK instruction should not be used.

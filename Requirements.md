@@ -127,7 +127,7 @@ description of the resource specification mechanism.
 * An LCC warning about long character constants in `cpp/eval.c` should be
     removed.
 
-* The implementation should probably use Berkely SoftFloat v2, since:
+* The implementation should probably use Berkeley SoftFloat v2, since:
 
     * It's very easy to port to new platforms, even those with odd int sizes.
 
@@ -151,73 +151,30 @@ description of the resource specification mechanism.
 * Bit-field operations that involve 8 or fewer bits should be strenth-reduced
     to one byte from LCC's full integer operations.
 
+* Automatic variables must retain their values across signals and or interrupts.
+
+* It must be possible to call a C function from an interrupt handler routine in
+    assembly.
+
+* It must be possible to call assembly language routines from C.
+
+* It must be possible to call C routines from assembly language.
+
+* The register save and restore overhead for every call, even those crossing a
+  C/assembly boundary, must be small and finite. This is particularly true when calling a C function from an interrupt handler.
+
+* The BRK instruction should not be used by the compiler.
+
+* No optimizations may be performed that would cause a program to no longer fit
+    into available RAM/ROM.
+
 ## END DESIGN
 
 ## OLD REQUIREMENTS
 
-## Data
-
-### Structs and Unions
-
 ## Code
 
-### Signals/Interrupts
-
-Automatic variables need to retain their values across signal handling
-suspensions (C89 2.1.2.3). This implies either keeping them in no-clobber registers
-or saving them on a stack.
-
-No signals need be provided, but to allow implementing signals, intterupt
-handlers must be writable in pure C. Any function can be interrupted at any
-time by an interrupt, which can call any C function.
-
-Interrupt handlers must not overrite any locations (memory or register) used by
-previous invocations or by any active functions.
-
-Interrupt handlers often need to be extremely timely, so the number of
-locations saved and restored by the handler must be tightly bounded.
-
-The BRK instruction can be swallowed in NMOS chips if a hardware interrupt
-occurs while one is being fetched. This was corrected in the CMOS
-implementation. To avoid this complexity, and due to insufficient utility, the
-BRK instruction should not be used by the compiler.
-
-IRQ handlers already have the A register saved, but not the X or Y registers.
-To allow C functions to be called by the OS, customizable callee-save
-register sets are required.
-
-Given the above, an interrupt handler also needs to restore registers it did
-not save (A) before executing a RTI.
-
-The system timers are called in the context of an interrupt via a JSR. These
-must end in an RTS, but all registers are already saved. Note that these do
-not need to restore the other registers before RTS, unlike the above. They
-still must not clobber anything in use by an interrupted function. Thus
-customizable calling conventions are needed for "regular" functions too.
-
-TODO: Redefine the __interrupt() mechanism to accomodate this.
-
-### Code Size
-
-For many practical programs, it may be difficult to fit the program and its
-data into available RAM. A program may reserve space for data using static
-variables.
-
-Since the target machines do not have Memory Management Units, much of the
-address space is unavailable for use by the program. The compiler should pack
-the program and its data into the available RAM as tightly as possible. Some
-programs may still be too big to fit; these may be rejected.
-
-No optimizations (inlining, etc) may be performed unless it can be guaranteed
-that it will not cause a program to no longer fit into RAM. Note that many
-optimizations tend to reduce both code size and execution time. When
-optimization is enabled, the compiler should always aim for the most efficient
-program that can be made to fit.
-
 ### Functions
-
-Each function needs to support at least 31 arguments (C89 2.2.4.1). That's at least
-31 bytes of storage.
 
 Prototyped functions with no "narrow" types (smaller than int) and no variable
 argument list must be callable in translation units without the prototype.
