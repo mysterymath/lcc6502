@@ -148,7 +148,7 @@ description of the resource specification mechanism.
 * Zero initializers for automatic structure variables should be replaced with a
     memset or equivalent.
 
-* Bit-field operations that involve 8 or fewer bits should be strenth-reduced
+* Bit-field operations that involve 8 or fewer bits should be strength-reduced
     to one byte from LCC's full integer operations.
 
 * Automatic variables must retain their values across signals and or interrupts.
@@ -168,6 +168,13 @@ description of the resource specification mechanism.
 * No optimizations may be performed that would cause a program to no longer fit
     into available RAM/ROM.
 
+* Prototyped functions with no "narrow" types (smaller than int) and no variable
+    argument list must be callable in translation units without the
+    prototype.
+
+* Return statements with no value are legal in functions with non-void return
+    types, so long as the return value is never used by the caller.
+
 ## END DESIGN
 
 ## OLD REQUIREMENTS
@@ -175,12 +182,6 @@ description of the resource specification mechanism.
 ## Code
 
 ### Functions
-
-Prototyped functions with no "narrow" types (smaller than int) and no variable
-argument list must be callable in translation units without the prototype.
-
-Return statements with no value are legal in functions with non-void return
-types, so long as the return value is never used by the caller.
 
 #### System Calls
 

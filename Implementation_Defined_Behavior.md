@@ -300,49 +300,6 @@ that is even (i.e., the lowest order bit is zero).
 
 ## Extensions
 
-### Interrupt Handlers
-
-TODO: This mechanism needs to be accomodated to incorporate the wide variety
-of interrupt handler calling conventions used by the Atari OS (A saved, all
-regs saved, RTS expected, restore and RTI expected, they have it all,
-really.)
-
-A function annotation is provided to mark a function as an interrupt
-handler. This alters the generation of the function such that:
-
-* `RTI` is issued for each return instead of `RTS`.
-
-* Any resources used by the function or any of its descendants must be saved on
-  entry and restored on exit, since the interrupted function cannot know that it
-  needs to save them.
-* Interrupts are disabled by default within an interrupt handler. They can be
-  reenabled by clearing the interrupt disable flag.
-
-* Functions are marked as interrupt handlers by calling the fake function
-  `__interrupt_handler()` immediately after entry to the block defining the
-  function. Interrupt handlers must return void and take no arguments. For
-  example:
-
-```C
-
-void my_handler(void) {
-    __interrupt_handler();
-    < rest of function >
-}
-
-```
-
-Interrupts can be enabled by calling `__enable_interrupts()` and disabled by
-calling `__disable_interrupts()`. Interrupts are automatically disabled upon
-entry to an interrupt handler. Upon return from an interrupt handler, all
-processor flags are restored to their value before the interrupt, including
-whether interrupts are enabled or disabled. If an interrupt is exited any other
-way (e.g., longjmp), this restoration does not occur.
-
-BCD mode is not cleared when an interrupt is entered. Behavior is undefined if
-an interrupt occurs while BCD mode is enabled. The compiler provides no support
-for enabling or disabling BCD mode, due to insufficient utility.
-
 ### Signal Handling
 
 It is well-defined to both read and write a static volatile `sig_atomic_t`
