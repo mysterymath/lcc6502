@@ -318,7 +318,3 @@ pointers that compare equal point to the same object. Accordingly:
 
 * Comparing two pointers that refer to objects in regions with overlapping
     memory assignments is undefined behavior.
-
-### Inline Assembly
-
-TODO: Define syntax and semantics.

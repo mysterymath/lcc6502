@@ -21,20 +21,7 @@ compiler. These requirements are gathered here, organized by topic.
 * It must be possible to call C routines from assembly language, including from
     interrupt handler routines.
 
-* It must be possible to include inline assembly language routines in C
-    functions.
-
-    * It must be possible to specify that the values of certain input
-        expressions be placed in certain registers or flags.
-
-    * It must be possible to specify that output values in certain registers or
-        flags be assigned to C objects.
-
-    * It must be possible to specify that certain registers or flags have been
-        overwritten with undefined values by the routine (clobbered).
-
-    * The S register and the C stack pointer (if any) must both have the same
-        value after the routine as before.
+* It must be possible to call assembly language routines from C.
 
 ## Execution Environments
 
