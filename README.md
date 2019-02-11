@@ -33,7 +33,18 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Develop automated acceptance tests for specification.
+* [ ] Develop C standard acceptance tests.
+* [ ] Develop Assembly to C acceptance test.
+* [ ] Develop C to assembly acceptance test.
+* [ ] Develop 8KB Atari 800 ROM cartridge acceptance test.
+* [ ] Develop OSS one-chip 16KB Atari 800 ROM cartridge acceptance test.
+* [ ] Develop Atari 800 cassette acceptance test.
+* [ ] Develop Atari 800 diskette acceptance test.
+* [ ] Develop Atari 800 diskette bootloader acceptance test.
+* [ ] Develop Atari 800 DOS 2.5 load acceptance test.
+* [ ] Develop Commodore disk `LOAD` acceptance test.
+* [ ] Develop Commodore cartridge acceptance test.
+* [ ] Develop all necesary NMOS vs CMOS acceptance tests.
 * [ ] Organize known design considerations (knowns).
 * [ ] Collect design questions (unknowns) to be answered by design spikes.
 * [ ] What kinds of calling conventions are needed to call OS routines in C?
