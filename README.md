@@ -12,33 +12,15 @@ implemented yet. Check back later for updates.
 
 Updated December 30, 2018.
 
-## Planned Features
+## Requirements
 
-* [C89 Compatibility](C_Standard_Compliance.md). For each supported target, the
-  project must meet the requirements for a freestanding implementation set
-  forth in the latest [freely-availible draft](std/draft.html) of ANSI
-  X3.159-1989 "Programming Language C."
-* Atari 800 target. The compiler must produce output capable of running on an
-  Atari 800.
-* C64 target. The compiler must produce output capable of running on the
-  Commodore 64.
-* ROM-compatible. The compiler must produce output capable of running from ROM.
-* POSIX-ish-ness. When there's no compelling reason to do otherwise, the C
-  should be like that inside a POSIX environment.
-* Fast code. The output produced by the compiler should be within an order of
-  magnitude as fast as that written by a human transliterating the C to
-  equivalent assembly.
-  * Whenever possible, the compiler must perform 8-bit arithmetic operations
-    directly, instead of integral promotions.
-  * Loop optimizations and strength reductions must be performed, since the
-    target platform cannot multiply or divide in hardware.
-* Debug mode. Debuggers exist for the target platform, so this should allow easy
-  debugging. Compiler speed is not an issue, so all optimizations that do not
-  interfere with debugging should still occur.
+[Requirements](Requirements.md) have been collected by analyzing the ANSI C
+standard, the programming manuals for the Atari 800 and the Commodore 64, and
+the NMOS and CMOS 6502 instruction set and quirks.
 
 ## Project Design
 
-The project is currently gathering requirements; design is TBD.
+The project is currently under [design](Design.md).
 
 To understand the problem space and potential solution techniques, start with
 David A. Wheeler's excellent [guide](https://dwheeler.com/6502/).
@@ -49,12 +31,11 @@ compliance, and excellent documentation. It's backend interface
 available.  The relevant parts of the compiler are in the [lcc/](lcc/)
 subdirectory.
 
-[Requirements](Requirements.md) are currently being collected. Once the a
-stable picture of these requirements is formed, design will begin.
+### Work Items
 
-### TODO
-
-* [ ] Distill requirements into a (more) formal specification.
+* [ ] Develop automated acceptance tests for specification.
+* [ ] Organize known design considerations (knowns).
+* [ ] Collect design questions (unknowns) to be answered by design spikes.
 * [ ] What kinds of calling conventions are needed to call OS routines in C?
 * [ ] Define the User Experience of the compiler.
 
@@ -63,7 +44,7 @@ stable picture of these requirements is formed, design will begin.
 ### [Requirements](Requirements.md)
 
 The C standard, the nature of the processor, and the nature of each target
-platform will place specific requirements on the implementation. Any
+platform each place specific requirements on the implementation. Any
 non-trivial requirements are collected here.
 
 ### [Implementation-Defined Behavior](Implementation_Defined_Behavior.md)
@@ -71,6 +52,10 @@ non-trivial requirements are collected here.
 The C89 standard requires a conforming implementation to document a number of
 "implementation-defined" behaviors and characteristics. All such definitions
 can be found at the link above.
+
+### [Design](Design.md)
+
+This will be a broad overview of the design of the compiler. WIP.
 
 ### Prototype ([prototype/](prototype/))
 

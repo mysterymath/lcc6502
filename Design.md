@@ -117,3 +117,23 @@
 
 * Prototypes in library headers may only use identifiers in the reserved
     namespace: `__x` or `_X`.
+
+* The compiler must provide a means for the user to specify what address
+    regions (including Zero Page) are available for use by the compiler. This
+    must include which address regions are RAM or ROM and the number of banks
+    available at various address regions. The compiler must produce code and
+    data that resides in those address regions, such that the code produced
+    can be included into an assembly program that describes the full program.
+
+* The register save and restore overhead for every call, even those crossing a
+  C/assembly boundary, must be small and finite. This is particularly true when calling a C function from an interrupt handler.
+
+* The implementation must define <setjmp.h> suitable for a hosted
+    implementation of ANSI C, though only a freestanding implementation is
+    provided.
+
+* The number of registers saved by `setjmp` and restored by `longjmp` must be
+    tightly bounded.
+
+* `longjmp` must restore the interrupt disable flag to its value at the time of
+    `setjmp`, since it may be used to escape from an interrupt.

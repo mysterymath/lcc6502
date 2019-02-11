@@ -305,7 +305,10 @@ that is even (i.e., the lowest order bit is zero).
 It is well-defined to both read and write a static volatile `sig_atomic_t`
 object in a signal handler. (The standard guarantees only writes.)
 
-### ???
+### Memory Layout
+
+TODO: Define mechanism for specifying the memory regions available to the
+compiler, including paging.
 
 On the face of it, paging conflicts with the C89 requirement that any two
 pointers that compare equal point to the same object. Accordingly:
@@ -316,6 +319,6 @@ pointers that compare equal point to the same object. Accordingly:
 * Comparing two pointers that refer to objects in regions with overlapping
     memory assignments is undefined behavior.
 
-TODO: Add both of these to Implementation-Defined behavior, along with a
-description of the resource specification mechanism.
+### Inline Assembly
 
+TODO: Define syntax and semantics.
