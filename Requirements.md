@@ -22,6 +22,15 @@ compiler. These requirements are gathered here, organized by topic.
     itself, then runs the code that it loaded.
 
 * In concert with an assembler, the compiler should be capable of producing a
+    program that can be run from Atari DOS 2.5.
+
+* In concert with an assembler, the compiler should be capable of producing a
+    program that returns control to Atari DOS 2.5 after being loaded.
+
+* In concert with an assembler, the compiler should be capable of producing a
+    function that can be called using the Atari BASIC `USR` statement.
+
+* In concert with an assembler, the compiler should be capable of producing a
     program that `RUN`s when `LOAD`ed from a Commodore 64 disk.
 
 * In concert with an assembler, the compiler should be capable of producing a

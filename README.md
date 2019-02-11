@@ -54,7 +54,6 @@ stable picture of these requirements is formed, design will begin.
 
 ### TODO
 
-* [ ] Determine all load and execution scenarios for the Atari 800 (file formats, combinations, etc.)
 * [ ] Distill requirements into a (more) formal specification.
 * [ ] What kinds of calling conventions are needed to call OS routines in C?
 * [ ] Define the User Experience of the compiler.
