@@ -22,7 +22,7 @@ bank2_fn:
   JMP bank2_fn_body
 bank3_fn:
   BIT $D501 // Select bank 3 (bit 3 = 0, bit 0 = 1)
-  JMP bank2_fn_body
+  JMP bank3_fn_body
 
 // Cartridge header (bank 0, $BFFA-$BFFF)
 .dsb $BFFA - *,0
