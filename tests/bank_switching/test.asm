@@ -4,15 +4,7 @@
 // This indicates that all four routines were called in all four banks.
 
 // Bank 0 (always mapped to $B000-$BFFF)
-* = $B000
-init:
-  RTS
-
-start:
-  LDA #1
-  JSR bank1_fn
-end:
-  JMP end
+#include "bank0_expected.asm"
 
 bank1_fn:
   BIT $D500 // Select bank 1 (bit 3 = 0, bit 0 = 0)
@@ -31,26 +23,6 @@ bank3_fn:
 .byt 4
 .word init
 
-// Bank 1
-* = $A000
-bank1_fn_body:
-  CLC
-  ADC #2
-  JMP bank2_fn
-.dsb $B000 - *,0
-
-// Bank 2
-* = $A000
-bank2_fn_body:
-  CLC
-  ADC #3
-  JMP bank3_fn
-.dsb $B000 - *,0
-
-// Bank 3
-* = $A000
-bank3_fn_body:
-  CLC
-  ADC #4
-  RTS
-.dsb $B000 - *,0
+#include "bank1_expected.asm"
+#include "bank2_expected.asm"
+#include "bank3_expected.asm"
