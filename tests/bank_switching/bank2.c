@@ -1,6 +1,6 @@
 #include "test.h"
 
-int bank2_fn_body(int a) {
+char bank2_fn_body(char a) {
   __externally_visible();
   __caller(bank2_fn);
 
