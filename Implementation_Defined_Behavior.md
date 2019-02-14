@@ -318,3 +318,38 @@ pointers that compare equal point to the same object. Accordingly:
 
 * Comparing two pointers that refer to objects in regions with overlapping
     memory assignments is undefined behavior.
+
+### Assembly Language Interop
+
+A C program is defined by all C modules visible to the linker. The linker
+will combine these C modules into an assembly file. However, this assembly
+file may need to call or be called by code outside the program visible to the
+linker. This section establishes C language extensions for this purpose.
+
+To call assembly language from C, simply call a function that is not defined by any compilation unit of the program, as seen by the linker. In assembly, the compiler will transform this into a JSR to the label given by the function name. Arguments and return values are passed and received using a standard calling convention.
+
+To call C from assembly language, the function must be marked as externally
+visible by calling a builtin function, `__externally_visible()`. This
+creates a symbol in the assembler corresponding to the name of the function.
+The calling convention is the same that of assembly language routines called
+from C.
+
+TODO: Define the calling convention.
+
+With C to assembly and assembly to C combined, portions of the control flow
+path become invisible to the compiler. Without additional information, the
+compiler must assume that any C to assembly call could end up calling any
+externally visible function. This could be quite severe, since generally any
+I/O leaf routines call ASM, but `main` is generally externally visible. This
+means nearly the whole program must be assumed possibly recursive, preventing
+a number of essential optimizations.
+
+To avoid the resulting slowdown, an externally visible function can also be
+annotated using `__caller(<fn_ptr>)`, which indicates that the function can
+potentially be called by the assembly language routine given by `<fn_ptr>`.
+If any such annotations are present, the compiler assumes that only such
+control flow paths are possible through assembly; accordingly, the list of
+caller annotations must be complete or the behavior is undefined.
+
+If an externally visible function cannot be called from C via assembly, it
+may be annotated `__entry()` to inform the compiler of this.

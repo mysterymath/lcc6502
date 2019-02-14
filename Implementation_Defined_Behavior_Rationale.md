@@ -33,3 +33,17 @@ ARM, makes 'plain' `char` unsigned.
 Though the standard allows the preprocessor to use either the source or
 target character set, consistency with GCC requires the target character set
 be used.
+
+## Extensions
+
+### Assembly Language Interop
+
+Calling C from assembly language and vice versa prevents the compiler from
+proving whether or not a routine is recursive. This would require recursion
+to be accomodated for any function with at least one ancestor that is called
+by assembly lanauge and at least one descendant that calls assembly language.
+If an assembly language routine at the root calls `main` (as is common), and
+assembly language routines at leaves performs all I/O (as is common), then
+nearly every function would be considered possibly recursive. This is far too
+restrictive to emit performant code, so recursion through assembly language
+is simply disallowed.
