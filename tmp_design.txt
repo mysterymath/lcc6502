@@ -1,0 +1,59 @@
+## Runtime 
+
+Let's consider SSA form, since it simplifies the nature of objects and
+values. In SSA form, values have exactly one definition, but possibly many
+uses. On the other hand, objects are represented by pointer values. Values
+may be defined by loading from an object pointer, and a value may be stored
+through an object poiner. Some C objects become a set of related values,
+while others become SSA objects.
+
+Using this, all objects must be in memory. If neither a store nor a volatile
+access can occur, the value can be placed in ROM. Otherwise, it must be in
+RAM. RAM objects can be in the zero page or outside.
+
+Some objects have lifetimes that are unbounded; these are static objects.
+Other objects have bounded lifetime. If it can be proven that two objects'
+lifetimes cannot intersect, those objects can safely share the same memory
+address.
+
+Values also need to be allocated to locations. For simplicity, each value
+should receive a designated storage location, where it is expected to reside
+for most of its life. If this conflicts with another resource, the value may
+temporarily be saved to another location and restored before its next use.
+
+Values could be allocated to machine registers, zero page memory locations,
+or regular memory locations. Values also have lifetimes, the range between
+the definition and the last use. Two values (or a value and an object) may
+only be assigned to overlapping locations if it can be proven that they do
+not have overlapping lifetimes.
+
+All values and objects alive when setjmp is called should, on the face of it,
+have their lifetimes extended to the time of the last possible corresponding
+longjmp call. As a concession, C89 allows automatic nonvolatile variables
+that were changed after setjmp to have indeterminate value upon longjmp. This
+means that setjmp can take a snapshot of all visible values, and longjmp can
+restore those values, ignoring any possible changes. This means that only
+volatile objects need have their lifetime extended, which eases allocation in
+the functions below the setjmp-bearing function. As a tradeoff, it creates
+save-restore overhead for the setjmp-longjmp pair. This overhead must be kept
+tightly bounded.
+
+* The register save and restore overhead for every call, even those crossing a
+  C/assembly boundary, must be small and finite. This is particularly true when
+  calling a C function from an interrupt handler.
+
+TODO: External calling convention
+TODO: Paging
+
+## ASM file
+
+All code and initializers must be stored into a binary that can somehow be
+loaded into the target machine. The specifics of this will vary greatly by
+target and execution environment, so the compiler should aim to be generic.
+
+Accordingly, the compiler produces raw ASM files containing the code and
+object initializers. Each function and object will have a runtime address
+associated with it. It is the responsibility of the author of a wrapping ASM
+file to ensure that all code and initialized objects are present at their
+runtime addresses before each reference. This ASM routine will also call
+the entry C function, called `main` by convention.
