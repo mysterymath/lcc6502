@@ -1,8 +1,5 @@
 * = $B000
-init:
-  RTS
-
-start:
+main:
   LDA #2
   JSR bank1_fn
 end:

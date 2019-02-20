@@ -1,6 +1,3 @@
-# TODO: Copying ROM initialization to RAM.
-# TODO: How do we ensure that there is enough space left for the trampolines in bank0?
-
 [[memory]]
 from = "80"
 to = "200"
@@ -14,29 +11,29 @@ from = "1CFC"
 to = "9C20"
 
 [[sections]]
+name = "bank0"
 type = "ROM"
 from = "A000"
 to = "C000"
 inputs = ["bank0.c"]
-output = "bank0.asm"
 
 [[sections]]
+name = "bank1"
 type = "ROM"
 from = "A000"
 to = "C000"
 inputs = ["bank1.c"]
-output = "bank1.asm"
 
 [[sections]]
+name = "bank2"
 type = "ROM"
 from = "A000"
 to = "C000"
 inputs = ["bank2.c"]
-output = "bank2.asm"
 
 [[sections]]
+name = "bank3"
 type = "ROM"
 from = "B000"
 to = "BFFA"
 inputs = ["bank3.c"]
-output = "bank3.asm"

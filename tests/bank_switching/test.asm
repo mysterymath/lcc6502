@@ -5,7 +5,10 @@
 
 // Bank 0 (always mapped to $B000-$BFFF)
 #include "bank0_expected.asm"
-
+start:
+  BIT $D500 // Select bank 1 (bit 3 = 0, bit 0 = 0)
+  JSR __bank1_init
+  JSR main
 bank1_fn:
   BIT $D500 // Select bank 1 (bit 3 = 0, bit 0 = 0)
   JMP bank1_fn_body
@@ -24,5 +27,10 @@ bank3_fn:
 .word init
 
 #include "bank1_expected.asm"
+.dsb $B000 - *,0
+
 #include "bank2_expected.asm"
+.dsb $B000 - *,0
+
 #include "bank3_expected.asm"
+.dsb $B000 - *,0
