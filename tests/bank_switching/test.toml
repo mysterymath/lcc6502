@@ -4,7 +4,7 @@ to = "200"
 
 [[memory]]
 from = "47F"
-to = "6FF"
+to = "700"
 
 [[memory]]
 from = "1CFC"
@@ -15,25 +15,25 @@ name = "bank0"
 type = "ROM"
 from = "A000"
 to = "C000"
-inputs = ["bank0.c"]
+inputs = ["bank0.o"]
 
 [[sections]]
 name = "bank1"
 type = "ROM"
 from = "A000"
 to = "C000"
-inputs = ["bank1.c"]
+inputs = ["bank1.o"]
 
 [[sections]]
 name = "bank2"
 type = "ROM"
 from = "A000"
 to = "C000"
-inputs = ["bank2.c"]
+inputs = ["bank2.o"]
 
 [[sections]]
 name = "bank3"
 type = "ROM"
 from = "B000"
 to = "BFFA"
-inputs = ["bank3.c"]
+inputs = ["bank3.o"]

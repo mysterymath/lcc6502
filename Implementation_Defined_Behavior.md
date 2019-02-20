@@ -322,34 +322,53 @@ pointers that compare equal point to the same object. Accordingly:
 ### Assembly Language Interop
 
 A C program is defined by all C modules visible to the linker. The linker
-will combine these C modules into an assembly file. However, this assembly
-file may need to call or be called by code outside the program visible to the
-linker. This section establishes C language extensions for this purpose.
+will produce one assembly output file per section of the linker config. A
+higher level will combine these C modules into an assembly file. However,
+additional code in this assembly file may need to call or be called by code
+outside the program visible to the linker. This section establishes C
+language extensions for this purpose.
 
-To call assembly language from C, simply call a function that is not defined by any compilation unit of the program, as seen by the linker. In assembly, the compiler will transform this into a JSR to the label given by the function name. Arguments and return values are passed and received using a standard calling convention.
+To call external routines from C, a stub definition of the function should
+be created. A stub is marked by calling `__external()` to indicate that it represents a function defined externally. It does not matter where the stub is defined, since no code is emitted for it. Calls to the function become JSRs to
+the label given by the function name. The calling convention for arguments and
+return values is defined below.
 
-To call C from assembly language, the function must be marked as externally
-visible by calling a builtin function, `__externally_visible()`. This
-creates a symbol in the assembler corresponding to the name of the function.
-The calling convention is the same that of assembly language routines called
-from C.
+To call C from external routines, the function must be marked as externally
+visible by calling a builtin function, `__externally_visible()`. This creates
+a symbol in the assembler corresponding to the name of the function. The
+calling convention is the same that of assembly language routines called from
+C.
 
-TODO: Define the calling convention.
+The external calling convention uses the A and X registers to pass arguments
+and return values. Bytes of the arguments are assigned to A, then X, and the
+remaining bytes are pushed onto the soft stack by the caller. The soft stack
+is cleaned up by the caller as well. One-byte and two-byte return values are
+placed in A and A then X, respectively. For three-plus-byte return values,
+the caller adds an additional pointer argument before the first vararg
+argument. The callee stores the return value in this pointer.
 
-With C to assembly and assembly to C combined, portions of the control flow
-path become invisible to the compiler. Without additional information, the
-compiler must assume that any C to assembly call could end up calling any
-externally visible function. This could be quite severe, since generally any
-I/O leaf routines call ASM, but `main` is generally externally visible. This
-means nearly the whole program must be assumed possibly recursive, preventing
-a number of essential optimizations.
+Note: The compiler uses dynamically optimized calling conventions for C-to-C
+calls. The above convention is only used for C-to-external or external-to-C
+calls.
 
-To avoid the resulting slowdown, an externally visible function can also be
-annotated using `__caller(<fn_ptr>)`, which indicates that the function can
-potentially be called by the assembly language routine given by `<fn_ptr>`.
-If any such annotations are present, the compiler assumes that only such
-control flow paths are possible through assembly; accordingly, the list of
-caller annotations must be complete or the behavior is undefined.
+To allow the compiler to generate efficient code on the 6502, the compiler
+makes a great many assumptions about external routines. Particularly, it
+assumes that external routines have no visible side effects to processor
+registers or the regions of memory available to the compiler, except those
+accessed using volatile. Additionally, no C->external->C call chains are
+assumed possible; all external routines are assumed to be either roots or
+leaves of the call graph.
 
-If an externally visible function cannot be called from C via assembly, it
-may be annotated `__entry()` to inform the compiler of this.
+The above assumptions are overly restrictive in many cases, so the compiler
+allows external routines to be annotated with their side effects.
+
+In a stub definition, any registers or flags overwritten by the routine can
+be marked by calling `__clobbers(<str>)`, where `<str>` is a string
+containing one capitalized character per overwritten register or flag. For
+example, `__clobbers("NZA")` means that the routine (potentially) overwrits
+the N and Z flags and the A register.
+
+In a stub definition, any C routines potentially called by the extrernal routine
+can be marked by calling `__calls(<fn>)`. Indicating that a function is called
+in this fashion automatically marks the callee as externally visible; that is,
+`__externally_visible()` is redundant in the definition of such functions.

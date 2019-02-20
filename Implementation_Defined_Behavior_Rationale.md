@@ -38,12 +38,14 @@ be used.
 
 ### Assembly Language Interop
 
-Calling C from assembly language and vice versa prevents the compiler from
-proving whether or not a routine is recursive. This would require recursion
-to be accomodated for any function with at least one ancestor that is called
-by assembly lanauge and at least one descendant that calls assembly language.
-If an assembly language routine at the root calls `main` (as is common), and
-assembly language routines at leaves performs all I/O (as is common), then
-nearly every function would be considered possibly recursive. This is far too
-restrictive to emit performant code, so recursion through assembly language
-is simply disallowed.
+Without making severe assumptions about what external routines can do, a
+great many optimizations that humans expect the compiler should be able to do
+become impossible. For example, say the `main` function is called by an
+external `start` routine, and `main`, through some chain of descendants,
+calls an external `IO` routine. Since the compiler cannot prove that `IO`
+does not call `start` or `main`, it cannot prove that the whole program is
+not recursive, which forces the use of a stack. A human programmer could
+easily verify that the function is not recursive, but a compiler cannot
+reliably verify the control flow of arbitrary assembly. Accordingly, the
+programmer needs to provide the compiler with all necessary side effect and
+control flow information.
