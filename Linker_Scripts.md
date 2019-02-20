@@ -18,7 +18,8 @@ Linker scripts are comprised of two main arrays of declarations:
 * Sections, which describe where program code and data initializers will be
   located when they are referenced at runtime.
 
-All addresses are given in hexadecimal, without prefix. For example, `47F` refers to address 0x47F.
+All addresses are given in hexadecimal, without prefix. For example, `47F`
+refers to address 0x47F.
 
 Text in brackets, `<like this>`, are syntactic variables referring to values
 named by the text in the brackets. For example, `<address>` refers to some
@@ -26,7 +27,9 @@ address.
 
 ## Memory
 
-Memory is an array of ranges available for general use by the compiler. The beginning of the range (inclusive) is given by `from`, and the end of the range (exclusive) is given by `to`.
+Memory is an array of ranges available for general use by the compiler. The
+beginning of the range (inclusive) is given by `from`, and the end of the
+range (exclusive) is given by `to`.
 
 For example:
 
@@ -46,7 +49,9 @@ between.
 
 ## Sections
 
-A section is a contiguous region of code and data initializers. Each section must have a `name` and produces `<name>.asm` as output. The object files placed in each section are given by the `inputs` array.
+A section is a contiguous region of code and data initializers. Each section
+must have a `name` and produces `<name>.asm` as output. The object files
+placed in each section are given by the `inputs` array.
 
  The address space that the section occupies at runtime may be specified
  using `from` and `to`, with the same semantics as above. If not provided,
@@ -54,10 +59,11 @@ A section is a contiguous region of code and data initializers. Each section mus
  contained in a memory declaration.
 
  The memory used can be indicated to be ROM by setting `type` to `"ROM"`. If
- any mutable objects with static lifetime and an initializer occur within the
- section, the compiler will generate a function with the name
- `__<name>_init`. Calling this function copies initialization data from the
- ROM section to the RAM address allocated for the mutable objects. This must
- be called before any code that refers to the variable, since all such code
- will expect the object to be present and initialized at its RAM address. The
- function takes no arguments, has no return value, and is externally visible.
+ any mutable or volatile objects with static lifetime and an initializer
+ occur within the section, the compiler will generate a function with the
+ name `__<name>_init`. Calling this function copies initialization data from
+ the ROM section to the RAM address allocated for the mutable objects. This
+ must be called before any code that refers to the variable, since all such
+ code will expect the object to be present and initialized at its RAM
+ address. The function takes no arguments, has no return value, and is
+ externally visible.

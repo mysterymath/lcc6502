@@ -38,9 +38,7 @@ compiler. These requirements are gathered here, organized by topic.
 * The compiler must support at least the Atari 800 and the Commodore 64.
 
 * In concert with an assembler, the compiler must be capable of producing a
-  program that boots from the following kinds of Atari ROM cartridge:
-    * Standard 8KB
-    * OSS one-chip 16 KB cartridge (Atari800 type 15)
+  program that boots from an OSS one-chip 16 KB cartridge (Atari800 type 15).
 
     * To ensure this, an automated test must be written for each.
 

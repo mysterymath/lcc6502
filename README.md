@@ -33,9 +33,7 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Develop OSS one-chip 16KB Atari 800 ROM cartridge acceptance test.
-* [ ] Develop 8KB Atari 800 ROM cartridge acceptance test.
-* [ ] Develop Assembly to C acceptance test.
+* [ ] Determine how setjmp/longjmp interact with external-to-C and C-to-external calls.
 * [ ] Develop Atari 800 diskette bootloader acceptance test.
 * [ ] Develop Atari 800 cassette acceptance test.
 * [ ] Develop Commodore cartridge acceptance test.
@@ -43,7 +41,6 @@ subdirectory.
 * [ ] Develop Atari 800 diskette acceptance test.
 * [ ] Develop Atari 800 DOS 2.5 load acceptance test.
 * [ ] Develop all necesary NMOS vs CMOS acceptance tests.
-* [ ] Develop C to assembly acceptance test.
 * [ ] Develop C standard acceptance tests.
 * [ ] Organize known design considerations (knowns).
 * [ ] Collect design questions (unknowns) to be answered by design spikes.

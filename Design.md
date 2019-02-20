@@ -34,14 +34,8 @@
 * The compiler must not use read-modify-write instructions like INC with
     volatile types.
 
-* Mutable static objects need to be copied from ROM to RAM locations. These RAM
-    locations would be the canonical locations for the objects.
-
 * Objects with statically-known constant values whose addresses are never used
     need not be allocated.
-
-* Static-lifetime objects that can be proven to neither be accessed using
-    `volatile` nor mutated can be allocated in ROM.
 
 * Address constant expressions may be used in static initializers, and they
     refer to part or all of other static objects or functions. These may even
@@ -109,7 +103,8 @@
     argument list must be callable in translation units without the
     prototype.
 
-* It must be possible to scan over the argument list of a variable argument         function more than once.
+* It must be possible to scan over the argument list of a variable argument
+    function more than once.
 
 * During a `longjmp`, it is legal to restore registers to their values at the
     time `setjmp` called so long as no register at that time contained the value
@@ -124,9 +119,6 @@
     available at various address regions. The compiler must produce code and
     data that resides in those address regions, such that the code produced
     can be included into an assembly program that describes the full program.
-
-* The register save and restore overhead for every call, even those crossing a
-  C/assembly boundary, must be small and finite. This is particularly true when calling a C function from an interrupt handler.
 
 * The implementation must define <setjmp.h> suitable for a hosted
     implementation of ANSI C, though only a freestanding implementation is
