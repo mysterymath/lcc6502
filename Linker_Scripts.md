@@ -60,5 +60,4 @@ A section is a contiguous region of code and data initializers. Each section mus
  ROM section to the RAM address allocated for the mutable objects. This must
  be called before any code that refers to the variable, since all such code
  will expect the object to be present and initialized at its RAM address. The
- function takes no arguments, has no return value, is externally visible, and
- makes no calls.
+ function takes no arguments, has no return value, and is externally visible.

@@ -328,10 +328,12 @@ additional code in this assembly file may need to call or be called by code
 outside the program visible to the linker. This section establishes C
 language extensions for this purpose.
 
-To call external routines from C, a stub definition of the function should
-be created. A stub is marked by calling `__external()` to indicate that it represents a function defined externally. It does not matter where the stub is defined, since no code is emitted for it. Calls to the function become JSRs to
-the label given by the function name. The calling convention for arguments and
-return values is defined below.
+To call external routines from C, a stub definition of the function should be
+created. A stub is marked by calling `__external()` to indicate that it
+represents a function defined externally. It does not matter where the stub
+is defined, since no code is emitted for it. Calls to the function become
+JSRs to the label given by the function name. The calling convention for
+arguments and return values is defined below.
 
 To call C from external routines, the function must be marked as externally
 visible by calling a builtin function, `__externally_visible()`. This creates
@@ -355,9 +357,11 @@ To allow the compiler to generate efficient code on the 6502, the compiler
 makes a great many assumptions about external routines. Particularly, it
 assumes that external routines have no visible side effects to processor
 registers or the regions of memory available to the compiler, except those
-accessed using volatile. Additionally, no C->external->C call chains are
-assumed possible; all external routines are assumed to be either roots or
-leaves of the call graph.
+accessed using volatile. Externally visible C functions called from external
+routines do not preserve anything; they may clobber any memory location made
+available to the compiler (via linker script), as well as any processor flag
+or register. Finally, no C->external->C call chains are assumed possible; all
+external routines are assumed to be either roots or leaves of the call graph.
 
 The above assumptions are overly restrictive in many cases, so the compiler
 allows external routines to be annotated with their side effects.
