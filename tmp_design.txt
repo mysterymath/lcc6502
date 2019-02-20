@@ -19,7 +19,10 @@ address.
 Values also need to be allocated to locations. For simplicity, each value
 should receive a designated storage location, where it is expected to reside
 for most of its life. If this conflicts with another resource, the value may
-temporarily be saved to another location and restored before its next use.
+temporarily be saved to another location and restored before its next use. If
+the value must reside in a current kind of location, the value in an location
+may be saved, the value temporarily loaded into the location, the use occur,
+and the original instance restored.
 
 Values could be allocated to machine registers, zero page memory locations,
 or regular memory locations. Values also have lifetimes, the range between
@@ -38,9 +41,39 @@ the functions below the setjmp-bearing function. As a tradeoff, it creates
 save-restore overhead for the setjmp-longjmp pair. This overhead must be kept
 tightly bounded.
 
-* The register save and restore overhead for every call, even those crossing a
-  C/assembly boundary, must be small and finite. This is particularly true when
-  calling a C function from an interrupt handler.
+Assembly language routines outside the C program are, for the most part,
+invisible to the compiler. As such, an assembly language routine called from
+C could modify any register or memory location, except those specifically
+reserved for use by the compiler. A call to C from assembly language could
+overwrite values used by the assembly code as well. To avoid these kinds of
+issues, there needs to be a convention for calling C from ASM and ASM from C.
+
+As mentioned before, some locations must definitely be reserved for compiler
+use only. Otherwise, static objects could not be counted on to have reliable
+values, and code in RAM could not be counted on not to change. However,
+it's unreasonable to expect all resources used by the compiler to be exclusive
+to it, since both assembly language routines and the C compiler have a need
+for all of the processor's registers and flags, and at least some zero page
+memory locations.
+
+Which locations can be reserved for compiler purposes will depend on the
+execution environment. Accordingly, this must be manually specified by
+the developer in a compiler config file.
+
+There must also be some forbidden locations that the compiler can never use.
+To see why, consider ASM code occurring in interrupt handlers. These can
+occur at any point within a C function, so there is no safe place to put save
+and restore code around the use of such resources. An interrupt could always
+occur after the save and see the overwritten value. Accordingly, a list of
+forbidden locations must also be manually specified by the developer in a
+compiler config file.
+
+For locations that are neither reserved nor forbidden, the C code and ASM
+code must coordinate the use. Some of these should be designated caller-save,
+and the callee is free to modify them at will. Others should be designated
+callee-save, and the callee must ensure that upon return they have the same
+values as the start of the call. A convention should also be established for
+parameter passing and return value passing.
 
 If a C function is called inside an interrupt across a FFI boundary, and all
 possible arguments are passed to it, then every free location used to produce those
