@@ -1,5 +1,8 @@
 #include "test.h"
 
-char bank1_fn_body(char a) {
-  return bank2_fn(a + 2);
+char accumulator = 1;
+
+char bank1_fn_body(char i) {
+  accumulator += i;
+  return bank2_fn(i + 1)
 }

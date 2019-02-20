@@ -2,7 +2,7 @@
 
 bank3_fn_body:
   CLC
-  ADC #4
+  ADC $80
   RTS
 
 .dsb $B000 - *,0

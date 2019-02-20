@@ -3,7 +3,7 @@ init:
   RTS
 
 start:
-  LDA #1
+  LDA #2
   JSR bank1_fn
 end:
   JMP end

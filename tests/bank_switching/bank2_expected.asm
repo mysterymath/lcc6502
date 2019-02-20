@@ -2,7 +2,11 @@
 
 bank2_fn_body:
   CLC
-  ADC #3
+  TAX
+  ADC $80
+  STA $80
+  TXA
+  ADC #1
   JMP bank3_fn
 
 .dsb $B000 - *,0

@@ -1,22 +1,22 @@
 #include "test.h"
 
-char bank1_fn_body(char a);
-char bank2_fn_body(char a);
-char bank3_fn_body(char a);
+char bank1_fn_body(char i);
+char bank2_fn_body(char i);
+char bank3_fn_body(char i);
 
-char bank1_fn(char a) {
+char bank1_fn(char i) {
   __asm_call();
   __clobbers("NZV");
   __calls(bank1_fn_body);
 }
 
-char bank2_fn(char a) {
+char bank2_fn(char i) {
   __asm_call();
   __clobbers("NZV");
   __calls(bank2_fn_body);
 }
 
-char bank3_fn(char a) {
+char bank3_fn(char i) {
   __asm_call();
   __clobbers("NZV");
   __calls(bank3_fn_body);
@@ -29,6 +29,6 @@ void init(void) {
 void start(void) {
   __externally_visible();
 
-  bank1_fn(1);
+  bank1_fn(2);
   while (1) {}
 }

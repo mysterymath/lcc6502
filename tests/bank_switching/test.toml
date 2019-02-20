@@ -1,5 +1,4 @@
 # TODO: Copying ROM initialization to RAM.
-# TODO: RAM locations for mutable statics in ROM sections.
 # TODO: How do we ensure that there is enough space left for the trampolines in bank0?
 
 [[memory]]
