@@ -42,8 +42,17 @@ tightly bounded.
   C/assembly boundary, must be small and finite. This is particularly true when
   calling a C function from an interrupt handler.
 
-TODO: External calling convention
-TODO: Paging
+If a C function is called inside an interrupt across a FFI boundary, and all
+possible arguments are passed to it, then every free location used to produce those
+arguments must necessarily be saved and restored. This means that keeping
+the save/restore cost per-interrupt bounded requires keeping the number of
+arguments passed in free locations bounded.
+
+Accordingly:
+
+A and X should be used to pass arguments/return values. After that, just use stack.
+
+TODO: Linker script specification.
 
 ## ASM file
 
