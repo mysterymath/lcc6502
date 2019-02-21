@@ -53,17 +53,21 @@ A section is a contiguous region of code and data initializers. Each section
 must have a `name` and produces `<name>.asm` as output. The object files
 placed in each section are given by the `inputs` array.
 
- The address space that the section occupies at runtime may be specified
- using `from` and `to`, with the same semantics as above. If not provided,
- they are automatically allocated from memory. The given ranges need not be
- contained in a memory declaration.
+The address space that the section occupies at runtime may be specified using
+`from` and `to`, with the same semantics as above. The given ranges need not
+be contained in a memory declaration.
 
- The memory used can be indicated to be ROM by setting `type` to `"ROM"`. If
- any mutable or volatile objects with static lifetime and an initializer
- occur within the section, the compiler will generate a function with the
- name `__<name>_init`. Calling this function copies initialization data from
- the ROM section to the RAM address allocated for the mutable objects. This
- must be called before any code that refers to the variable, since all such
- code will expect the object to be present and initialized at its RAM
- address. The function takes no arguments, has no return value, and is
- externally visible.
+If address ranges are not provided, the section is automatically allocated to
+part of some memory declaration. Automatic allocations cannot span memory
+declarations or use ranges explicitly allocated to other sections. I If the
+automatically allocated sections cannot be made to all fit in the available
+memory, the linker signals an error.
+
+The memory used can be indicated to be ROM by setting `type` to `"ROM"`. If
+any mutable or volatile objects with static lifetime and an initializer occur
+within the section, the compiler will generate a function with the name
+`__<name>_init`. Calling this function copies initialization data from the
+ROM section to the RAM address allocated for the mutable objects. This must
+be called before any code that refers to the variable, since all such code
+will expect the object to be present and initialized at its RAM address. The
+function takes no arguments, has no return value, and is externally visible.
