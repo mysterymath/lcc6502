@@ -1,7 +1,8 @@
-// Diskette-boot header
 
 start = $0700
 * = start
+
+// Diskette-boot header
 
 // Flags (always zero)
 .byt 0
@@ -16,11 +17,14 @@ start = $0700
 .word init
 
 // Multistage load address.
-LDA #$A
-end:
-  JMP end
+// TODO: Update MEMLO and APPMHI to first free address.
+// TODO: Set DOSVEC to start entry of application.
+CLC  // Mark boot successful.
+RTS
 
 init:
   LDA #$B
-end:
-  JMP end
+end2:
+  JMP end2
+
+.dsb 128-(* - start),0
