@@ -1,10 +1,12 @@
-// This file contains an assembly language version of the test.
+// This file produces the final cartridge image for the test.
 // Expected conditions at end of test: A register contains $0A = $1 + $2 + $3 + $4.
 // This indicates that all four routines were called in all four banks, and the
 // value was accumulated in a variable initialized from a ROM bank.
 
 // Bank 0 (always mapped to $B000-$BFFF)
 #include "bank0_expected.asm"
+init:
+  RTS
 start:
   BIT $D500 // Select bank 1 (bit 3 = 0, bit 0 = 0)
   JSR __bank1_init
@@ -34,3 +36,4 @@ bank3_fn:
 
 #include "bank3_expected.asm"
 .dsb $B000 - *,0
+
