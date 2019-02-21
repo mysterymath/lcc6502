@@ -33,8 +33,8 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Determine how setjmp/longjmp interact with external-to-C and C-to-external calls.
 * [ ] Develop Atari 800 diskette bootloader acceptance test.
+* [ ] Develop Atari 800 USR statement acceptance test.
 * [ ] Develop Atari 800 cassette acceptance test.
 * [ ] Develop Commodore cartridge acceptance test.
 * [ ] Develop Commodore disk `LOAD` acceptance test.

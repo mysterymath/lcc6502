@@ -1,4 +1,4 @@
-// This file contains an assembly language version of the test.
+// This file produces the final cartridge image for the test.
 // Expected conditions at end of test: A register contains $0A = $1 + $2 + $3 + $4.
 // This indicates that all four routines were called in all four banks, and the
 // value was accumulated in a variable initialized from a ROM bank.
