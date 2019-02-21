@@ -8,12 +8,21 @@
 // Soft reset.
 // Verify that A is in A reg.
 
-start = $0700
-* = start
+load = $0700
+* = load
+sector1 = *
 
 DOSVEC = $A
 APPMHI = $E
 MEMLO = $2E7
+
+DUNIT = $0301
+DCOMND = $0302
+DBUF = $0304
+DAUX1 = $030A
+DAUX2 = $030B
+
+DSKINV = $E453
 
 // Diskette-boot header
 
@@ -24,15 +33,33 @@ MEMLO = $2E7
 .byt 1
 
 // Load address
-.word start
+.word load
 
 // Init address
 .word init
 
-// Multistage load address.
-  LDA #<loader
+// Multistage loader.
+  LDA #1
+  STA DUNIT
+
+  LDA #$52
+  STA DCOMND
+
+  LDA #<sector2
+  STA DBUF
+  LDA #>sector2
+  STA DBUF+1
+
+  LDA #2
+  STA DAUX1
+  LDA #0
+  STA DAUX2
+
+  JSR DSKINV
+
+  LDA #<start
   STA DOSVEC
-  LDA #>loader
+  LDA #>start
   STA DOSVEC+1
   LDA #<free
   STA MEMLO
@@ -46,11 +73,14 @@ MEMLO = $2E7
 init:
   RTS
 
-loader:
+.dsb 128-(* - sector1),0
+
+* = $900
+sector2 = *
+start:
   LDA #$A
 end:
   JMP end
 
 free = *
-
-.dsb 128-(* - start),0
+.dsb 128-(* - sector2),0
