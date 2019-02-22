@@ -27,7 +27,7 @@ address.
 
 ## Memory
 
-Memory is an array of ranges available for general use by the compiler. The
+Memory is an array of ranges reserved for general use by the compiler. The
 beginning of the range (inclusive) is given by `from`, and the end of the
 range (exclusive) is given by `to`.
 
@@ -46,6 +46,9 @@ to = "700"
 The above config allows the compiler to use any address 0x80, address 0x199,
 and any address in between. It may also use 0x47F, 0x6FF, and any address in
 between.
+
+If external routines modify any reserved location, the behavior is undefined.
+If external routines read any reserved location, the value is undefined.
 
 ## Sections
 

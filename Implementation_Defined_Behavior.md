@@ -356,10 +356,10 @@ calls.
 To allow the compiler to generate efficient code on the 6502, the compiler
 makes a great many assumptions about external routines. Particularly, it
 assumes that external routines have no visible side effects to processor
-registers or the regions of memory available to the compiler, except those
-accessed using volatile. Externally visible C functions called from external
-routines do not preserve anything; they may clobber any memory location made
-available to the compiler (via linker script), as well as any processor flag
+registers or the regions of memory reserved to the compiler (via linker
+script), except those accessed using volatile. Externally visible C functions
+called from external routines do not preserve anything; they may clobber any
+memory location made reserved to the compiler, as well as any processor flag
 or register. Finally, no C->external->C call chains are assumed possible; all
 external routines are assumed to be either roots or leaves of the call graph.
 
