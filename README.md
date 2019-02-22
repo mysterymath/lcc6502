@@ -33,12 +33,11 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Develop Atari 800 diskette bootloader acceptance test.
+* [ ] Develop Atari 800 diskette acceptance test.
 * [ ] Develop Atari 800 USR statement acceptance test.
 * [ ] Develop Atari 800 cassette acceptance test.
 * [ ] Develop Commodore cartridge acceptance test.
 * [ ] Develop Commodore disk `LOAD` acceptance test.
-* [ ] Develop Atari 800 diskette acceptance test.
 * [ ] Develop Atari 800 DOS 2.5 load acceptance test.
 * [ ] Develop all necesary NMOS vs CMOS acceptance tests.
 * [ ] Develop C standard acceptance tests.
@@ -53,7 +52,7 @@ The C89 standard requires a conforming implementation to document a number of
 "implementation-defined" behaviors and characteristics. All such definitions
 can be found at the link above.
 
-### [Linker Scripts](Linnker_Scripts.md)
+### [Linker Scripts](Linker_Scripts.md)
 
 The provided linker performs most of the actual code generation of the
 compiler. It takes a description of the execution environment, as well as a

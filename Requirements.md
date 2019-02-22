@@ -53,12 +53,6 @@ compiler. These requirements are gathered here, organized by topic.
     * To ensure this, an automated test must be written.
 
 * In concert with an assembler, the compiler must be capable of producing a
-    program that minimally boots from an Atari 800 diskette, loads the rest of
-    itself, then runs the code that it loaded.
-
-    * To ensure this, an automated test must be written.
-
-* In concert with an assembler, the compiler must be capable of producing a
     program that can be run from Atari DOS 2.5.
 
     * To ensure this, an automated test must be written.
