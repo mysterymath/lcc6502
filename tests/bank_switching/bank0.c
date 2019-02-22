@@ -22,6 +22,10 @@ char bank3_fn(char i) {
   __calls(bank3_fn_body);
 }
 
+void init(void) {
+  __externally_visible();
+}
+
 void main(void) {
   __externally_visible();
 
