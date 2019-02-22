@@ -1,25 +1,20 @@
-DOSVEC = $A
-APPMHI = $E
-MEMLO = $2E7
+boot:
+  LDA #<start
+  STA $A
+  LDA #>start
+  STA $B
+  LDA #<end
+  STA $E
+  STA $2E7
+  LDA #>end
+  STA $F
+  STA $2E8
+  LDA #0
+  RTS
 
 init:
   RTS
 
-start:
+test:
   LDA #$A
-loop:
-  JMP loop
-
-boot:
-  LDA #<start
-  STA DOSVEC
-  LDA #>start
-  STA DOSVEC+1
-  LDA #<end
-  STA MEMLO
-  STA APPMHI
-  LDA #>end
-  STA MEMLO+1
-  STA APPMHI+1
   RTS
-

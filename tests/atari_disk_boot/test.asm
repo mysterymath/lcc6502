@@ -17,9 +17,18 @@ load = $0700
 
 // Boot continuation.
 JSR boot
-CLC  // Mark boot successful.
+CLC
+ADC #$FF  // Set carry if return was 1 (indicating error)
 RTS
 
+start:
+  JSR test
+  // NOTE: A reg is set to return value.
+loop:
+  JMP loop
+
+#echo The C section begins at the below address.
+#print *
 #include "prg_expected.asm"
 
 end = *
