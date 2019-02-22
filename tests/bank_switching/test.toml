@@ -1,14 +1,6 @@
 [[memory]]
 from = "80"
-to = "200"
-
-[[memory]]
-from = "47F"
-to = "700"
-
-[[memory]]
-from = "1CFC"
-to = "9C20"
+to = "81"
 
 [[sections]]
 name = "bank0"
@@ -37,3 +29,4 @@ type = "ROM"
 from = "B000"
 to = "BFFA"
 inputs = ["bank3.o"]
+
