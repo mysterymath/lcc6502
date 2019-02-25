@@ -49,3 +49,19 @@ easily verify that the function is not recursive, but a compiler cannot
 reliably verify the control flow of arbitrary assembly. Accordingly, the
 programmer needs to provide the compiler with all necessary side effect and
 control flow information.
+
+#### Calling Convention
+
+Using a soft-stack instead of the processor stack was considered, but this
+places an unneccesary burden on external callers. Pushing to the soft stack is
+slow, complex, and produces large code, so it should be avoided whenever
+possible. It requires at least 6 cycles per byte pushed. By contrast, a byte
+can be completely pushed to the hard stack in only 1 byte of code and 4 cycles.
+
+The downside to the hard stack is it's extremely limited size. However, the C89
+standard only mandates that it be possible for the compiler to compile at least
+one instance of a function with 31 arguments. Taking each argument to be
+2-bytes large, this requires 62 + 2 = 64 bytes of hard stack space, allowing 4
+such calls in the worst case. To limit size usage, arguments larger than two
+bytes are passed by a const pointer instead.
+

@@ -341,18 +341,6 @@ a symbol in the assembler corresponding to the name of the function. The
 calling convention is the same that of assembly language routines called from
 C.
 
-The external calling convention uses the A and X registers to pass arguments
-and return values. Bytes of the arguments are assigned to A, then X, and the
-remaining bytes are pushed onto the soft stack by the caller. The soft stack
-is cleaned up by the caller as well. One-byte and two-byte return values are
-placed in A and A then X, respectively. For three-plus-byte return values,
-the caller adds an additional pointer argument before the first vararg
-argument. The callee stores the return value in this pointer.
-
-Note: The compiler uses dynamically optimized calling conventions for C-to-C
-calls. The above convention is only used for C-to-external or external-to-C
-calls.
-
 To allow the compiler to generate efficient code on the 6502, the compiler
 makes a great many assumptions about external routines. Particularly, it
 assumes that external routines have no visible side effects to processor
@@ -376,3 +364,22 @@ In a stub definition, any C routines potentially called by the extrernal routine
 can be marked by calling `__calls(<fn>)`. Indicating that a function is called
 in this fashion automatically marks the callee as externally visible; that is,
 `__externally_visible()` is redundant in the definition of such functions.
+
+#### Calling Convention
+
+The external calling convention uses the A and X registers to pass arguments.
+Bytes of the arguments are assigned to A, then X, and the remaining bytes are
+pushed onto the processor stack by the caller. An argument is either entirely
+in registers or entirely on the stack, never in both. If an argument is more
+than two bytes large, it is passed by a const pointer to a location controlled
+by the caller. The processor stack is cleaned up by the callee.
+
+One-byte and two-byte return values are returned in A and A then X,
+respectively.  For three-or-more-byte or struct return values, the caller adds
+an additional pointer argument after the last non-vararg argument.  The callee
+stores the return value in this pointer.
+
+Note: The compiler uses dynamically optimized calling conventions for C-to-C
+calls. The above convention is only used for C-to-external or external-to-C
+calls.
+
