@@ -1,2 +1,5 @@
+* = $0609
 usr:
-  // TODO
+  BRK
+  NOP
+  RTS

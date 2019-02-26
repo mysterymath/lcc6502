@@ -1,0 +1,5 @@
+[[sections]]
+name = "usr"
+from = "0609"
+to = "0700"
+inputs = ["usr.o"]

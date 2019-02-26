@@ -1,3 +1,4 @@
+* = $0713
 boot:
   LDA #<start
   STA $A

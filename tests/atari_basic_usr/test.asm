@@ -1,3 +1,5 @@
+* = $0600
+
 // Retrieve number of args.
 PLA
 
@@ -11,3 +13,6 @@ STX $D5
 // Return to BASIC.
 RTS
 
+#echo The C section begins at the below address.
+#print *
+#include "usr_expected.asm"
