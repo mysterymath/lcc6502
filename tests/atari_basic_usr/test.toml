@@ -1,3 +1,7 @@
+[[memory]]
+from = "00CC"
+to = "00D2"
+
 [[sections]]
 name = "usr"
 from = "0609"

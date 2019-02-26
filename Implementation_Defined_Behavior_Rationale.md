@@ -65,3 +65,18 @@ one instance of a function with 31 arguments. Taking each argument to be
 such calls in the worst case. To limit size usage, arguments larger than two
 bytes are passed by a const pointer instead.
 
+The return value covers the arguments to allow the standard JSR/RTS pair to
+be used for external procedure calls. This avoids having to construct a
+return value manually to push first, which takes twice the cycles and space
+of a JSR. Note that the callee usually need never pop anything off the stack,
+since individual arguments can accessed via the ABSOLUTE,X addressing mode
+much like a traditional C compiler would. Since JSR is used, it's very
+inconvenient for the callee to have to clean up the arguments, since the
+return address is in the way. Accordingly, the convention was made
+caller-cleanup.
+
+The downside of caller-cleanup is that it forces the hard stack to be used
+for the entire duration of the call, even if the arguments are no longer needed.
+This is pretty severe really, since the stack space is such a premium.
+
+TODO: What do we actually do here?
