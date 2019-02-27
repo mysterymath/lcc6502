@@ -1,4 +1,4 @@
-* = $0609
+* = $0617
 usr:
   STX $CC
   STY $CD
@@ -17,7 +17,7 @@ loop:
   INY
   INY
   DEX
-  JMP LOOP
+  JMP loop
 
 end:
   RTS

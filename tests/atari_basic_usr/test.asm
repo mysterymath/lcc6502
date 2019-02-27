@@ -6,7 +6,7 @@ STA $CB
 
 // Store ptr to beginning of args in X and Y
 TSX
-LDY #$100
+LDY #$01
 
 // Call C routine.
 JSR usr
