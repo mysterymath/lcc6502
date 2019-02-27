@@ -45,6 +45,7 @@ end_swap_loop:
 
 // Store ptr to beginning of args in X and Y
   TSX
+  INX
   LDY #$01
 
 // Call C routine.

@@ -1,4 +1,4 @@
-* = $062D
+* = $062C
 usr:
   STX $CC
   STY $CD
