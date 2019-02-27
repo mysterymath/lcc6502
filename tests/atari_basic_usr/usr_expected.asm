@@ -11,13 +11,13 @@ usr:
   DEX
 
   SEC
-loop:
   BEQ end
+loop:
   SBC ($CD),Y
   INY
   INY
   DEX
-  JMP loop
+  BNE loop
 
 end:
   RTS
