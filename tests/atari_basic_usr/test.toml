@@ -4,6 +4,6 @@ to = "00D2"
 
 [[sections]]
 name = "usr"
-from = "0617"
+from = "062D"
 to = "0700"
 inputs = ["usr.o"]

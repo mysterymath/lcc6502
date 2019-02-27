@@ -5,34 +5,36 @@
 ARGS_END = $CB
 
   TSX
-  LDA $100,X  // A = Num Args
   INX
+  LDY $100,X  // A = Num Args, Z = A == 0
 
 // We need to swap the high and low bytes of each argument here.
 // USR stores them big-endian for some unfathomable reason.
-// Set the carry bit to count down the arguments to zero.
-  SEC
+
+// Throughout the loop, the X register is maintained as the top of the
+// unprocessed stack. At the end of the loop, X will contain the top of the
+// stack if all the arguments were popped.
 
 // Skip loop if no arguments.
   BEQ end_swap_loop
 
 swap_loop:
 // Save the Xth stack entry
-  LDA $100,X
+  LDA $100+1,X
   PHA
 
 // Move the X+1th stack entry to the Xth stack entry
-  LDA $100+1,X
-  STA $100,X
+  LDA $100+2,X
+  STA $100+1,X
 
 // Move the saved Xth stack entry to the X+1th entry.
   PLA
-  STA $100+1,X
+  STA $100+2,X
 
 // Advance to the next arg.
   INX
   INX
-  SBC #2
+  DEY
 
 // When A reaches zero, the last argument has been reversed.
   BNE swap_loop
@@ -58,8 +60,6 @@ end_swap_loop:
 
 // Return to BASIC.
   RTS
-
-// TODO: Update the .TOML file to incorporate the newly-huge number of bytes this takes.
 
 #echo The C section begins at the below address.
 #print *
