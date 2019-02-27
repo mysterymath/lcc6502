@@ -1,22 +1,23 @@
 * = $0609
 usr:
-  TAY
+  STX $CC
+  STY $CD
+  TAX
+  LDY #0
 
-  TSX
-  INX
-  INX
-  LDA $100,X
-  INX
-  INX
-  DEY
+  LDA ($CD),Y
+  INY
+  INY
+  DEX
 
   SEC
 loop:
   BEQ end
-  SBC $100,X
-  INX
-  INX
-  DEY
+  SBC ($CD),Y
+  INY
+  INY
+  DEX
+  JMP LOOP
 
 end:
   RTS

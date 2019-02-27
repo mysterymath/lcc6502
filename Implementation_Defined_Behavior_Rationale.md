@@ -52,31 +52,23 @@ control flow information.
 
 #### Calling Convention
 
-Using a soft-stack instead of the processor stack was considered, but this
-places an unneccesary burden on external callers. Pushing to the soft stack is
-slow, complex, and produces large code, so it should be avoided whenever
-possible. It requires at least 6 cycles per byte pushed. By contrast, a byte
-can be completely pushed to the hard stack in only 1 byte of code and 4 cycles.
+Using a soft-stack was considered, but this places an unneccesary burden on
+external callers. Pushing to the soft stack is slow, complex, and produces
+large code, so it should be avoided whenever possible. It requires at least 6
+cycles per byte pushed.
 
-The downside to the hard stack is it's extremely limited size. However, the C89
-standard only mandates that it be possible for the compiler to compile at least
-one instance of a function with 31 arguments. Taking each argument to be
-2-bytes large, this requires 62 + 2 = 64 bytes of hard stack space, allowing 4
-such calls in the worst case. To limit size usage, arguments larger than two
-bytes are passed by a const pointer instead.
+By contrast, a byte can be completely pushed to the hard stack in only 1 byte
+of code and 4 cycles. The downside to the hard stack is it's extremely
+limited size. Since calling a function uses JSR, the return value covers up
+the arguments in this case, which means that the callee cannot easily clean
+up the arguments. This in turn means that even if the arguments are dead before
+the first call made by the callee, they must remain on the hard stack for the entire
+duration of the call. This places too much pressure on the hard stack, even with
+mitigation techniques.
 
-The return value covers the arguments to allow the standard JSR/RTS pair to
-be used for external procedure calls. This avoids having to construct a
-return value manually to push first, which takes twice the cycles and space
-of a JSR. Note that the callee usually need never pop anything off the stack,
-since individual arguments can accessed via the ABSOLUTE,X addressing mode
-much like a traditional C compiler would. Since JSR is used, it's very
-inconvenient for the callee to have to clean up the arguments, since the
-return address is in the way. Accordingly, the convention was made
-caller-cleanup.
-
-The downside of caller-cleanup is that it forces the hard stack to be used
-for the entire duration of the call, even if the arguments are no longer needed.
-This is pretty severe really, since the stack space is such a premium.
-
-TODO: What do we actually do here?
+Still, system calling conventions like that used by Atari USR make it
+important that arguments on the stack be possible. Generalizing, the calling
+convention punts responsibility for argument location entirely to the caller.
+This makes it possible to write callers that use the processor stack (e.g.
+wrappers called by Atari USR), the soft stack (recursive routines), or static
+memory regions (carefully written ASM or proven-nonrecursive C).

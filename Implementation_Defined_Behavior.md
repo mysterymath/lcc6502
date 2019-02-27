@@ -367,28 +367,13 @@ in this fashion automatically marks the callee as externally visible; that is,
 
 #### Calling Convention
 
-The external calling convention uses the A and X registers to pass arguments.
-Bytes of the arguments are assigned to A, then X, and the remaining bytes are
-pushed onto the processor stack by the caller. An argument is either entirely
-in registers or entirely on the stack, never in both. If an argument is more
-than two bytes large, it is passed by a const pointer to a location
-controlled by the caller. Arguments are pushed on the stack from right to
-left, so the leftmost argument is the nearest to the top of the stack after
-all are pushed.
-
-After the stack arguments are pushed and the registers are set, a JSR is
-issued to the caller. Note that this means the return address will be on the
-top of the stack, not the first argument. Contrast this with the Atari BASIC
-USR statement, which places the return address underneath the arguments. The
-processor stack is cleaned up by the caller.
-
-One-byte and two-byte return values are returned in A and A then X,
-respectively.  For three-or-more-byte or struct return values, the caller adds
-an additional pointer argument after the last non-vararg argument.  The callee
-stores the return value in this pointer.
+The external calling convention uses the A, X, and Y registers to pass
+arguments. If there are three or fewer bytes of arguments, then the bytes are
+assigned to A, then X, then Y. Otherwise, if the first argument is one byte,
+it is still assigned to A. The remaining of the arguments are placed into a
+memory region allocated and cleaned up by the caller, and the address of this
+memory is placed into X and Y, with X receiving the low byte and Y the high byte.
 
 Note: The compiler uses dynamically optimized calling conventions for C-to-C
 calls. The above convention is only used for C-to-external or external-to-C
 calls.
-
-TODO: What do we actually do here? See Rationale.

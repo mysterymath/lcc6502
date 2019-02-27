@@ -1,9 +1,12 @@
 * = $0600
 
-// Retrieve and save number of arg bytes.
+// Retrieve and save number of args.
 PLA
-ASL A  // 2 bytes per arg.
 STA $CB
+
+// Store ptr to beginning of args in X and Y
+TSX
+LDY #$100
 
 // Call C routine.
 JSR usr
@@ -16,6 +19,8 @@ STX $D5
 TSX
 TXA
 CLC
+// Each arg is two bytes.
+ADC $CB
 ADC $CB
 TAX
 TXS
