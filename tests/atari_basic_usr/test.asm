@@ -1,32 +1,67 @@
 * = $0600
 
-// Retrieve and save number of args.
-PLA
-STA $CB
+
+// Location to save the number of arguments, so they can be popped.
+NUM_ARGS = $CB
+
+  PLA
+  STA NUM_ARGS
+
+// We need to swap the high and low bytes of each argument here.
+// USR stores them big-endian for some unfathomable reason.
+  TSX
+// Set the carry bit to count down the arguments to zero.
+  SEC
+swap_loop:
+// When A reaches zero, the last argument has been reversed.
+  BEQ end_swap_loop
+
+// Save the Xth stack entry
+  LDA $100,X
+  PHA
+
+// Move the X+1th stack entry to the Xth stack entry
+  LDA $100+1,X
+  STA $100,X
+
+// Move the saved Xth stack entry to the X+1th entry.
+  PLA
+  STA $100+1,X
+
+// Advance to the next arg.
+  INX
+  INX
+  SBC #2
+  JMP swap_loop
+
+end_swap_loop:
+  LDA NUM_ARGS
 
 // Store ptr to beginning of args in X and Y
-TSX
-LDY #$01
+  TSX
+  LDY #$01
 
 // Call C routine.
-JSR usr
+  JSR usr
 
 // Save return value in BASIC return location.
-STA $D4
-STX $D5
+  STA $D4
+  STX $D5
 
 // Pop args.
-TSX
-TXA
-CLC
+  TSX
+  TXA
+  CLC
 // Each arg is two bytes.
-ADC $CB
-ADC $CB
-TAX
-TXS
+  ADC $CB
+  ADC $CB
+  TAX
+  TXS
 
 // Return to BASIC.
-RTS
+  RTS
+
+// TODO: Update the .TOML file to incorporate the newly-huge number of bytes this takes.
 
 #echo The C section begins at the below address.
 #print *
