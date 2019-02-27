@@ -3,10 +3,10 @@
 int usr(char argc, ...) {
   va_list args;
   char result;
-  int i;
+  char i;
 
   __externally_visible();
-
+  
   va_start(argc, argc);
 
   result = va_arg(argc, int);
