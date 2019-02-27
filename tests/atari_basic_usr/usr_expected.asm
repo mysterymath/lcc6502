@@ -5,7 +5,7 @@ usr:
   TAX
   LDY #0
 
-  LDA ($CD),Y
+  LDA ($CC),Y
   INY
   INY
   DEX
@@ -13,7 +13,7 @@ usr:
   SEC
   BEQ end
 loop:
-  SBC ($CD),Y
+  SBC ($CC),Y
   INY
   INY
   DEX

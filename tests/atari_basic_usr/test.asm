@@ -1,13 +1,12 @@
 * = $0600
 
 
-// Location to save the number of arguments, so they can be popped.
-NUM_ARGS = $CB
+// Location to save the end of argument stack, so they can be popped.
+ARGS_END = $CB
 
   TSX
-
-  PLA
-  STA NUM_ARGS
+  LDA $100,X  // A = Num Args
+  INX
 
 // We need to swap the high and low bytes of each argument here.
 // USR stores them big-endian for some unfathomable reason.
@@ -39,7 +38,8 @@ swap_loop:
   BNE swap_loop
 
 end_swap_loop:
-  LDA NUM_ARGS
+  STX ARGS_END
+  PLA
 
 // Store ptr to beginning of args in X and Y
   TSX
@@ -53,13 +53,7 @@ end_swap_loop:
   STX $D5
 
 // Pop args.
-  TSX
-  TXA
-  CLC
-// Each arg is two bytes.
-  ADC $CB
-  ADC $CB
-  TAX
+  LDX ARGS_END
   TXS
 
 // Return to BASIC.
