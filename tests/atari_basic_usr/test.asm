@@ -4,18 +4,20 @@
 // Location to save the number of arguments, so they can be popped.
 NUM_ARGS = $CB
 
+  TSX
+
   PLA
   STA NUM_ARGS
 
 // We need to swap the high and low bytes of each argument here.
 // USR stores them big-endian for some unfathomable reason.
-  TSX
 // Set the carry bit to count down the arguments to zero.
   SEC
-swap_loop:
-// When A reaches zero, the last argument has been reversed.
+
+// Skip loop if no arguments.
   BEQ end_swap_loop
 
+swap_loop:
 // Save the Xth stack entry
   LDA $100,X
   PHA
@@ -32,7 +34,9 @@ swap_loop:
   INX
   INX
   SBC #2
-  JMP swap_loop
+
+// When A reaches zero, the last argument has been reversed.
+  BNE swap_loop
 
 end_swap_loop:
   LDA NUM_ARGS
