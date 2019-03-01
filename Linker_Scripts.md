@@ -62,7 +62,7 @@ be contained in a memory declaration.
 
 If address ranges are not provided, the section is automatically allocated to
 part of some memory declaration. Automatic allocations cannot span memory
-declarations or use ranges explicitly allocated to other sections. I If the
+declarations or use ranges explicitly allocated to other sections. If the
 automatically allocated sections cannot be made to all fit in the available
 memory, the linker signals an error.
 
@@ -74,3 +74,18 @@ ROM section to the RAM address allocated for the mutable objects. This must
 be called before any code that refers to the variable, since all such code
 will expect the object to be present and initialized at its RAM address. The
 function takes no arguments, has no return value, and is externally visible.
+
+### Paging
+
+Specifying address ranges manually allows sections to overlap. This is not
+necessarily an error, since some machines have mechanisms to map several
+pages of memory to one page of address space. However, if the compiler is
+used this way, violating any of the following produces undefined behavior:
+
+* An object in such a section is accessed or modified, but the object is not
+  paged in.
+
+* A function is called, but the code of that function is not paged in.
+
+* Two pointers from different sections that map to the same address are
+  compared.
