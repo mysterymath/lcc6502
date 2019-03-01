@@ -1,0 +1,6 @@
+#!/bin/bash
+
+GLOBIGNORE="kit6502.py"
+yapf -i *.py
+pylint3 *.py
+unset GLOBIGNORE
