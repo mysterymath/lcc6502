@@ -7,10 +7,10 @@ assembly.
 
 ## Project Status
 
-This project is gathering requirements, and nothing useful has been designed or
-implemented yet. Check back later for updates.
+This project is under design, and nothing useful has been implemented yet.
+Check back later for updates.
 
-Updated December 30, 2018.
+Updated February 28, 2019.
 
 ## Requirements
 
