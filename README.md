@@ -72,9 +72,10 @@ non-trivial requirements are collected here.
 
 This will be a broad overview of the design of the compiler. WIP.
 
-### Prototype ([prototype/](prototype/))
+### Prototypes ([prototype/](prototype/))
 
-A basic proof-of-concept prototype for the compiler.
+This directory contains various prototypes used to inform aspects of the
+compiler design.
 
 ### LCC ([lcc/](lcc/))
 
