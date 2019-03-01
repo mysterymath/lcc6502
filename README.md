@@ -33,6 +33,7 @@ subdirectory.
 
 ### Work Items
 
+* [ ] Develop Atari interrupt handler acceptance test.
 * [ ] Develop Atari 800 cassette acceptance test.
 * [ ] Develop Commodore cartridge acceptance test.
 * [ ] Develop Commodore disk `LOAD` acceptance test.
