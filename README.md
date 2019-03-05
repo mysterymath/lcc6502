@@ -40,6 +40,8 @@ subdirectory.
 * [ ] Develop all necesary NMOS vs CMOS acceptance tests.
 * [ ] Develop C standard acceptance tests.
 * [ ] Organize known design considerations (knowns).
+* [ ] Collect new design considerations from Implementation Defined Behavior
+  and the desired behavior of the acceptance tests.
 * [ ] Collect design questions (unknowns) to be answered by design spikes.
 
 ## For More Details

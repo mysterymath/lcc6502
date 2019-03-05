@@ -1,0 +1,4 @@
+[[sections]]
+name = "prg"
+from = "713"
+inputs = ["prg.o"]
