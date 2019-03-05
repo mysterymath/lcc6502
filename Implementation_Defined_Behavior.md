@@ -363,3 +363,34 @@ memory is placed into X and Y, with X receiving the low byte and Y the high byte
 Note: The compiler uses dynamically optimized calling conventions for C-to-C
 calls. The above convention is only used for C-to-external or external-to-C
 calls.
+
+### Interrupt Handlers
+
+Given interoperability with ASM, it is possible to write C functions that can
+be called in the context of an interrupt handler. Moreover, these calls could
+occur while a C function call is active, which requires the compiler to avoid
+resource conflicts between the interrupted C functions and the interrupting
+ones.
+
+To achieve this, a C function can be marked as being callable inside an
+interrupt handler by calling one of a pair of special functions. The two have
+slightly different semantics.
+
+`__interrupt()` tells the compiler that the annotated function could be
+called while any other C function is active. This does not include the
+annotated function itself. It also does not include functions that could only
+be called within an activation of the `__interrupt()`-annotated function. Put
+another way, the compiler assumes that the function can only be called by an
+interrupt if the function is not already active (that is, called, but not yet
+returned). This could be achieved by disabling interrupts for the duration or
+by using a flag to prevent recursive interrupt handling. The interrupt
+handler may already guarantee this, depending on target hardware and OS
+features.
+
+Alternatively, `__recursive_interrupt()` tells the compiler that the function
+could be called while any C function is active, including itself. Like a
+recursive function, this means that resources used by one invocation of the
+function necessarily conflict with later invocations. If you can determine
+that it is safe to mark a function with `__interrupt()`, do so, since it
+improves resource allocation. Otherwise, `__recursive_interrupt()` is always
+safe, even if sometimes produces slower code than necessary.
