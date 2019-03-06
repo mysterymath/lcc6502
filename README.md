@@ -33,9 +33,6 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Develop Commodore cartridge acceptance test.
-* [ ] Develop Commodore disk `LOAD` acceptance test.
-* [ ] Develop Atari 800 DOS 2.5 load acceptance test.
 * [ ] Develop all necesary NMOS vs CMOS acceptance tests.
 * [ ] Develop C standard acceptance tests.
 * [ ] Organize known design considerations (knowns).
