@@ -33,8 +33,6 @@ subdirectory.
 
 ### Work Items
 
-* [ ] Develop all necesary NMOS vs CMOS acceptance tests.
-* [ ] Develop C standard acceptance tests.
 * [ ] Organize known design considerations (knowns).
 * [ ] Collect new design considerations from Implementation Defined Behavior
   and the desired behavior of the acceptance tests.
