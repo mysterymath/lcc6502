@@ -7,29 +7,10 @@ assembly.
 
 ## Project Status
 
-This project is under design, and nothing useful has been implemented yet.
-Check back later for updates.
+The behavior of the compiler is being specified, and nothing useful has been
+implemented yet. Check back later for updates.
 
-Updated February 28, 2019.
-
-## Requirements
-
-[Requirements](Requirements.md) have been collected by analyzing the ANSI C
-standard, the programming manuals for the Atari 800 and the Commodore 64, and
-the NMOS and CMOS 6502 instruction set and quirks.
-
-## Project Design
-
-The project is currently under [design](Design.md).
-
-To understand the problem space and potential solution techniques, start with
-David A. Wheeler's excellent [guide](https://dwheeler.com/6502/).
-
-The LCC compiler has been chosen as a C frontend for its simplicity, standards
-compliance, and excellent documentation. It's backend interface
-[documentation](http://storage.webhop.net/documents/interface4.pdf) is freely
-available.  The relevant parts of the compiler are in the [lcc/](lcc/)
-subdirectory.
+Updated March 7, 2019.
 
 ### Work Items
 
@@ -70,7 +51,7 @@ platforms that inform or constrain the specification are collected here.
 
 ### [Specification](Specification.md)
 
-The specification of the compiler is provided here. These are a set of
+The specification of the compiler is provided here. WIP. These are a set of
 user-visible properties, such that given the domain characteristics, if the
 compiler holds them, the requirements are met.
 
