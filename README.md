@@ -61,13 +61,24 @@ execution environment and how the C inputs relate to it.
 
 ### [Requirements](Requirements.md)
 
-The C standard, the nature of the processor, and the nature of each target
-platform each place specific requirements on the implementation. Any
-non-trivial requirements are collected here.
+Any non-trivial requirements are collected here.
+
+### [Domain Characteristics](Domain_Characteristics.md)
+
+Non-trivial properties of the 6502 (NMOS and CMOS), C language, and target
+platforms that inform or constrain the specification are collected here.
+
+### [Specification](Specification.md)
+
+The specification of the compiler is provided here. These are a set of
+user-visible properties, such that given the domain characteristics, if the
+compiler holds them, the requirements are met.
 
 ### [Design](Design.md)
 
-This will be a broad overview of the design of the compiler. WIP.
+This will be a broad overview of the design of the compiler. WIP. This is a
+set of user-nonfacing characteristics such that, if the compiler holds them,
+it satisfies the specification.
 
 ### Prototypes ([prototype/](prototype/))
 

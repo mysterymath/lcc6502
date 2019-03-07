@@ -1,15 +1,13 @@
 # Requirements
 
-The C standard, the nature of the 6502, and the nature of each target
-platform each impose a number of requirements for the design of a suitable
-compiler. These requirements are gathered here, organized by topic.
+Project requirements are gathered here, organized by topic.
 
 ## C Language
 
 * For each supported target, the compiler must conform to the requirements for
     a freestanding implementation of ANSI C, as laid out in the latest
     freely-available draft, including all technical corrigenda.
-    
+
 * It must be possible to extend the compiler to hosted implementation of C by
     writing C libraries.
 
