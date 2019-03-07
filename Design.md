@@ -1,42 +1,5 @@
 # Design
 
-* The compiler must emit a branch to an absolute JMP if a branch needs to
-    travel more than 127 bytes forward or more than 128 bytes backward. This
-    must be incorporated into the cost model.
-
-* The compiler should consider branches taken one cycle more expensive than
-    branches not taken in its cost model.
-
-* A number of instructions are one cycle more expensive when they cross page
-    boundaries; this should be incorporated into the cost model.
-
-* The system must not emit any indirect JMPs through a vector ending with FF,
-    since the NMOS versions of the 6502 have a bug. Avoiding the scenario
-    entirely allows easy compatibility with both the NMOS and CMOS versions
-    of the chip.
-
-* Indexed zero page accesses are vulnerable to 8-bit wraparound. If this would
-    produce incorrect behavior, the compiler must use the absolute address
-    mode and should update the cost model accordingly.
-
-* The compiler must avoid placing any addresses that will be indirected
-    through on the 0xFF-0x100 boundary.
-
-* Any tables using the `(,X)` addressing mode must be ensured to fit entirely
-    on the zero page.
-
-* Indexed addressing modes that cross page boundaries (start address + index is
-    not at the same 256-byte page as the start address) issue an erroneous
-    read from the old page, exactly 256 bytes prior to the correct address.
-    The compiler must ensure that only addresses controlled by the compiler
-    are accessed in such a way.
-
-* The compiler must not use read-modify-write instructions like INC with
-    volatile types.
-
-* Objects with statically-known constant values whose addresses are never used
-    need not be allocated.
-
 * Address constant expressions may be used in static initializers, and they
     refer to part or all of other static objects or functions. These may even
     be self-referential; for instance, a static struct with a recursive
@@ -92,37 +55,19 @@
 * Bit-field operations that involve 8 or fewer bits must be strength-reduced
     to one byte from LCC's full integer operations.
 
-* Automatic variables must retain their values across signals and or interrupts.
-
-* The BRK instruction should not be used by the compiler.
-
 * Return statements with no value are legal in functions with non-void return
     types, so long as the return value is never used by the caller.
-
-* Prototyped functions with no "narrow" types (smaller than int) and no variable
-    argument list must be callable in translation units without the
-    prototype.
 
 * It must be possible to scan over the argument list of a variable argument
     function more than once.
 
 * During a `longjmp`, it is legal to restore registers to their values at the
-    time `setjmp` called so long as no register at that time contained the value
-    of a volatile variable or a static object that could have changed since `setjmp` was called.
+    time `setjmp` called so long as no register at that time contained the
+    value of a volatile variable or a static object that could have changed
+    since `setjmp` was called.
 
 * Prototypes in library headers may only use identifiers in the reserved
     namespace: `__x` or `_X`.
-
-* The compiler must provide a means for the user to specify what address
-    regions (including Zero Page) are available for use by the compiler. This
-    must include which address regions are RAM or ROM and the number of banks
-    available at various address regions. The compiler must produce code and
-    data that resides in those address regions, such that the code produced
-    can be included into an assembly program that describes the full program.
-
-* The implementation must define <setjmp.h> suitable for a hosted
-    implementation of ANSI C, though only a freestanding implementation is
-    provided.
 
 * The number of registers saved by `setjmp` and restored by `longjmp` must be
     tightly bounded.

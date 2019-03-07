@@ -33,9 +33,10 @@ subdirectory.
 
 ### Work Items
 
+* [ ] Write setjmp/longjmp acceptance test.
+* [ ] Write functional specification that meets the requirements and matches acceptance tests.
 * [ ] Organize known design considerations (knowns).
-* [ ] Collect new design considerations from Implementation Defined Behavior
-  and the desired behavior of the acceptance tests.
+* [ ] Collect new design considerations from the specification.
 * [ ] Collect design questions (unknowns) to be answered by design spikes.
 
 ## For More Details
