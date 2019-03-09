@@ -15,9 +15,14 @@ An alpha prototype is under construction. Upon completion, the prototype will su
 
   * If any of these occur, behavior of the compiler is undefined.
 
+  * Bit fields are supported, but need not be lowered to 8-bits from LCC's
+    native int operations.
+  
+  * TODO: Determined if the planned shrink-wrapped enums should be in the alpha.
+
 * All planned linker script features.
 
-* All current implementation defined behavior.
+* All current implementation-defined behavior and extensions.
 
 Updated March 9, 2019.
 

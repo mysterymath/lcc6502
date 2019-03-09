@@ -259,11 +259,10 @@ that is even (i.e., the lowest order bit is zero).
 
 * The method for locating includable source files (3.8.2).
 
-  * The default search path referred to below is the section of the `include`
-    subdirectory of the compiler installation with the same name as the target
-    specification. For example, if the compiler was installed to
-    `/usr/local/lcc65`, and the target is `c64`, the default search path is
-    `/usr/local/lcc65/include/c64`.
+  * The default search path referred to below is the `include`
+    subdirectory of the compiler installation. For example, if the compiler
+    was installed to `/usr/local/lcc65`, the default search path is
+    `/usr/local/lcc65/include`.
 
   * Include directives using angle brackets are resolved by searching for the
     given path relative to the default search path.
