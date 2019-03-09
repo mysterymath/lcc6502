@@ -12,6 +12,8 @@ An alpha prototype is under construction. Upon completion, the prototype will su
 * All planned C features except character literals, string literals,
   recursion, floating point numbers, multiplication, division and floats.
 
+  * If any of these occur, behavior of the compiler is undefined.
+
 * All planned linker script features.
 
 * All current implementation defined behavior.
