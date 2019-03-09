@@ -7,18 +7,20 @@ assembly.
 
 ## Project Status
 
-The behavior of the compiler is being specified, and nothing useful has been
-implemented yet. Check back later for updates.
+An alpha prototype is under construction. Upon completion, the prototype will support:
 
-Updated March 7, 2019.
+* All planned C features except character literals, string literals,
+  recursion, floating point numbers, multiplication, division and floats.
+
+* All planned linker script features.
+
+* All current implementation defined behavior.
+
+Updated March 9, 2019.
 
 ### Work Items
 
-* [ ] Write setjmp/longjmp acceptance test.
-* [ ] Write functional specification that meets the requirements and matches acceptance tests.
-* [ ] Organize known design considerations (knowns).
-* [ ] Collect new design considerations from the specification.
-* [ ] Collect design questions (unknowns) to be answered by design spikes.
+* [ ] Build an alpha prototype.
 
 ## For More Details
 
