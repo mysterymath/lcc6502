@@ -28,6 +28,7 @@ Updated March 9, 2019.
 
 ### Work Items
 
+* [ ] Compile LCC bytecode output and desired ASM output for all alpha features where either is nontrivial.
 * [ ] Build an alpha prototype.
 
 ## For More Details
