@@ -10,8 +10,8 @@ assembly.
 An alpha prototype is under construction. Upon completion, the prototype will support:
 
 * All planned C features except character literals, string literals,
-  floating point numbers, multiplication, division, floats/doubles, and
-  setjmp/longjmp.
+  floating point numbers, multiplication, division, floats/doubles,
+  setjmp/longjmp, and variable argument lists.
 
   * If any of these occur, behavior of the compiler is undefined.
 
