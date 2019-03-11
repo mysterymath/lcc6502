@@ -118,7 +118,7 @@ that is even (i.e., the lowest order bit is zero).
 
   * An short consists of 2 little-endian bytes.
   * An int consists of 2 little-endian bytes.
-  * A long consists of 4 little-endian bytes.
+  * A long consists of 4 little-endian bytes# LCC Experiments
   * For the value ranges of each type, see [limits.h](include/limits.h)
 
 * The result of converting an integer to a shorter signed integer, or the result of converting an unsigned integer to a signed integer of equal length, if the value cannot be represented (3.2.1.2).
@@ -252,7 +252,10 @@ that is even (i.e., the lowest order bit is zero).
 
 ## A.6.3.12 Preprocessing directives
 
-* Whether the value of a single-character character constant in a constant expression that controls conditional inclusion matches the value of the same character constant in the execution character set. Whether such a character constant may have a negative value (3.8.1).
+* Whether the value of a single-character character constant in a constant
+    expression that controls conditional inclusion matches the value of the same
+    character constant in the execution character set. Whether such a character
+    constant may have a negative value (3.8.1).
 
   * All character constants have the same value in the preprocessor and at
     runtime. No character constants can have negative value.

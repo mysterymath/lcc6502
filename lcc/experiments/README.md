@@ -14,6 +14,22 @@ Measures what LCC generates for struct bitfield accesses and mutations.
 
 Measures what LCC generates for automatic struct variable initialization.
 
+### TODO
+
+The following experiments still need to be run:
+
+* Self-referential static struct initializers.
+
+* Local variables in nested blocks.
+
+* Valueless return statements in non-void functions.
+
+* How const/volatilatile static variables are indicated.
+
+* Switch statements.
+
+* Function pointers.
+
 #### Results
 
 LCC performs struct initialization much like character array initialization.

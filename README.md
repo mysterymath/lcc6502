@@ -28,8 +28,12 @@ Updated March 9, 2019.
 
 ### Work Items
 
-* [ ] Compile LCC bytecode output and desired ASM output for all alpha features where either is nontrivial.
+* [ ] Compile a list of LCC experiments for all uncertain alpha feature scenarios.
+* [ ] Perform LCC experiments.
 * [ ] Build an alpha prototype.
+* [ ] Audit the prototype against the Specification
+* [ ] Audit the prototype against the Domain Characteristics
+* [ ] Audit the prototype against the Implementation-Defined Behavior
 
 ## For More Details
 
