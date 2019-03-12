@@ -14,6 +14,14 @@ Measures what LCC generates for struct bitfield accesses and mutations.
 
 Measures what LCC generates for automatic struct variable initialization.
 
+#### Results
+
+LCC performs struct initialization much like character array initialization.
+Space for the initializer is statically allocated, and an assignment is issued
+at the beginning of the block from the static location to the variable. LCC does
+not combine identical initializers; instead, it creates one initializer per struct
+literal instance in the source text.
+
 ### [struct_self_ref.c](struct_self_ref.c)
 
 Measures what LCC generates for global structs with self-referential contents.
@@ -24,11 +32,19 @@ LCC emits a `LABELV <label>` instruction in the `data` section to mark the
 start of the structure. It then emits `address <label>` instructions to emit
 the address of the struct into the data section.
 
+### [nested_local.c](nested_local.c)
+
+Measures what LCC generates for local variables in nested blocks.
+
+#### Results
+
+LCC hoists all local variables up to function scope. It does not emit any
+variable allocation code for block entry or exit (though it does initialize,
+as required).
+
 ### TODO
 
 The following experiments still need to be run:
-
-* Local variables in nested blocks.
 
 * Valueless return statements in non-void functions.
 
@@ -37,11 +53,3 @@ The following experiments still need to be run:
 * Switch statements.
 
 * Function pointers.
-
-#### Results
-
-LCC performs struct initialization much like character array initialization.
-Space for the initializer is statically allocated, and an assignment is issued
-at the beginning of the block from the static location to the variable. LCC does
-not combine identical initializers; instead, it creates one initializer per struct
-literal instance in the source text.
