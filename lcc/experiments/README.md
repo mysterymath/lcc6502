@@ -14,11 +14,19 @@ Measures what LCC generates for struct bitfield accesses and mutations.
 
 Measures what LCC generates for automatic struct variable initialization.
 
+### [struct_self_ref.c](struct_self_ref.c)
+
+Measures what LCC generates for global structs with self-referential contents.
+
+#### Results
+
+LCC emits a `LABELV <label>` instruction in the `data` section to mark the
+start of the structure. It then emits `address <label>` instructions to emit
+the address of the struct into the data section.
+
 ### TODO
 
 The following experiments still need to be run:
-
-* Self-referential static struct initializers.
 
 * Local variables in nested blocks.
 
