@@ -10,8 +10,8 @@ assembly.
 An alpha prototype is under construction. Upon completion, the prototype will support:
 
 * All planned C features except character literals, string literals,
-  floating point numbers, multiplication, division, floats/doubles,
-  setjmp/longjmp, and variable argument lists.
+  floating point numbers, division, floats/doubles, setjmp/longjmp, and
+  variable argument lists.
 
   * If any of these occur, behavior of the compiler is undefined.
 
@@ -24,13 +24,20 @@ An alpha prototype is under construction. Upon completion, the prototype will su
 
 * All current implementation-defined behavior and extensions.
 
+* The LCC compiler bug where an error is incorrectly emitted when no return
+  value is provided for a double or struct-valued function remains unfixed.
+
+* Chars are returned as ints, even though this is wider than necessary.
+
 Updated March 9, 2019.
 
 ### Work Items
 
-* [ ] Compile a list of LCC experiments for all uncertain alpha feature scenarios.
 * [ ] Perform LCC experiments.
+* [ ] Narrow LCC character returns from int.
 * [ ] Build an alpha prototype.
+* [ ] Fix noreturn LCC compiler bug.
+* [ ] Narrow char return values from int.
 * [ ] Audit the prototype against the Specification
 * [ ] Audit the prototype against the Domain Characteristics
 * [ ] Audit the prototype against the Implementation-Defined Behavior

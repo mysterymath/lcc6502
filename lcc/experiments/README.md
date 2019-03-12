@@ -42,11 +42,28 @@ LCC hoists all local variables up to function scope. It does not emit any
 variable allocation code for block entry or exit (though it does initialize,
 as required).
 
+### [omit_return.c](omit_return.c)
+
+Measures what LCC generates when return values are omitted.
+
+#### Results
+
+For long, LCC returns zero instead. For struct types and doubles, LCC
+produces an error. This is incorrect; so long as the value of the function
+call is not used by the caller, this is well-defined behavior according to
+the C89 standard.
+
+### [char_return.c](char_return.c)
+
+Measures what LCC generates when char values are returned.
+
+#### Results
+
+LCC returns an int instead.
+
 ### TODO
 
 The following experiments still need to be run:
-
-* Valueless return statements in non-void functions.
 
 * How const/volatilatile static variables are indicated.
 
