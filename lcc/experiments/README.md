@@ -61,10 +61,19 @@ Measures what LCC generates when char values are returned.
 
 LCC returns an int instead.
 
+### [switch.c](switch.c)
+
+Measures what LCC generates for switch statements.
+
+#### Results
+
+LCC seems to have some intelligence to build binary search branching, but it
+looks like we hit a weird corner case. Still, it's not *wrong*, just odd.
+
+See [switch_results.lcc](switch_results.lcc) for details.
+
 ### TODO
 
 The following experiments still need to be run:
-
-* Switch statements.
 
 * Function pointers.

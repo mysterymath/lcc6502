@@ -1,0 +1,99 @@
+export function
+code
+proc function 4 0
+int a, b
+
+  ADDRLP2 0
+    ADDRFP2 0
+  INDIRI2
+ASGNI2
+a = arg;
+
+  ADDRLP2 2
+  CNSTI2 1
+ASGNI2
+b = 1;
+
+    ADDRLP2 0
+  INDIRI2
+    ADDRLP2 2
+  INDIRI2
+EQI2 $4
+if (a == b) goto $4;
+
+    ADDRLP2 0
+  INDIRI2
+  CNSTI2 2
+EQI2 $7
+if (a == 2) goto $7;
+
+    ADDRLP2 0
+  INDIRI2
+  CNSTI2 3
+EQI2 $6
+if (a == 3) goto $6;
+
+    ADDRLP2 0
+  INDIRI2
+    ADDRLP2 2
+  INDIRI2
+LTI2 $2
+if (a < b) goto $2;
+
+LABELV $8
+    ADDRFP2 0
+  INDIRI2
+  CNSTI2 12345
+EQI2 $5
+  ADDRGP2 $2
+JUMPV
+$8:
+if (a == 12345) goto $5;
+goto $2
+
+LABELV $4
+  CNSTI2 1
+RETI2
+  ADDRGP2 $1
+JUMPV
+$4:
+return 1;
+goto $1;
+
+LABELV $5
+  CNSTI2 2
+RETI2
+  ADDRGP2 $1
+JUMPV
+$5:
+return 2;
+goto $1;
+
+LABELV $6
+  CNSTI2 3
+RETI2
+  ADDRGP2 $1
+JUMPV
+$6:
+return 3;
+goto $1;
+
+LABELV $7
+  CNSTI2 4
+RETI2
+  ADDRGP2 $1
+JUMPV
+$7:
+return 4;
+goto $1;
+
+LABELV $2
+  CNSTI2 0
+RETI2
+$2:
+return 0;
+
+LABELV $1
+$1:;
+
+endproc function 4 0
