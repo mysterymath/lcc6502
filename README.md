@@ -10,8 +10,8 @@ assembly.
 An alpha prototype is under construction. Upon completion, the prototype will support:
 
 * All planned C features except character literals, string literals,
-  floating point numbers, division, floats/doubles, setjmp/longjmp, and
-  variable argument lists.
+  floating point numbers, division, floats/doubles, setjmp/longjmp, variable
+  argument lists, and volatile.
 
   * If any of these occur, behavior of the compiler is undefined.
 
@@ -20,7 +20,7 @@ An alpha prototype is under construction. Upon completion, the prototype will su
   
   * TODO: Determined if the planned shrink-wrapped enums should be in the alpha.
 
-* All planned linker script features.
+* All planned linker script features except ROM support.
 
 * All current implementation-defined behavior and extensions.
 
@@ -34,13 +34,14 @@ Updated March 9, 2019.
 ### Work Items
 
 * [ ] Perform LCC experiments.
-* [ ] Narrow LCC character returns from int.
 * [ ] Build an alpha prototype.
-* [ ] Fix noreturn LCC compiler bug.
-* [ ] Narrow char return values from int.
 * [ ] Audit the prototype against the Specification
 * [ ] Audit the prototype against the Domain Characteristics
 * [ ] Audit the prototype against the Implementation-Defined Behavior
+* [ ] Fix noreturn LCC compiler bug.
+* [ ] Narrow char return values from int.
+* [ ] Forward const information to the backend.
+* [ ] Implement ROM linker script features using const information.
 
 ## For More Details
 

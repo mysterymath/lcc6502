@@ -65,8 +65,6 @@ LCC returns an int instead.
 
 The following experiments still need to be run:
 
-* How const/volatilatile static variables are indicated.
-
 * Switch statements.
 
 * Function pointers.
