@@ -34,7 +34,11 @@ Updated March 9, 2019.
 ### Work Items
 
 * [ ] Perform LCC experiments.
-* [ ] Build an alpha prototype.
+* [ ] Output shoddy LLVM IR from LCC, sufficient to support the alpha.
+* [ ] Use `llvm-link` to link the IR into a single module.
+* [ ] Use `opt` to optimize the IR.
+* [ ] Read the IR by parsing the bitcode and emit 6502 assembly.
+* [ ] Build a simple driver that does all of the above using Installed utils.
 * [ ] Audit the prototype against the Specification
 * [ ] Audit the prototype against the Domain Characteristics
 * [ ] Audit the prototype against the Implementation-Defined Behavior
