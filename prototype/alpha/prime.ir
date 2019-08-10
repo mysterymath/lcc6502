@@ -1,0 +1,23 @@
+start
+  call putint 2
+  call putchar '\n'
+
+  br loop
+
+loop
+  i = phi start 3 loop i1
+  i1 = add i 2
+  is_prime = call is_odd_prime i
+  br is_prime prime loop_end
+
+prime
+  call putint i
+  call putchar '\n'
+  br loop_end
+
+loop_end
+  c = ne i1 65536
+  br c loop end
+
+end
+  ret
