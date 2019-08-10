@@ -7,47 +7,29 @@ assembly.
 
 ## Project Status
 
-An alpha prototype is under construction. Upon completion, the prototype will support:
+An alpha prototype is under construction to determine, in broad strokes, how
+efficient code can be generated for the 6502.
 
-* All planned C features except character literals, string literals,
-  floating point numbers, division, floats/doubles, setjmp/longjmp, variable
-  argument lists, and volatile.
+The current plan for this prototype can be found below.
 
-  * If any of these occur, behavior of the compiler is undefined.
-
-  * Bit fields are supported, but need not be lowered to 8-bits from LCC's
-    native int operations.
-  
-  * TODO: Determined if the planned shrink-wrapped enums should be in the alpha.
-
-* All planned linker script features except ROM support.
-
-* All current implementation-defined behavior and extensions.
-
-* The LCC compiler bug where an error is incorrectly emitted when no return
-  value is provided for a double or struct-valued function remains unfixed.
-
-* Chars are returned as ints, even though this is wider than necessary.
-
-Updated March 9, 2019.
+Updated August 9, 2019.
 
 ### Work Items
 
-* [ ] Perform LCC experiments.
-* [ ] Output shoddy LLVM IR from LCC, sufficient to support the alpha.
-* [ ] Use `llvm-link` to link the IR into a single module.
-* [ ] Use `opt` to optimize the IR.
-* [ ] Read the IR by parsing the bitcode and emit 6502 assembly.
-* [ ] Build a simple driver that does all of the above using Installed utils.
-* [ ] Audit the prototype against the Specification
-* [ ] Audit the prototype against the Domain Characteristics
-* [ ] Audit the prototype against the Implementation-Defined Behavior
-* [ ] Fix noreturn LCC compiler bug.
-* [ ] Narrow char return values from int.
-* [ ] Forward const information to the backend.
-* [ ] Implement ROM linker script features using const information.
+* [ ] Complete alpha prototype.
 
 ## For More Details
+
+### [Prototype Plan](Prototype_Plan.md)
+
+An alpha prototype is under construction to determine, in broad strokes, how
+efficient code can be generated for the 6502. Details about the goals and
+methods of this prototype can be here.
+
+### [LLVM Postmortem](LLVM_Postmortem.md)
+
+The previous attempt to use LLVM for code generation didn't go so well. The
+author's point of view on why can be found here.
 
 ### [Implementation-Defined Behavior](Implementation_Defined_Behavior.md)
 
