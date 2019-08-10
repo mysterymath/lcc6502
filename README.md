@@ -17,10 +17,10 @@ Updated August 9, 2019.
 ### Work Items
 
 * [ ] Produce Atari 800 XEX prime number prototype in high-level SSA form.
-* [ ] Parse this into an in-memory representation, then print a graphphiz rep.
-* [ ] Reduce all function calls to one big global SSA, then print graph.
-* [ ] Compute GVN PRE, then print graph.
-* [ ] Lower operations to 8-bit, then print graph.
+* [ ] Parse this into an in-memory representation, then print.
+* [ ] Reduce all function calls to one big global SSA, then print.
+* [ ] Compute GVN PRE, then print.
+* [ ] Lower operations to 8-bit, then print.
 * [ ] Complete alpha prototype.
 
 ## For More Details
