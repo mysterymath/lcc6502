@@ -26,7 +26,6 @@ class Cmd:
         result_str = f'{self.result} = ' if self.result else ''
         return f'{result_str}{self.op} {" ".join(self.args)}'
 
-
 def parse_blocks():
     blocks = []
     block = None

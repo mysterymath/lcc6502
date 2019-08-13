@@ -1,23 +1,120 @@
-start
-  call putint 2
-  call putchar '\n'
+func main
+  start
+    call init_putchar
+    call putint 2w
+    call putchar '\n'
 
-  br loop
+    br loop
 
-loop
-  i = phi start 3 loop i1
-  i1 = add i 2
-  is_prime = call is_odd_prime i
-  br is_prime prime loop_end
+  loop
+    i = phi start 3w loop i1
+    i1 = add i word 2b
+    is_prime = call is_odd_prime i
+    br is_prime prime loop_end
 
-prime
-  call putint i
-  call putchar '\n'
-  br loop_end
+  prime
+    call putint i
+    call putchar '\n'
+    br loop_end
 
-loop_end
-  c = ne i1 65536
-  br c loop end
+  loop_end
+    c = ne i1 65536w
+    br c loop finish
 
+  finish
+    ret
+
+
+func putint
+  input n word
+  start
+    c = lt n 10w
+    br c single_digit multi_digit
+
+  single_digit
+    t1 = lo n
+    ch = add t1 '0'
+    call putchar ch
+    br finish
+
+  multi_digit
+    rest last = call div_rem n 10w
+    call putint rest
+    call putint last
+    br finish
+
+  finish
+    ret
+
+
+func putchar
+  input c byte
+  start
+    asm 
+      input a c
+      input x 0b
+      clobber y p
+
+      jsr 0xE456
+    end
+    br finish
+
+  finish
+    ret
+
+
+func init_putchar
+  start
+    store 0x0341 0x0Bb
+    store 0x0348 0w
+    br finish
+
+  finish
+    ret
+
+
+func is_odd_prime
+  input n word
+  output is_prime byte
+  start
+    half = lsr n
+    done = gt 3w half
+    br done finish loop
+
+  loop
+    i = phi start 3w continue i1
+    _ rem = call div_rem n i
+    is_not_prime = eq rem 0w
+    br is_not_prime finish continue
+
+  continue
+    i1 = i + 2w
+    done1 = gt i1 half
+    br done1 finish loop
+
+  finish
+    is_prime = phi start 1b continue 1b loop 0b
+    ret
 end
-  ret
+
+func div_rem
+  input dividend word
+  input divisor word
+  output quotient word
+  output remainder word
+  start
+    done = lt dividend divisor
+    br done finish loop
+
+  loop
+    r = phi start dividend loop r1
+    q = phi start 0w loop q1
+    r1 = sub r divisor
+    q1 = add q 1w
+    done = lt r1 divisor
+    br done finish loop
+
+  finish
+    quotient = phi start 0w loop q1
+    remainder = phi start dividend loop r1
+    ret
