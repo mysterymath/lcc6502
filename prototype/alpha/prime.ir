@@ -1,4 +1,4 @@
-func main
+main
   start
     call init_putchar
     call putint 2w
@@ -23,10 +23,12 @@ func main
 
   finish
     ret
+end
 
 
-func putint
+putint
   input n word
+
   start
     c = lt n 10w
     br c single_digit multi_digit
@@ -35,20 +37,19 @@ func putint
     t1 = lo n
     ch = add t1 '0'
     call putchar ch
-    br finish
+    ret
 
   multi_digit
     rest last = call div_rem n 10w
     call putint rest
     call putint last
-    br finish
-
-  finish
     ret
+end
 
 
-func putchar
+putchar
   input c byte
+
   start
     asm 
       input a c
@@ -57,25 +58,22 @@ func putchar
 
       jsr 0xE456
     end
-    br finish
-
-  finish
     ret
+end
 
 
-func init_putchar
+init_putchar
   start
     store 0x0341 0x0Bb
     store 0x0348 0w
-    br finish
-
-  finish
     ret
+end
 
 
-func is_odd_prime
+is_odd_prime
   input n word
   output is_prime byte
+
   start
     half = lsr n
     done = gt 3w half
@@ -97,11 +95,12 @@ func is_odd_prime
     ret
 end
 
-func div_rem
+div_rem
   input dividend word
   input divisor word
   output quotient word
   output remainder word
+
   start
     done = lt dividend divisor
     br done finish loop
@@ -118,3 +117,4 @@ func div_rem
     quotient = phi start 0w loop q1
     remainder = phi start dividend loop r1
     ret
+end
