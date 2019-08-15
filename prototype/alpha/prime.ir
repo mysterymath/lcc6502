@@ -54,7 +54,7 @@ putchar
     asm 
       input a c
       input x 0b
-      clobber y p
+      clobbers y p
 
       jsr 0xE456
     end

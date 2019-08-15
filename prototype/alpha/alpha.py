@@ -19,12 +19,9 @@ class Func:
     blocks = attrib()
 
     def __str__(self):
-        name = f'{self.name}\n'
-        inputs = textwrap.indent(''.join(map(str, self.inputs)), '  ')
-        outputs = textwrap.indent(''.join(map(str, self.outputs)), '  ')
-        blocks = textwrap.indent(''.join(map(str, self.blocks)), '  ')
-        end = 'end\n'
-        return ''.join([name, inputs, outputs, blocks, end])
+        body = strcat(*self.inputs, *self.outputs, *self.blocks)
+        body = textwrap.indent(body, '  ')
+        return f'func {self.name}\n{body}end\n'
 
 
 @attrs
@@ -51,8 +48,8 @@ class Block:
     cmds = attrib()
 
     def __str__(self):
-        cmd_str = textwrap.indent(''.join(map(str, self.cmds)), '  ')
-        return f'{self.name}\n{cmd_str}'
+        body = textwrap.indent(strcat(*self.cmds), '  ')
+        return f'{self.name}\n{body}'
 
 
 @attrs
@@ -65,8 +62,8 @@ class Cmd:
         return self.op in ('br', 'ret')
 
     def __str__(self):
-        results_str = f'{" ".join(self.results)} = ' if self.results else ''
-        return f'{results_str}{self.op} {" ".join(self.args)}\n'
+        results_str = f'{unsplit(self.results)} = ' if self.results else ''
+        return f'{results_str}{self.op} {unsplit(self.args)}\n'
 
 
 @attrs
@@ -76,13 +73,10 @@ class Asm:
     instrs = attrib()
 
     def __str__(self):
-        begin_str = 'asm\n'
-        inputs_str = textwrap.indent(''.join(map(str, self.inputs)), '  ')
-        clobbers_str = textwrap.indent(f'clobbers {" ".join(map(str, self.clobbers))}\n', '  ')
-        instrs_str = textwrap.indent(''.join(map(str, self.instrs)), '  ')
-        end_str = 'end\n'
-
-        return ''.join([begin_str, inputs_str, clobbers_str, instrs_str, end_str])
+        clobbers_str = f'clobbers {unsplit(self.clobbers)}\n'
+        body = strcat(*self.inputs, clobbers_str, *self.instrs)
+        body = textwrap.indent(body, '  ')
+        return f'asm\n{body}end\n'
 
 
 @attrs
@@ -91,7 +85,7 @@ class AsmInstr:
     args = attrib()
 
     def __str__(self):
-        return f'{self.op} {" ".join(map(str, self.args))}\n'
+        return f'{self.op} {unsplit(self.args)}\n'
 
 
 @attrs
@@ -201,8 +195,8 @@ def parse_asm(first, rest):
     while first.split()[0] == 'input':
         inputs.append(parse_asm_input(first, rest))
         first = next(rest)
-    if first.split()[0] == 'clobber':
-        clobbers = parse_clobber(first, rest)
+    if first.split()[0] == 'clobbers':
+        clobbers = parse_clobbers(first, rest)
         first = next(rest)
 
     instrs = parse_asm_instrs(first, rest)
@@ -215,7 +209,7 @@ def parse_asm_input(first, rest):
     return AsmInput(register, value)
 
 
-def parse_clobber(first, rest):
+def parse_clobbers(first, rest):
     return list(first.split()[1:])
 
 
@@ -231,6 +225,14 @@ def parse_asm_instrs(first, rest):
 def parse_asm_instr(first, rest):
     (op, *args) = first.split()
     return AsmInstr(op, args)
+
+
+def strcat(*args):
+    return ''.join(map(str, args))
+
+
+def unsplit(l):
+    return ' '.join(map(str, l))
 
 
 try:
