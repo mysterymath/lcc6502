@@ -136,7 +136,7 @@ def parse_func(first, rest):
         outputs.append(parse_output(first, rest))
         first = next(rest)
 
-    blocks = parse_blocks(first, rest)
+    blocks = parse_section(first, rest, parse_block)
     return Func(name, inputs, outputs, blocks)
 
 
@@ -148,15 +148,6 @@ def parse_input(first, rest):
 def parse_output(first, rest):
     (_, name, size) = first.split()
     return Output(name, size)
-
-
-def parse_blocks(first, rest):
-    blocks = []
-    while True:
-        blocks.append(parse_block(first, rest))
-        first = next(rest)
-        if first == 'end':
-            return blocks
 
 
 def parse_block(first, rest):
@@ -199,7 +190,7 @@ def parse_asm(first, rest):
         clobbers = parse_clobbers(first, rest)
         first = next(rest)
 
-    instrs = parse_asm_instrs(first, rest)
+    instrs = parse_section(first, rest, parse_asm_instr)
 
     return Asm(inputs, clobbers, instrs)
 
@@ -213,18 +204,18 @@ def parse_clobbers(first, rest):
     return list(first.split()[1:])
 
 
-def parse_asm_instrs(first, rest):
-    instrs = []
-    while True:
-        instrs.append(parse_asm_instr(first, rest))
-        first = next(rest)
-        if first == 'end':
-            return instrs
-
-
 def parse_asm_instr(first, rest):
     (op, *args) = first.split()
     return AsmInstr(op, args)
+
+
+def parse_section(first, rest, parse_item):
+    items = []
+    while True:
+        items.append(parse_item(first, rest))
+        first = next(rest)
+        if first == 'end':
+            return items
 
 
 def strcat(*args):
