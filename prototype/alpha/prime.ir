@@ -4,11 +4,10 @@ main
     call putint 2w
     call putchar '\n'
 
+    i = 3w
     br loop
 
   loop
-    i = phi start 3w loop i1
-    i1 = add i word 2b
     is_prime = call is_odd_prime i
     br is_prime prime loop_end
 
@@ -18,7 +17,8 @@ main
     br loop_end
 
   loop_end
-    c = ne i1 65536w
+    i = add i word 2b
+    c = ne i 65536w
     br c loop finish
 
   finish
@@ -34,8 +34,8 @@ putint
     br c single_digit multi_digit
 
   single_digit
-    t1 = lo n
-    ch = add t1 '0'
+    t = lo n
+    ch = add t '0'
     call putchar ch
     ret
 
@@ -72,26 +72,30 @@ end
 
 is_odd_prime
   input n word
-  output is_prime byte
+  output is_prime bool
 
   start
     half = lsr n
-    done = gt 3w half
-    br done finish loop
+    i = 3w
+    done = gt i half
+    br done prime loop
 
   loop
-    i = phi start 3w continue i1
     _ rem = call div_rem n i
     is_not_prime = eq rem 0w
-    br is_not_prime finish continue
+    br is_not_prime not_prime maybe_prime
 
-  continue
-    i1 = i + 2w
-    done1 = gt i1 half
-    br done1 finish loop
+  not_prime
+    is_prime = false
+    ret
+
+  maybe_prime
+    i = i + 2w
+    done = gt i half
+    br done prime loop
 
   finish
-    is_prime = phi start 1b continue 1b loop 0b
+    is_prime = true
     ret
 end
 
@@ -103,18 +107,16 @@ div_rem
 
   start
     done = lt dividend divisor
+    quotient = 0w
+    remainder = dividend
     br done finish loop
 
   loop
-    r = phi start dividend loop r1
-    q = phi start 0w loop q1
-    r1 = sub r divisor
-    q1 = add q 1w
-    done = lt r1 divisor
+    remainder = sub remainder divisor
+    quotient = add quotient 1w
+    done = lt remainder divisor
     br done finish loop
 
   finish
-    quotient = phi start 0w loop q1
-    remainder = phi start dividend loop r1
     ret
 end
