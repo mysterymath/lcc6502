@@ -1,7 +1,9 @@
 from attr import attrs, attrib, Factory
+from collections import defaultdict, Counter
 import fileinput
 import re
 import textwrap
+import itertools
 
 
 debug_line = None
@@ -21,7 +23,7 @@ class Func:
     def __str__(self):
         body = strcat(*self.inputs, *self.outputs, *self.blocks)
         body = textwrap.indent(body, '  ')
-        return f'func {self.name}\n{body}end\n'
+        return f'{self.name}\n{body}end\n'
 
 
 @attrs
@@ -42,10 +44,10 @@ class Output:
         return f'output {self.name} {self.size}\n'
 
 
-@attrs
+@attrs(cmp=False)
 class Block:
     name = attrib()
-    cmds = attrib()
+    cmds = attrib(repr=False)
 
     def __str__(self):
         body = textwrap.indent(strcat(*self.cmds), '  ')
@@ -63,7 +65,8 @@ class Cmd:
 
     def __str__(self):
         results_str = f'{unsplit(self.results)} = ' if self.results else ''
-        return f'{results_str}{self.op} {unsplit(self.args)}\n'
+        args_str = ' ' + unsplit(self.args) if self.args else ''
+        return f'{results_str}{self.op}{args_str}\n'
 
 
 @attrs
@@ -218,6 +221,66 @@ def parse_section(first, rest, parse_item):
             return items
 
 
+def to_ssa(func):
+    defns = set()
+    new_values = defaultdict(set)
+
+    def renumber(result):
+        if result == '_':
+            return result
+        candidates = (f'{result}{n}' for n in itertools.count(1))
+        chosen = next(c for c in candidates if c not in defns)
+        defns.add(chosen)
+        new_values[result].add(chosen)
+        return chosen
+
+
+    for block in func.blocks:
+        for cmd in block.cmds:
+            if not isinstance(cmd, Asm):
+                cmd.results = list(map(renumber, cmd.results))
+
+    preds = collect_predecessors(func)
+
+    for block in func.blocks:
+        for cmd_index, cmd in enumerate(block.cmds):
+            def lookup_renumbered_value(val, cmd_index=cmd_index, block=block):
+                if val not in new_values:
+                    return val
+
+                for i in range(cmd_index-1, -1, -1):
+                    for r in block.cmds[i].results:
+                        if r in new_values[val]:
+                            return r
+
+                # A definition was not found in this block, so recurse into previous ones
+                if len(preds[block.name]) == 1:
+                    (pred,) = preds[block.name]
+                    return lookup_renumbered_value(val, len(pred.cmds), pred)
+
+                # 2 or more predecessors, so insert a phi. May be removed later.
+                new_v = renumber(val)
+                args = []
+                phi = Cmd([new_v], 'phi', args)
+                # Insert phi before args computed to terminate recursive lookups
+                block.cmds.insert(0, phi)
+                for pred in preds[block.name]:
+                    args.append(pred.name)
+                    args.append(lookup_renumbered_value(val, len(pred.cmds), pred))
+                return new_v
+
+            if isinstance(cmd, Asm):
+                for i in cmd.inputs:
+                    i.value = lookup_renumbered_value(i.value)
+            elif cmd.op == 'br':
+                if len(cmd.args) == 3:
+                    cmd.args[0] = lookup_renumbered_value(cmd.args[0])
+            elif cmd.op == 'call':
+                cmd.args[1:] = list(map(lookup_renumbered_value, cmd.args[1:]))
+            else:
+                cmd.args = list(map(lookup_renumbered_value, cmd.args))
+
+
 def strcat(*args):
     return ''.join(map(str, args))
 
@@ -226,9 +289,24 @@ def unsplit(l):
     return ' '.join(map(str, l))
 
 
+def collect_predecessors(func):
+    preds = defaultdict(set)
+    for block in func.blocks:
+        term = block.cmds[-1]
+        if term.op == 'br':
+            if len(term.args) == 1:
+                preds[term.args[0]].add(block)
+            else:
+                preds[term.args[1]].add(block)
+                preds[term.args[2]].add(block)
+    return preds
+
 try:
     funcs = parse()
 except Exception as e:
     raise ParseError(f'{fileinput.filename()}:{fileinput.lineno()}: {debug_line}') from e
+
 for func in funcs:
+    to_ssa(func)
     print(func)
+

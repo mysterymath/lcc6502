@@ -4,7 +4,7 @@ main
     call putint 2w
     call putchar '\n'
 
-    i = 3w
+    i = copy 3w
     br loop
 
   loop
@@ -17,7 +17,7 @@ main
     br loop_end
 
   loop_end
-    i = add i word 2b
+    i = add i 2b
     c = ne i 65536w
     br c loop finish
 
@@ -51,7 +51,7 @@ putchar
   input c byte
 
   start
-    asm 
+    asm
       input a c
       input x 0b
       clobbers y p
@@ -76,7 +76,7 @@ is_odd_prime
 
   start
     half = lsr n
-    i = 3w
+    i = copy 3w
     done = gt i half
     br done prime loop
 
@@ -86,16 +86,16 @@ is_odd_prime
     br is_not_prime not_prime maybe_prime
 
   not_prime
-    is_prime = false
+    is_prime = copy false
     ret
 
   maybe_prime
-    i = i + 2w
+    i = add i 2w
     done = gt i half
     br done prime loop
 
   finish
-    is_prime = true
+    is_prime = copy true
     ret
 end
 
@@ -107,8 +107,8 @@ div_rem
 
   start
     done = lt dividend divisor
-    quotient = 0w
-    remainder = dividend
+    quotient = copy 0w
+    remainder = copy dividend
     br done finish loop
 
   loop
