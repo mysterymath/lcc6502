@@ -240,6 +240,15 @@ def to_ssa(func):
             if not isinstance(cmd, Asm):
                 cmd.results = list(map(renumber, cmd.results))
 
+    # Copy to the real outputs of each function, which are no longer assigned to.
+    # The arguments to these copies will be rewritten with the actual reaching
+    # definitions.
+    for block in func.blocks:
+        term = block.cmds[-1]
+        if isinstance(term, Cmd) and term.op == 'ret':
+            for o in func.outputs:
+                block.cmds.insert(len(block.cmds)-1, Cmd([o.name], 'copy', [o.name]))
+
     preds = collect_predecessors(func)
 
     for block in func.blocks:
