@@ -262,12 +262,8 @@ def to_ssa(func):
                         if r in new_values[val]:
                             return r
 
-                # A definition was not found in this block, so recurse into previous ones
-                if len(preds[block.name]) == 1:
-                    (pred,) = preds[block.name]
-                    return lookup_renumbered_value(val, len(pred.cmds), pred)
-
-                # 2 or more predecessors, so insert a phi. May be removed later.
+                # Value not defined in block, so insert a phi.
+                # May be removed later.
                 new_v = renumber(val)
                 args = []
                 phi = Cmd([new_v], 'phi', args)
@@ -288,6 +284,52 @@ def to_ssa(func):
                 cmd.args[1:] = list(map(lookup_renumbered_value, cmd.args[1:]))
             else:
                 cmd.args = list(map(lookup_renumbered_value, cmd.args))
+
+    while True:
+        # Collect redundant phis.
+        redundant_phis = {}
+        for block in func.blocks:
+            for cmd in block.cmds:
+                if isinstance(cmd, Asm) or cmd.op != 'phi':
+                    continue
+                (result,) = cmd.results
+                is_redundant = True
+                real_arg = None
+                for arg in cmd.args[1::2]:
+                    if arg == result:
+                        continue
+                    elif real_arg is None:
+                        real_arg = arg
+                    elif real_arg != arg:
+                        is_redundant = False
+                        break
+                if is_redundant:
+                    redundant_phis[result] = real_arg
+
+        if not len(redundant_phis):
+            break
+
+        # Remove redundant phis.
+        for block in func.blocks:
+            def is_not_redundant_phi(cmd):
+                if isinstance(cmd, Asm) or cmd.op != 'phi':
+                    return True
+                (result,) = cmd.results
+                return result not in redundant_phis
+            block.cmds = list(filter(is_not_redundant_phi, block.cmds))
+
+        # Relable redundant phi usages.
+        def relable_redundant_phi_arg(arg):
+            if arg not in redundant_phis:
+                return arg
+            return redundant_phis[arg]
+        for block in func.blocks:
+            for cmd in block.cmds:
+                if isinstance(cmd, Asm):
+                    for i in cmd.inputs:
+                        i.value = relable_redundant_phi_arg(i.value)
+                else:
+                    cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
 
 
 def strcat(*args):

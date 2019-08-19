@@ -17,7 +17,7 @@ main
     br loop_end
 
   loop_end
-    i = add i 2b
+    i = add i 2w
     c = ne i 65536w
     br c loop finish
 
