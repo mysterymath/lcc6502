@@ -204,9 +204,14 @@ def parse_section(first, rest, parse_item):
 
 
 def to_ssa(func):
+    # SSA values that have been already defined.
     defns = set()
+
+    # A map from a pre-ssa variable to all its post-ssa definitions.
     new_values = defaultdict(set)
 
+    # Given a pre-ssa definition label, assign a new label to it. This gives
+    # each static definition a unique global label.
     def renumber(result):
         if result == '_':
             return result
@@ -216,7 +221,7 @@ def to_ssa(func):
         new_values[result].add(chosen)
         return chosen
 
-
+    # Renumber all definitions.
     for block in func.blocks:
         for cmd in block.cmds:
             cmd.results = list(map(renumber, cmd.results))
@@ -230,80 +235,81 @@ def to_ssa(func):
             for o in func.outputs:
                 block.cmds.insert(len(block.cmds)-1, Cmd([o.name], 'copy', [o.name]))
 
+    relabel_uses(func, new_values, renumber)
+
+# Replace each use of an old value with the corresponding relabeled value.
+# Inserts phi instructions as necessary.
+def relabel_uses(func, new_values, renumber):
     preds = collect_predecessors(func)
+
+    # Look up the reaching definition of a value at a given command.
+    def lookup_renumbered_value(val, cmd_index, block):
+        # Handle constants, block refs, anything not defined by a cmd.
+        if val not in new_values:
+            return val
+
+        # If the value is defined in this block, return the
+        # latest definition.
+        for i in range(cmd_index-1, -1, -1):
+            for r in block.cmds[i].results:
+                if r in new_values[val]:
+                    return r
+
+        # Value not defined in block, so insert an phi without any
+        # arguments.
+        new_v = renumber(val)
+        args = []
+        phi = Cmd([new_v], 'phi', args)
+        block.cmds.insert(0, phi)
+
+        # Recursively look up the arguments of the phi. Since the phi
+        # was already inserted, it will terminate any loops in the
+        # dataflow graph by referencing itself.
+        for pred in preds[block.name]:
+            args.append(pred.name)
+            args.append(lookup_value_from_end(val, pred))
+        return new_v
+
+    # Look up reaching definition of a value from the end of a block.
+    def lookup_value_from_end(val, block):
+        return lookup_renumbered_value(val, len(block.cmds), block)
 
     for block in func.blocks:
         for cmd_index, cmd in enumerate(block.cmds):
-            def lookup_renumbered_value(val, cmd_index=cmd_index, block=block):
-                if val not in new_values:
-                    return val
+            def lookup_value(val):
+                return lookup_renumbered_value(val, cmd_index, block)
+            cmd.args = list(map(lookup_value, cmd.args))
 
-                for i in range(cmd_index-1, -1, -1):
-                    for r in block.cmds[i].results:
-                        if r in new_values[val]:
-                            return r
-
-                # Value not defined in block, so insert a phi.
-                # May be removed later.
-                new_v = renumber(val)
-                args = []
-                phi = Cmd([new_v], 'phi', args)
-                # Insert phi before args computed to terminate recursive lookups
-                block.cmds.insert(0, phi)
-                for pred in preds[block.name]:
-                    args.append(pred.name)
-                    args.append(lookup_renumbered_value(val, len(pred.cmds), pred))
-                return new_v
-
-            if cmd.op == 'br':
-                if len(cmd.args) == 3:
-                    cmd.args[0] = lookup_renumbered_value(cmd.args[0])
-            elif cmd.op == 'call':
-                cmd.args[1:] = list(map(lookup_renumbered_value, cmd.args[1:]))
-            else:
-                cmd.args = list(map(lookup_renumbered_value, cmd.args))
-
+    # Remove redundant phi instructions and relabel their uses iteratively
+    # until none are left.
     while True:
-        # Collect redundant phis.
-        redundant_phis = {}
-        for block in func.blocks:
-            for cmd in block.cmds:
-                if cmd.op != 'phi':
-                    continue
-                (result,) = cmd.results
-                is_redundant = True
-                real_arg = None
-                for arg in cmd.args[1::2]:
-                    if arg == result:
-                        continue
-                    elif real_arg is None:
-                        real_arg = arg
-                    elif real_arg != arg:
-                        is_redundant = False
-                        break
-                if is_redundant:
-                    redundant_phis[result] = real_arg
-
-        if not len(redundant_phis):
+        redundant_phis = collect_redundant_phis(func)
+        if not redundant_phis:
             break
+        remove_redundant_phis(func, redundant_phis)
+        relabel_redundant_phi_uses(func, redundant_phis)
 
-        # Remove redundant phis.
-        for block in func.blocks:
-            def is_not_redundant_phi(cmd):
-                if cmd.op != 'phi':
-                    return True
-                (result,) = cmd.results
-                return result not in redundant_phis
-            block.cmds = list(filter(is_not_redundant_phi, block.cmds))
 
-        # Relable redundant phi usages.
-        def relable_redundant_phi_arg(arg):
-            if arg not in redundant_phis:
-                return arg
-            return redundant_phis[arg]
-        for block in func.blocks:
-            for cmd in block.cmds:
-                cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
+def collect_redundant_phis(func):
+    redundant_phis = {}
+    for block in func.blocks:
+        for cmd in block.cmds:
+            if cmd.op != 'phi':
+                continue
+            (result,) = cmd.results
+            is_redundant = True
+            real_arg = None
+            for arg in cmd.args[1::2]:
+                if arg == result:
+                    continue
+                elif real_arg is None:
+                    real_arg = arg
+                elif real_arg != arg:
+                    is_redundant = False
+                    break
+            if is_redundant:
+                redundant_phis[result] = real_arg
+    return redundant_phis
 
 
 def strcat(*args):
@@ -325,6 +331,27 @@ def collect_predecessors(func):
                 preds[term.args[1]].add(block)
                 preds[term.args[2]].add(block)
     return preds
+
+
+def remove_redundant_phis(func, redundant_phis):
+    for block in func.blocks:
+        def is_not_redundant_phi(cmd):
+            if cmd.op != 'phi':
+                return True
+            (result,) = cmd.results
+            return result not in redundant_phis
+        block.cmds = list(filter(is_not_redundant_phi, block.cmds))
+
+
+def relabel_redundant_phi_uses(func, redundant_phis):
+    def relable_redundant_phi_arg(arg):
+        if arg not in redundant_phis:
+            return arg
+        return redundant_phis[arg]
+    for block in func.blocks:
+        for cmd in block.cmds:
+            cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
+
 
 try:
     funcs = parse()
