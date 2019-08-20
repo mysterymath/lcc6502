@@ -210,7 +210,7 @@ def to_ssa(func):
     def renumber(result):
         if result == '_':
             return result
-        candidates = (f'{result}{n}' for n in itertools.count(1))
+        candidates = itertools.chain([result], (f'{result}{n}' for n in itertools.count(1)))
         chosen = next(c for c in candidates if c not in defns)
         defns.add(chosen)
         new_values[result].add(chosen)
