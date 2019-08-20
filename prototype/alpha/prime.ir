@@ -51,9 +51,8 @@ putchar
   input c byte
 
   start
-    asm
-      input a c
-      input x 0b
+    asm c 0b
+      inputs a x
       clobbers y p
 
       jsr 0xE456

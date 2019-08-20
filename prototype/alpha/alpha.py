@@ -70,16 +70,18 @@ class Cmd:
 
 
 @attrs
-class Asm:
+class Asm(Cmd):
     inputs = attrib()
     clobbers = attrib()
     instrs = attrib()
 
     def __str__(self):
-        clobbers_str = f'clobbers {unsplit(self.clobbers)}\n'
-        body = strcat(*self.inputs, clobbers_str, *self.instrs)
+        inputs = f'inputs {unsplit(self.inputs)}\n' if self.inputs else ''
+        clobbers = f'clobbers {unsplit(self.clobbers)}\n' if self.clobbers else ''
+        body = strcat(inputs, clobbers, *self.instrs)
         body = textwrap.indent(body, '  ')
-        return f'asm\n{body}end\n'
+        cmd_str = super().__str__()
+        return f'{cmd_str}{body}end\n'
 
 
 @attrs
@@ -89,15 +91,6 @@ class AsmInstr:
 
     def __str__(self):
         return f'{self.op} {unsplit(self.args)}\n'
-
-
-@attrs
-class AsmInput:
-    register = attrib()
-    value = attrib()
-
-    def __str__(self):
-        return f'input {self.register} {self.value}\n'
 
 
 def read_lines():
@@ -163,14 +156,10 @@ def parse_block(first, rest):
 def parse_cmds(first, rest):
     cmds = []
     while True:
-        if first == 'asm':
-            cmd = parse_asm(first, rest)
-            cmds.append(cmd)
-        else:
-            cmd = parse_cmd(first, rest)
-            cmds.append(cmd)
-            if cmd.is_terminator():
-                return cmds
+        cmd = parse_cmd(first, rest)
+        cmds.append(cmd)
+        if cmd.is_terminator():
+            return cmds
         first = next(rest)
 
 
@@ -178,33 +167,26 @@ def parse_cmd(first, rest):
     (results, expr) = re.fullmatch(r'(?:(.*) = )?(.*)', first).groups()
     results = results.split() if results else []
     (op, *args) = expr.split()
+    if op == 'asm':
+        return parse_asm(first, rest, results, args)
     return Cmd(results, op, args)
 
 
-def parse_asm(first, rest):
+def parse_asm(first, rest, results, args):
     first = next(rest)
 
     inputs = []
     clobbers = []
-    while first.split()[0] == 'input':
-        inputs.append(parse_asm_input(first, rest))
+    if first.split()[0] == 'input':
+        inputs.append(first.split()[1:])
         first = next(rest)
     if first.split()[0] == 'clobbers':
-        clobbers = parse_clobbers(first, rest)
+        clobbers.append(first.split()[1:])
         first = next(rest)
 
     instrs = parse_section(first, rest, parse_asm_instr)
 
-    return Asm(inputs, clobbers, instrs)
-
-
-def parse_asm_input(first, rest):
-    (_, register, value) = first.split()
-    return AsmInput(register, value)
-
-
-def parse_clobbers(first, rest):
-    return list(first.split()[1:])
+    return Asm(results, 'asm', args, inputs, clobbers, instrs)
 
 
 def parse_asm_instr(first, rest):
@@ -237,15 +219,14 @@ def to_ssa(func):
 
     for block in func.blocks:
         for cmd in block.cmds:
-            if not isinstance(cmd, Asm):
-                cmd.results = list(map(renumber, cmd.results))
+            cmd.results = list(map(renumber, cmd.results))
 
     # Copy to the real outputs of each function, which are no longer assigned to.
     # The arguments to these copies will be rewritten with the actual reaching
     # definitions.
     for block in func.blocks:
         term = block.cmds[-1]
-        if isinstance(term, Cmd) and term.op == 'ret':
+        if term.op == 'ret':
             for o in func.outputs:
                 block.cmds.insert(len(block.cmds)-1, Cmd([o.name], 'copy', [o.name]))
 
@@ -274,10 +255,7 @@ def to_ssa(func):
                     args.append(lookup_renumbered_value(val, len(pred.cmds), pred))
                 return new_v
 
-            if isinstance(cmd, Asm):
-                for i in cmd.inputs:
-                    i.value = lookup_renumbered_value(i.value)
-            elif cmd.op == 'br':
+            if cmd.op == 'br':
                 if len(cmd.args) == 3:
                     cmd.args[0] = lookup_renumbered_value(cmd.args[0])
             elif cmd.op == 'call':
@@ -290,7 +268,7 @@ def to_ssa(func):
         redundant_phis = {}
         for block in func.blocks:
             for cmd in block.cmds:
-                if isinstance(cmd, Asm) or cmd.op != 'phi':
+                if cmd.op != 'phi':
                     continue
                 (result,) = cmd.results
                 is_redundant = True
@@ -312,7 +290,7 @@ def to_ssa(func):
         # Remove redundant phis.
         for block in func.blocks:
             def is_not_redundant_phi(cmd):
-                if isinstance(cmd, Asm) or cmd.op != 'phi':
+                if cmd.op != 'phi':
                     return True
                 (result,) = cmd.results
                 return result not in redundant_phis
@@ -325,11 +303,7 @@ def to_ssa(func):
             return redundant_phis[arg]
         for block in func.blocks:
             for cmd in block.cmds:
-                if isinstance(cmd, Asm):
-                    for i in cmd.inputs:
-                        i.value = relable_redundant_phi_arg(i.value)
-                else:
-                    cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
+                cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
 
 
 def strcat(*args):
