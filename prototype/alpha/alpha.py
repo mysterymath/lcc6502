@@ -17,11 +17,10 @@ class ParseError(Exception):
 class Func:
     name = attrib()
     inputs = attrib()
-    outputs = attrib()
     blocks = attrib()
 
     def __str__(self):
-        body = strcat(*self.inputs, *self.outputs, *self.blocks)
+        body = strcat(*self.inputs, *self.blocks)
         body = textwrap.indent(body, '  ')
         return f'{self.name}\n{body}end\n'
 
@@ -33,15 +32,6 @@ class Input:
 
     def __str__(self):
         return f'input {self.name} {self.size}\n'
-
-
-@attrs
-class Output:
-    name = attrib()
-    size = attrib()
-
-    def __str__(self):
-        return f'output {self.name} {self.size}\n'
 
 
 @attrs(cmp=False)
@@ -124,26 +114,17 @@ def parse_func(first, rest):
     first = next(rest)
 
     inputs = []
-    outputs = []
     while first.split()[0] == 'input':
         inputs.append(parse_input(first, rest))
         first = next(rest)
-    while first.split()[0] == 'output':
-        outputs.append(parse_output(first, rest))
-        first = next(rest)
 
     blocks = parse_section(first, rest, parse_block)
-    return Func(name, inputs, outputs, blocks)
+    return Func(name, inputs, blocks)
 
 
 def parse_input(first, rest):
     (_, name, size) = first.split()
     return Input(name, size)
-
-
-def parse_output(first, rest):
-    (_, name, size) = first.split()
-    return Output(name, size)
 
 
 def parse_block(first, rest):
@@ -226,15 +207,6 @@ def to_ssa(func):
         for cmd in block.cmds:
             cmd.results = list(map(renumber, cmd.results))
 
-    # Copy to the real outputs of each function, which are no longer assigned to.
-    # The arguments to these copies will be rewritten with the actual reaching
-    # definitions.
-    for block in func.blocks:
-        term = block.cmds[-1]
-        if term.op == 'ret':
-            for o in func.outputs:
-                block.cmds.insert(len(block.cmds)-1, Cmd([o.name], 'copy', [o.name]))
-
     relabel_uses(func, new_values, renumber)
 
 # Replace each use of an old value with the corresponding relabeled value.
@@ -275,10 +247,18 @@ def relabel_uses(func, new_values, renumber):
         return lookup_renumbered_value(val, len(block.cmds), block)
 
     for block in func.blocks:
-        for cmd_index, cmd in enumerate(block.cmds):
-            def lookup_value(val):
-                return lookup_renumbered_value(val, cmd_index, block)
-            cmd.args = list(map(lookup_value, cmd.args))
+        while True:
+            for cmd_index, cmd in enumerate(block.cmds):
+                if cmd.op == 'phi':
+                    continue
+                def lookup_value(val):
+                    return lookup_renumbered_value(val, cmd_index, block)
+                old_size = len(block.cmds)
+                cmd.args = list(map(lookup_value, cmd.args))
+                if len(block.cmds) != old_size:
+                    break
+            else:
+                break
 
     # Remove redundant phi instructions and relabel their uses iteratively
     # until none are left.

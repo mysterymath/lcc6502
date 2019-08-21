@@ -71,7 +71,6 @@ end
 
 is_odd_prime
   input n word
-  output is_prime bool
 
   start
     half = lsr n
@@ -85,8 +84,7 @@ is_odd_prime
     br is_not_prime not_prime maybe_prime
 
   not_prime
-    is_prime = copy false
-    ret
+    ret false
 
   maybe_prime
     i = add i 2w
@@ -94,15 +92,12 @@ is_odd_prime
     br done prime loop
 
   finish
-    is_prime = copy true
-    ret
+    ret true
 end
 
 div_rem
   input dividend word
   input divisor word
-  output quotient word
-  output remainder word
 
   start
     done = lt dividend divisor
@@ -117,5 +112,5 @@ div_rem
     br done finish loop
 
   finish
-    ret
+    ret quotient remainder
 end
