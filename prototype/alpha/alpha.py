@@ -269,6 +269,8 @@ def relabel_uses(func, new_values, renumber):
         remove_redundant_phis(func, redundant_phis)
         relabel_redundant_phi_uses(func, redundant_phis)
 
+    remove_copies(func)
+
 
 def collect_redundant_phis(func):
     redundant_phis = {}
@@ -331,6 +333,27 @@ def relabel_redundant_phi_uses(func, redundant_phis):
     for block in func.blocks:
         for cmd in block.cmds:
             cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
+
+
+def remove_copies(func):
+    # Collect and remove copies
+    copies = {}
+    for block in func.blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'copy':
+                (result,) = cmd.results
+                (arg,) = cmd.args
+                copies[result] = arg
+        block.cmds = list(filter(lambda c: c.op != 'copy', block.cmds))
+
+    # Propagate uses of copies
+    for block in func.blocks:
+        for cmd in block.cmds:
+            def relabel(val):
+                if val in copies:
+                    return copies[val]
+                return val
+            cmd.args = list(map(relabel, cmd.args))
 
 
 try:
