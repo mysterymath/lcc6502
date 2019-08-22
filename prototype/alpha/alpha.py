@@ -356,6 +356,43 @@ def remove_copies(func):
             cmd.args = list(map(relabel, cmd.args))
 
 
+def compute_live_sets(func):
+    defns = {i.name for i in func.inputs}
+    for block in func.blocks:
+        block.live_in = set()
+        block.live_out = set()
+        for cmd in block.cmds:
+            defns |= set(cmd.results)
+
+    preds = collect_predecessors(func)
+
+    is_done = False
+    while not is_done:
+        is_done = True
+        for block in func.blocks:
+            live = block.live_out.copy()
+            for cmd in reversed(block.cmds):
+                live -= set(cmd.results)
+                if cmd.op != 'phi':
+                    live |= set(cmd.args) & defns
+            block.live_in = live.copy()
+
+            for pred in preds[block.name]:
+                old_size = len(pred.live_out)
+
+                pred.live_out |= block.live_in
+                for cmd in block.cmds:
+                    if cmd.op != 'phi':
+                        continue
+                    for a_block, a in zip(cmd.args[::2], cmd.args[1::2]):
+                        if a_block == pred.name:
+                            pred.live_out |= {a} & defns
+
+                if len(pred.live_out) != old_size:
+                    is_done = False
+
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -365,3 +402,11 @@ for func in funcs:
     to_ssa(func)
     print(func)
 
+    compute_live_sets(func)
+    for block in func.blocks:
+        print(block.name)
+        print('In:')
+        print(block.live_in)
+        print('Out:')
+        print(block.live_out)
+        print()
