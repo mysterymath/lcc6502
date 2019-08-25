@@ -392,6 +392,40 @@ def compute_live_sets(func):
                     is_done = False
 
 
+def find_recursive_calls(funcs):
+    calls = []
+
+    callers = defaultdict(set)
+    for func in funcs:
+        for block in func.blocks:
+            for cmd in block.cmds:
+                if cmd.op == 'call':
+                    callers[cmd.args[0]].add(func.name)
+
+    def callers_size():
+        return sum(len(v) for v in callers.values())
+
+    while True:
+        old_size = callers_size()
+        for lee, lers in callers.items():
+            new_lers = set()
+            for ler in lers:
+                # Never add anything to the callers defaultdict, since it is
+                # being iterated.
+                if ler in callers:
+                    new_lers |= callers[ler]
+            lers |= new_lers
+        if callers_size() == old_size:
+            break
+
+    for func in funcs:
+        for block in func.blocks:
+            for i, cmd in enumerate(block.cmds):
+                if cmd.op == 'call' and cmd.args[0] in callers[func.name]:
+                    calls.append((block, i))
+
+    return calls
+
 
 try:
     funcs = parse()
@@ -403,10 +437,6 @@ for func in funcs:
     print(func)
 
     compute_live_sets(func)
-    for block in func.blocks:
-        print(block.name)
-        print('In:')
-        print(block.live_in)
-        print('Out:')
-        print(block.live_out)
-        print()
+
+calls = find_recursive_calls(funcs)
+print(calls)
