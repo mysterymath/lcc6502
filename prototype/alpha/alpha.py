@@ -457,6 +457,93 @@ def get_definitions(func):
     return defns
 
 
+def merge_all_funcs(funcs):
+    for func in funcs:
+        names = get_definitions(func)
+        for block in func.blocks:
+            names.add(block.name)
+
+        def new_name(name):
+            if name == 'start':
+                return func.name
+            if name in names:
+                return f'{func.name}_{name}'
+            return name
+
+        for block in func.blocks:
+            block.name = new_name(block.name)
+            for cmd in block.cmds:
+                cmd.results = list(map(new_name, cmd.results))
+                cmd.args = list(map(new_name, cmd.args))
+
+    funcs_by_name = {}
+    for func in funcs:
+        funcs_by_name[func.name] = func
+
+    for func in funcs:
+        for block in func.blocks:
+            cmds = []
+            for cmd in block.cmds:
+                if cmd.op == 'call':
+                    callee = cmd.args[0]
+                    inputs = funcs_by_name[callee].inputs
+                    for i, arg in enumerate(cmd.args[1:]):
+                        input_name = f'{callee}_{inputs[i].name}'
+                        cmds.append(Cmd([input_name], 'copy', [arg]))
+
+                    cmds.append(Cmd([], 'jsr', [callee]))
+
+                    for i, result in enumerate(cmd.results):
+                        if result != '_':
+                            cmds.append(Cmd([result], 'copy', [f'__{callee}_o{i+1}']))
+                elif cmd.op == 'ret':
+                    for i, arg in enumerate(cmd.args):
+                        cmds.append(Cmd([f'__{func.name}_o{i+1}'], 'copy', [arg]))
+                    cmds.append(Cmd([], 'rts', [func.name]))
+                else:
+                    cmds.append(cmd)
+            block.cmds = cmds
+
+    block_names = set(block.name for func in funcs for block in func.blocks)
+    def new_block_name(name):
+        for i in itertools.chain([''], itertools.count(1)):
+            candidate = f'{name}{i}'
+            if candidate not in block_names:
+                block_names.add(candidate)
+                return candidate
+
+    blocks = []
+    rts_dest_blocks = defaultdict(set)
+    phi_blocks = defaultdict(set)
+    for func in funcs:
+
+        for block in func.blocks:
+            block_name = block.name
+            cmds = []
+            for cmd in block.cmds:
+                cmds.append(cmd)
+                if cmd.op == 'jsr':
+                    block.cmds = cmds
+                    blocks.append(block)
+
+                    block = Block(new_block_name(block_name), [])
+                    cmds = []
+                    rts_dest_blocks[cmd.args[0]].add(block.name)
+            phi_blocks[block_name] = block.name
+            block.cmds = cmds
+            blocks.append(block)
+
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'rts':
+                (callee,) = cmd.args
+                cmd.args = list(rts_dest_blocks[callee])
+            elif cmd.op == 'phi':
+                for i in range(0, len(cmd.args), 2):
+                    cmd.args[i] = phi_blocks[cmd.args[i]]
+    return blocks
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -468,5 +555,6 @@ for func in funcs:
 
 break_live_ranges_across_recursive_calls(funcs)
 
-for func in funcs:
-    print(func)
+blocks = merge_all_funcs(funcs)
+for block in blocks:
+    print(block)
