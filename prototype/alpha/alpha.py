@@ -357,12 +357,10 @@ def remove_copies(func):
 
 
 def compute_live_sets(func):
-    defns = {i.name for i in func.inputs}
+    defns = get_definitions(func)
     for block in func.blocks:
         block.live_in = set()
         block.live_out = set()
-        for cmd in block.cmds:
-            defns |= set(cmd.results)
 
     preds = collect_predecessors(func)
 
@@ -392,7 +390,7 @@ def compute_live_sets(func):
                     is_done = False
 
 
-def find_recursive_calls(funcs):
+def break_live_ranges_across_recursive_calls(funcs):
     calls = []
 
     callers = defaultdict(set)
@@ -419,12 +417,44 @@ def find_recursive_calls(funcs):
             break
 
     for func in funcs:
+        defns = get_definitions(func)
+        still_in_ssa = True
         for block in func.blocks:
-            for i, cmd in enumerate(block.cmds):
+            new_cmds = []
+            live = block.live_out.copy()
+            for cmd in reversed(block.cmds):
                 if cmd.op == 'call' and cmd.args[0] in callers[func.name]:
-                    calls.append((block, i))
+                    live_across = live.copy()
+                    live_across -= set(cmd.results)
+                    if live_across:
+                        still_in_ssa = False
+                        live_across = list(live_across)
+                        # Note that new_cmds is in reverse order
+                        new_cmds.append(Cmd(live_across, 'restore', []))
+                        new_cmds.append(cmd)
+                        new_cmds.append(Cmd([], 'save', live_across))
+                    else:
+                        new_cmds.append(cmd)
+                    # No values are live across recursive call, so only args of
+                    # call are now live before the call.
+                    live = set(cmd.args) & defns
+                else:
+                    new_cmds.append(cmd)
+                    live -= set(cmd.results)
+                    live |= set(cmd.args) & defns
+            new_cmds.reverse()
+            block.cmds = new_cmds
 
-    return calls
+        if not still_in_ssa:
+            to_ssa(func)
+
+
+def get_definitions(func):
+    defns = {i.name for i in func.inputs}
+    for block in func.blocks:
+        for cmd in block.cmds:
+            defns |= set(cmd.results)
+    return defns
 
 
 try:
@@ -434,9 +464,9 @@ except Exception as e:
 
 for func in funcs:
     to_ssa(func)
-    print(func)
-
     compute_live_sets(func)
 
-calls = find_recursive_calls(funcs)
-print(calls)
+break_live_ranges_across_recursive_calls(funcs)
+
+for func in funcs:
+    print(func)
