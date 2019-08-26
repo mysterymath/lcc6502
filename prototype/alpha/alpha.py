@@ -227,8 +227,7 @@ def relabel_uses(blocks, new_values, renumber):
                 if r in new_values[val]:
                     return r
 
-        # Value not defined in block, so insert an phi without any
-        # arguments.
+        # Insert an phi without any arguments.
         new_v = renumber(val)
         args = []
         phi = Cmd([new_v], 'phi', args)
@@ -282,7 +281,7 @@ def collect_redundant_phis(blocks):
             is_redundant = True
             real_arg = None
             for arg in cmd.args[1::2]:
-                if arg == result:
+                if arg == result or arg == 'undef':
                     continue
                 elif real_arg is None:
                     real_arg = arg
@@ -290,7 +289,18 @@ def collect_redundant_phis(blocks):
                     is_redundant = False
                     break
             if is_redundant:
+                if real_arg is None:
+                    real_arg = 'undef'
                 redundant_phis[result] = real_arg
+
+    is_closed = False
+    while not is_closed:
+        is_closed = True
+        for phi, val in redundant_phis.items():
+            if val in redundant_phis:
+                redundant_phis[phi] = redundant_phis[val]
+                is_closed = False
+
     return redundant_phis
 
 
@@ -350,6 +360,14 @@ def remove_copies(blocks):
                 (arg,) = cmd.args
                 copies[result] = arg
         block.cmds = list(filter(lambda c: c.op != 'copy', block.cmds))
+
+    is_closed = False
+    while not is_closed:
+        is_closed = True
+        for copy, val in copies.items():
+            if val in copies:
+                copies[copy] = copies[val]
+                is_closed = False
 
     # Propagate uses of copies
     for block in blocks:
@@ -562,11 +580,6 @@ break_live_ranges_across_recursive_calls(funcs)
 
 blocks = merge_all_funcs(funcs)
 
-print('='*80)
-for block in blocks:
-    print(block)
-
-print('='*80)
 to_ssa(blocks)
 for block in blocks:
     print(block)
