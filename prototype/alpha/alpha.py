@@ -312,6 +312,11 @@ def collect_predecessors(blocks):
             else:
                 preds[term.args[1]].add(block)
                 preds[term.args[2]].add(block)
+        elif term.op == 'jsr':
+            preds[term.args[0]].add(block)
+        elif term.op == 'rts':
+            for a in term.args:
+                preds[a].add(block)
     return preds
 
 
@@ -556,5 +561,12 @@ for func in funcs:
 break_live_ranges_across_recursive_calls(funcs)
 
 blocks = merge_all_funcs(funcs)
+
+print('='*80)
+for block in blocks:
+    print(block)
+
+print('='*80)
+to_ssa(blocks)
 for block in blocks:
     print(block)
