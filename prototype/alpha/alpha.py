@@ -184,7 +184,7 @@ def parse_section(first, rest, parse_item):
             return items
 
 
-def to_ssa(func):
+def to_ssa(blocks):
     # SSA values that have been already defined.
     defns = set()
 
@@ -203,16 +203,16 @@ def to_ssa(func):
         return chosen
 
     # Renumber all definitions.
-    for block in func.blocks:
+    for block in blocks:
         for cmd in block.cmds:
             cmd.results = list(map(renumber, cmd.results))
 
-    relabel_uses(func, new_values, renumber)
+    relabel_uses(blocks, new_values, renumber)
 
 # Replace each use of an old value with the corresponding relabeled value.
 # Inserts phi instructions as necessary.
-def relabel_uses(func, new_values, renumber):
-    preds = collect_predecessors(func)
+def relabel_uses(blocks, new_values, renumber):
+    preds = collect_predecessors(blocks)
 
     # Look up the reaching definition of a value at a given command.
     def lookup_renumbered_value(val, cmd_index, block):
@@ -246,7 +246,7 @@ def relabel_uses(func, new_values, renumber):
     def lookup_value_from_end(val, block):
         return lookup_renumbered_value(val, len(block.cmds), block)
 
-    for block in func.blocks:
+    for block in blocks:
         while True:
             for cmd_index, cmd in enumerate(block.cmds):
                 if cmd.op == 'phi':
@@ -263,18 +263,18 @@ def relabel_uses(func, new_values, renumber):
     # Remove redundant phi instructions and relabel their uses iteratively
     # until none are left.
     while True:
-        redundant_phis = collect_redundant_phis(func)
+        redundant_phis = collect_redundant_phis(blocks)
         if not redundant_phis:
             break
-        remove_redundant_phis(func, redundant_phis)
-        relabel_redundant_phi_uses(func, redundant_phis)
+        remove_redundant_phis(blocks, redundant_phis)
+        relabel_redundant_phi_uses(blocks, redundant_phis)
 
-    remove_copies(func)
+    remove_copies(blocks)
 
 
-def collect_redundant_phis(func):
+def collect_redundant_phis(blocks):
     redundant_phis = {}
-    for block in func.blocks:
+    for block in blocks:
         for cmd in block.cmds:
             if cmd.op != 'phi':
                 continue
@@ -302,9 +302,9 @@ def unsplit(l):
     return ' '.join(map(str, l))
 
 
-def collect_predecessors(func):
+def collect_predecessors(blocks):
     preds = defaultdict(set)
-    for block in func.blocks:
+    for block in blocks:
         term = block.cmds[-1]
         if term.op == 'br':
             if len(term.args) == 1:
@@ -315,8 +315,8 @@ def collect_predecessors(func):
     return preds
 
 
-def remove_redundant_phis(func, redundant_phis):
-    for block in func.blocks:
+def remove_redundant_phis(blocks, redundant_phis):
+    for block in blocks:
         def is_not_redundant_phi(cmd):
             if cmd.op != 'phi':
                 return True
@@ -325,20 +325,20 @@ def remove_redundant_phis(func, redundant_phis):
         block.cmds = list(filter(is_not_redundant_phi, block.cmds))
 
 
-def relabel_redundant_phi_uses(func, redundant_phis):
+def relabel_redundant_phi_uses(blocks, redundant_phis):
     def relable_redundant_phi_arg(arg):
         if arg not in redundant_phis:
             return arg
         return redundant_phis[arg]
-    for block in func.blocks:
+    for block in blocks:
         for cmd in block.cmds:
             cmd.args = list(map(relable_redundant_phi_arg, cmd.args))
 
 
-def remove_copies(func):
+def remove_copies(blocks):
     # Collect and remove copies
     copies = {}
-    for block in func.blocks:
+    for block in blocks:
         for cmd in block.cmds:
             if cmd.op == 'copy':
                 (result,) = cmd.results
@@ -347,7 +347,7 @@ def remove_copies(func):
         block.cmds = list(filter(lambda c: c.op != 'copy', block.cmds))
 
     # Propagate uses of copies
-    for block in func.blocks:
+    for block in blocks:
         for cmd in block.cmds:
             def relabel(val):
                 if val in copies:
@@ -362,7 +362,7 @@ def compute_live_sets(func):
         block.live_in = set()
         block.live_out = set()
 
-    preds = collect_predecessors(func)
+    preds = collect_predecessors(func.blocks)
 
     is_done = False
     while not is_done:
@@ -446,7 +446,7 @@ def break_live_ranges_across_recursive_calls(funcs):
             block.cmds = new_cmds
 
         if not still_in_ssa:
-            to_ssa(func)
+            to_ssa(func.blocks)
 
 
 def get_definitions(func):
@@ -550,7 +550,7 @@ except Exception as e:
     raise ParseError(f'{fileinput.filename()}:{fileinput.lineno()}: {debug_line}') from e
 
 for func in funcs:
-    to_ssa(func)
+    to_ssa(func.blocks)
     compute_live_sets(func)
 
 break_live_ranges_across_recursive_calls(funcs)
