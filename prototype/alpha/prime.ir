@@ -4,7 +4,7 @@ main
     call putint 2w
     call putchar '\n'
 
-    i = copy 3w
+    i = copy 3
     br loop
 
   loop
@@ -17,8 +17,8 @@ main
     br loop_end
 
   loop_end
-    i = add i 2w
-    c = ne i 65536w
+    i = add2 i 2
+    c = ne2 i 65535
     br c loop finish
 
   finish
@@ -27,20 +27,20 @@ end
 
 
 putint
-  input n word
+  inputs n
 
   start
-    c = lt n 10w
+    c = lt2 n 10
     br c single_digit multi_digit
 
   single_digit
     t = lo n
-    ch = add t '0'
+    ch = add2 t '0'
     call putchar ch
     ret
 
   multi_digit
-    rest last = call div_rem n 10w
+    rest last = call div_rem n 10
     call putint rest
     call putint last
     ret
@@ -48,10 +48,10 @@ end
 
 
 putchar
-  input c byte
+  inputs c
 
   start
-    asm c 0b
+    asm c 0
       inputs a x
       clobbers y p
 
@@ -63,32 +63,32 @@ end
 
 init_putchar
   start
-    store 0x0341 0x0Bb
-    store 0x0348 0w
+    store1 0x0341 0x0B
+    store2 0x0348 0
     ret
 end
 
 
 is_odd_prime
-  input n word
+  inputs n
 
   start
-    half = lsr n
-    i = copy 3w
-    done = gt i half
+    half = lsr2 n
+    i = copy 3
+    done = gt2 i half
     br done prime loop
 
   loop
     _ rem = call div_rem n i
-    is_not_prime = eq rem 0w
+    is_not_prime = eq2 rem 0
     br is_not_prime not_prime maybe_prime
 
   not_prime
     ret false
 
   maybe_prime
-    i = add i 2w
-    done = gt i half
+    i = add2 i 2
+    done = gt2 i half
     br done prime loop
 
   finish
@@ -96,19 +96,18 @@ is_odd_prime
 end
 
 div_rem
-  input dividend word
-  input divisor word
+  inputs dividend divisor
 
   start
-    done = lt dividend divisor
-    quotient = copy 0w
+    done = lt2 dividend divisor
+    quotient = copy 0
     remainder = copy dividend
     br done finish loop
 
   loop
-    remainder = sub remainder divisor
-    quotient = add quotient 1w
-    done = lt remainder divisor
+    remainder = sub2 remainder divisor
+    quotient = add2 quotient 1
+    done = lt2 remainder divisor
     br done finish loop
 
   finish

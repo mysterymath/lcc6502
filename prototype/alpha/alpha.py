@@ -25,15 +25,6 @@ class Func:
         return f'{self.name}\n{body}end\n'
 
 
-@attrs
-class Input:
-    name = attrib()
-    size = attrib()
-
-    def __str__(self):
-        return f'input {self.name} {self.size}\n'
-
-
 @attrs(cmp=False)
 class Block:
     name = attrib()
@@ -48,6 +39,7 @@ class Block:
 class Cmd:
     results = attrib()
     op = attrib()
+    size = attrib()
     args = attrib()
 
     def is_terminator(self):
@@ -55,8 +47,9 @@ class Cmd:
 
     def __str__(self):
         results_str = f'{unsplit(self.results)} = ' if self.results else ''
+        op_str = f'{self.op}{self.size}' if self.size is not None else self.op
         args_str = ' ' + unsplit(self.args) if self.args else ''
-        return f'{results_str}{self.op}{args_str}\n'
+        return f'{results_str}{op_str}{args_str}\n'
 
 
 @attrs
@@ -114,8 +107,8 @@ def parse_func(first, rest):
     first = next(rest)
 
     inputs = []
-    while first.split()[0] == 'input':
-        inputs.append(parse_input(first, rest))
+    while first.split()[0] == 'inputs':
+        inputs = first.split()[1:]
         first = next(rest)
 
     blocks = parse_section(first, rest, parse_block)
@@ -123,8 +116,8 @@ def parse_func(first, rest):
 
 
 def parse_input(first, rest):
-    (_, name, size) = first.split()
-    return Input(name, size)
+    (_, name) = first.split()
+    return Input(name)
 
 
 def parse_block(first, rest):
@@ -147,10 +140,11 @@ def parse_cmds(first, rest):
 def parse_cmd(first, rest):
     (results, expr) = re.fullmatch(r'(?:(.*) = )?(.*)', first).groups()
     results = results.split() if results else []
-    (op, *args) = expr.split()
+    (op_str, *args) = expr.split()
+    (op, size) = re.fullmatch(r'(.*?)(\d)?', op_str).groups()
     if op == 'asm':
         return parse_asm(first, rest, results, args)
-    return Cmd(results, op, args)
+    return Cmd(results, op, size, args)
 
 
 def parse_asm(first, rest, results, args):
@@ -158,16 +152,16 @@ def parse_asm(first, rest, results, args):
 
     inputs = []
     clobbers = []
-    if first.split()[0] == 'input':
-        inputs.append(first.split()[1:])
+    if first.split()[0] == 'inputs':
+        inputs = first.split()[1:]
         first = next(rest)
     if first.split()[0] == 'clobbers':
-        clobbers.append(first.split()[1:])
+        clobbers =first.split()[1:]
         first = next(rest)
 
     instrs = parse_section(first, rest, parse_asm_instr)
 
-    return Asm(results, 'asm', args, inputs, clobbers, instrs)
+    return Asm(results, 'asm', None, args, inputs, clobbers, instrs)
 
 
 def parse_asm_instr(first, rest):
@@ -230,7 +224,7 @@ def relabel_uses(blocks, new_values, renumber):
         # Insert an phi without any arguments.
         new_v = renumber(val)
         args = []
-        phi = Cmd([new_v], 'phi_tmp', args)
+        phi = Cmd([new_v], 'phi_tmp', None, args)
         block.cmds.insert(0, phi)
 
         # Recursively look up the arguments of the phi. Since the phi
@@ -460,9 +454,9 @@ def break_live_ranges_across_recursive_calls(funcs):
                         still_in_ssa = False
                         live_across = list(live_across)
                         # Note that new_cmds is in reverse order
-                        new_cmds.append(Cmd(live_across, 'restore', []))
+                        new_cmds.append(Cmd(live_across, 'restore', None, []))
                         new_cmds.append(cmd)
-                        new_cmds.append(Cmd([], 'save', live_across))
+                        new_cmds.append(Cmd([], 'save', None, live_across))
                     else:
                         new_cmds.append(cmd)
                     # No values are live across recursive call, so only args of
@@ -480,7 +474,7 @@ def break_live_ranges_across_recursive_calls(funcs):
 
 
 def get_definitions(func):
-    defns = {i.name for i in func.inputs}
+    defns = set(func.inputs)
     for block in func.blocks:
         for cmd in block.cmds:
             defns |= set(cmd.results)
@@ -518,18 +512,18 @@ def merge_all_funcs(funcs):
                     callee = cmd.args[0]
                     inputs = funcs_by_name[callee].inputs
                     for i, arg in enumerate(cmd.args[1:]):
-                        input_name = f'{callee}_{inputs[i].name}'
-                        cmds.append(Cmd([input_name], 'copy', [arg]))
+                        input_name = f'{callee}_{inputs[i]}'
+                        cmds.append(Cmd([input_name], 'copy', None, [arg]))
 
-                    cmds.append(Cmd([], 'jsr', [callee]))
+                    cmds.append(Cmd([], 'jsr', None, [callee]))
 
                     for i, result in enumerate(cmd.results):
                         if result != '_':
-                            cmds.append(Cmd([result], 'copy', [f'__{callee}_o{i+1}']))
+                            cmds.append(Cmd([result], 'copy', None, [f'__{callee}_o{i+1}']))
                 elif cmd.op == 'ret':
                     for i, arg in enumerate(cmd.args):
-                        cmds.append(Cmd([f'__{func.name}_o{i+1}'], 'copy', [arg]))
-                    cmds.append(Cmd([], 'rts', [func.name]))
+                        cmds.append(Cmd([f'__{func.name}_o{i+1}'], 'copy', None, [arg]))
+                    cmds.append(Cmd([], 'rts', None, [func.name]))
                 else:
                     cmds.append(cmd)
             block.cmds = cmds
@@ -573,6 +567,14 @@ def merge_all_funcs(funcs):
     return blocks
 
 
+def lower_16(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            cmds.append(cmd)
+        block.cmds = cmds
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -587,5 +589,6 @@ break_live_ranges_across_recursive_calls(funcs)
 blocks = merge_all_funcs(funcs)
 
 to_ssa(blocks)
+lower_16(blocks)
 for block in blocks:
     print(block)
