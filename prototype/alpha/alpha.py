@@ -230,7 +230,7 @@ def relabel_uses(blocks, new_values, renumber):
         # Insert an phi without any arguments.
         new_v = renumber(val)
         args = []
-        phi = Cmd([new_v], 'phi', args)
+        phi = Cmd([new_v], 'phi_tmp', args)
         block.cmds.insert(0, phi)
 
         # Recursively look up the arguments of the phi. Since the phi
@@ -248,7 +248,8 @@ def relabel_uses(blocks, new_values, renumber):
     for block in blocks:
         while True:
             for cmd_index, cmd in enumerate(block.cmds):
-                if cmd.op == 'phi':
+                # Only newly added phis should be skipped.
+                if cmd.op == 'phi_tmp':
                     continue
                 def lookup_value(val):
                     return lookup_renumbered_value(val, cmd_index, block)
@@ -258,6 +259,12 @@ def relabel_uses(blocks, new_values, renumber):
                     break
             else:
                 break
+
+    # Change all temporary phis back to regular phis.
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'phi_tmp':
+                cmd.op = 'phi'
 
     # Remove redundant phi instructions and relabel their uses iteratively
     # until none are left.
@@ -539,7 +546,6 @@ def merge_all_funcs(funcs):
     rts_dest_blocks = defaultdict(set)
     phi_blocks = defaultdict(set)
     for func in funcs:
-
         for block in func.blocks:
             block_name = block.name
             cmds = []
