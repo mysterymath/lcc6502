@@ -488,11 +488,14 @@ def merge_all_funcs(funcs):
             names.add(block.name)
 
         def new_name(name):
-            if name == 'start':
+            if name == '_':
+                return name
+            elif name == 'start':
                 return func.name
-            if name in names:
+            elif name in names:
                 return f'{func.name}_{name}'
-            return name
+            else:
+                return name
 
         for block in func.blocks:
             block.name = new_name(block.name)
