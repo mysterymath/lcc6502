@@ -142,6 +142,7 @@ def parse_cmd(first, rest):
     results = results.split() if results else []
     (op_str, *args) = expr.split()
     (op, size) = re.fullmatch(r'(.*?)(\d)?', op_str).groups()
+    size = size and int(size)
     if op == 'asm':
         return parse_asm(first, rest, results, args)
     return Cmd(results, op, size, args)
@@ -571,11 +572,54 @@ def merge_all_funcs(funcs):
 
 
 def lower_16(blocks):
+    defns = get_blocks_definitions(blocks)
+
     for block in blocks:
         cmds = []
         for cmd in block.cmds:
-            cmds.append(cmd)
+            if cmd.op == 'add':
+                assert cmd.size in (1, 2)
+                if cmd.size == 1:
+                    cmds.append(Cmd(cmd.results + ['_'], 'adc', None, cmd.args + ['0']))
+                else:
+                    (result,) = cmd.results
+
+                    arg1_lo = new_name('arg1_lo', defns)
+                    arg1_hi = new_name('arg1_hi', defns)
+                    cmds.append(Cmd([arg1_lo, arg1_hi], 'split', None, [cmd.args[0]]))
+
+                    arg2_lo = new_name('arg2_lo', defns)
+                    arg2_hi = new_name('arg2_hi', defns)
+                    cmds.append(Cmd([arg2_lo, arg2_hi], 'split', None, [cmd.args[1]]))
+
+                    result_lo = new_name(result + '_lo', defns)
+                    carry = new_name('carry', defns)
+                    cmds.append(Cmd([result_lo, carry], 'adc', None, [arg1_lo, arg2_lo, '0']))
+
+                    result_hi = new_name(result + '_hi', defns)
+                    cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
+
+                    cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
+            else:
+                cmds.append(cmd)
         block.cmds = cmds
+
+
+def get_blocks_definitions(blocks):
+    defns = set()
+    for block in blocks:
+        for cmd in block.cmds:
+            defns |= set(cmd.results)
+    return defns
+
+
+def new_name(name, defns):
+    if name == '_':
+        return name
+    candidates = itertools.chain([name], (f'{name}{n}' for n in itertools.count(1)))
+    chosen = next(c for c in candidates if c not in defns)
+    defns.add(chosen)
+    return chosen
 
 
 try:
