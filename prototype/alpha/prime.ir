@@ -34,8 +34,8 @@ putint
     br c single_digit multi_digit
 
   single_digit
-    t = lo n
-    ch = add2 t '0'
+    t _ = split n
+    ch = add1 t '0'
     call putchar ch
     ret
 
