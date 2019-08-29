@@ -635,6 +635,23 @@ def lower_16(blocks):
                     cmds.append(Cmd([result_lo, '_'], 'lsr', None, [arg_lo, carry]))
 
                     cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
+            elif cmd.op == 'ne':
+                assert cmd.size in (1, 2)
+                if cmd.size == 1:
+                    cmd.size = None
+                else:
+                    (result,) = cmd.results
+
+                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
+                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
+
+                    result_lo = new_name(result + '_lo', defns)
+                    cmds.append(Cmd([result_lo], 'ne', None, [arg1_lo, arg2_lo]))
+
+                    result_hi = new_name(result + '_hi', defns)
+                    cmds.append(Cmd([result_hi], 'ne', None, [arg1_hi, arg2_hi]))
+
+                    cmds.append(Cmd([result], 'or', None, [result_lo, result_hi]))
             else:
                 cmds.append(cmd)
         block.cmds = cmds
