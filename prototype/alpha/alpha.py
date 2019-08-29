@@ -576,6 +576,13 @@ def lower_16(blocks):
 
     for block in blocks:
         cmds = []
+
+        def emit_split2(name, val):
+            val_lo = new_name(f'{name}_lo', defns)
+            val_hi = new_name(f'{name}_hi', defns)
+            cmds.append(Cmd([val_lo, val_hi], 'split', None, [val]))
+            return [val_lo, val_hi]
+
         for cmd in block.cmds:
             if cmd.op == 'add':
                 assert cmd.size in (1, 2)
@@ -584,13 +591,8 @@ def lower_16(blocks):
                 else:
                     (result,) = cmd.results
 
-                    arg1_lo = new_name('arg1_lo', defns)
-                    arg1_hi = new_name('arg1_hi', defns)
-                    cmds.append(Cmd([arg1_lo, arg1_hi], 'split', None, [cmd.args[0]]))
-
-                    arg2_lo = new_name('arg2_lo', defns)
-                    arg2_hi = new_name('arg2_hi', defns)
-                    cmds.append(Cmd([arg2_lo, arg2_hi], 'split', None, [cmd.args[1]]))
+                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
+                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
 
                     result_lo = new_name(result + '_lo', defns)
                     carry = new_name('carry', defns)
@@ -607,13 +609,8 @@ def lower_16(blocks):
                 else:
                     (result,) = cmd.results
 
-                    arg1_lo = new_name('arg1_lo', defns)
-                    arg1_hi = new_name('arg1_hi', defns)
-                    cmds.append(Cmd([arg1_lo, arg1_hi], 'split', None, [cmd.args[0]]))
-
-                    arg2_lo = new_name('arg2_lo', defns)
-                    arg2_hi = new_name('arg2_hi', defns)
-                    cmds.append(Cmd([arg2_lo, arg2_hi], 'split', None, [cmd.args[1]]))
+                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
+                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
 
                     result_lo = new_name(result + '_lo', defns)
                     borrow = new_name('borrow', defns)
@@ -628,9 +625,7 @@ def lower_16(blocks):
                 if cmd.size == 2:
                     (result,) = cmd.results
 
-                    arg_lo = new_name('arg_lo', defns)
-                    arg_hi = new_name('arg_hi', defns)
-                    cmds.append(Cmd([arg_lo, arg_hi], 'split', None, [cmd.args[0]]))
+                    arg_lo, arg_hi = emit_split2('arg', cmd.args[0])
 
                     result_hi = new_name(result + '_hi', defns)
                     carry = new_name('carry', defns)
