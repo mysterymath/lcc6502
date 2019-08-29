@@ -600,6 +600,29 @@ def lower_16(blocks):
                     cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
 
                     cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
+            elif cmd.op == 'sub':
+                assert cmd.size in (1, 2)
+                if cmd.size == 1:
+                    cmds.append(Cmd(cmd.results + ['_'], 'sbc', None, cmd.args + ['1']))
+                else:
+                    (result,) = cmd.results
+
+                    arg1_lo = new_name('arg1_lo', defns)
+                    arg1_hi = new_name('arg1_hi', defns)
+                    cmds.append(Cmd([arg1_lo, arg1_hi], 'split', None, [cmd.args[0]]))
+
+                    arg2_lo = new_name('arg2_lo', defns)
+                    arg2_hi = new_name('arg2_hi', defns)
+                    cmds.append(Cmd([arg2_lo, arg2_hi], 'split', None, [cmd.args[1]]))
+
+                    result_lo = new_name(result + '_lo', defns)
+                    borrow = new_name('borrow', defns)
+                    cmds.append(Cmd([result_lo, borrow], 'sbc', None, [arg1_lo, arg2_lo, '1']))
+
+                    result_hi = new_name(result + '_hi', defns)
+                    cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
+
+                    cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
             else:
                 cmds.append(cmd)
         block.cmds = cmds

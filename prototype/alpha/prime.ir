@@ -84,7 +84,7 @@ is_odd_prime
     br is_not_prime not_prime maybe_prime
 
   not_prime
-    ret false
+    ret 0
 
   maybe_prime
     i = add2 i 2
@@ -92,7 +92,7 @@ is_odd_prime
     br done prime loop
 
   finish
-    ret true
+    ret 1
 end
 
 div_rem
