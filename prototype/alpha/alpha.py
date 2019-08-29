@@ -645,13 +645,13 @@ def lower_16(blocks):
                     arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
                     arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
 
-                    result_lo = new_name(result + '_lo', defns)
-                    cmds.append(Cmd([result_lo], 'eq', None, [arg1_lo, arg2_lo]))
+                    eq_lo = new_name('eq_lo', defns)
+                    cmds.append(Cmd([eq_lo], 'eq', None, [arg1_lo, arg2_lo]))
 
-                    result_hi = new_name(result + '_hi', defns)
-                    cmds.append(Cmd([result_hi], 'eq', None, [arg1_hi, arg2_hi]))
+                    eq_hi = new_name('eq_hi', defns)
+                    cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
 
-                    cmds.append(Cmd([result], 'and', None, [result_lo, result_hi]))
+                    cmds.append(Cmd([result], 'and', None, [eq_lo, eq_hi]))
             elif cmd.op == 'ne':
                 assert cmd.size in (1, 2)
                 if cmd.size == 1:
@@ -662,13 +662,36 @@ def lower_16(blocks):
                     arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
                     arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
 
-                    result_lo = new_name(result + '_lo', defns)
-                    cmds.append(Cmd([result_lo], 'ne', None, [arg1_lo, arg2_lo]))
+                    ne_lo = new_name('ne_lo', defns)
+                    cmds.append(Cmd([ne_lo], 'ne', None, [arg1_lo, arg2_lo]))
 
-                    result_hi = new_name(result + '_hi', defns)
-                    cmds.append(Cmd([result_hi], 'ne', None, [arg1_hi, arg2_hi]))
+                    ne_hi = new_name('ne_hi', defns)
+                    cmds.append(Cmd([ne_hi], 'ne', None, [arg1_hi, arg2_hi]))
 
-                    cmds.append(Cmd([result], 'or', None, [result_lo, result_hi]))
+                    cmds.append(Cmd([result], 'or', None, [ne_lo, ne_hi]))
+            elif cmd.op == 'lt':
+                assert cmd.size in (1, 2)
+                if cmd.size == 1:
+                    cmd.size = None
+                else:
+                    (result,) = cmd.results
+
+                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
+                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
+
+                    lt_hi = new_name('lt_hi', defns)
+                    cmds.append(Cmd([lt_hi], 'lt', None, [arg1_hi, arg2_hi]))
+
+                    lt_lo = new_name('lt_lo', defns)
+                    cmds.append(Cmd([lt_lo], 'lt', None, [arg1_lo, arg2_lo]))
+
+                    eq_hi = new_name('eq_hi', defns)
+                    cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
+
+                    t = new_name('t', defns)
+                    cmds.append(Cmd([t], 'and', None, [eq_hi, lt_lo]))
+
+                    cmds.append(Cmd([result], 'or', None, [lt_hi, t]))
             else:
                 cmds.append(cmd)
         block.cmds = cmds
