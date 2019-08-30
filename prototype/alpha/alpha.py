@@ -571,6 +571,32 @@ def merge_all_funcs(funcs):
     return blocks
 
 
+def lower_cmp(blocks):
+    defns = get_blocks_definitions(blocks)
+
+    for block in blocks:
+        cmds = []
+
+        for cmd in block.cmds:
+            if cmd.op == 'gt':
+                cmds.append(Cmd(cmd.results, 'lt', cmd.size, [cmd.args[1], cmd.args[0]]))
+            elif cmd.op == 'ge':
+                t = new_name('t', defns)
+                cmds.append(Cmd([t], 'lt', cmd.size, [cmd.args[0], cmd.args[1]]))
+                cmds.append(Cmd(cmd.results, 'not', None, [t]))
+            elif cmd.op == 'le':
+                t = new_name('t', defns)
+                cmds.append(Cmd([t], 'lt', cmd.size, [cmd.args[1], cmd.args[0]]))
+                cmds.append(Cmd(cmd.results, 'not', None, [t]))
+            elif cmd.op == 'ne':
+                t = new_name('t', defns)
+                cmds.append(Cmd([t], 'eq', cmd.size, [cmd.args[0], cmd.args[1]]))
+                cmds.append(Cmd(cmd.results, 'not', None, [t]))
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+
+
 def lower_16(blocks):
     defns = get_blocks_definitions(blocks)
 
@@ -652,23 +678,6 @@ def lower_16(blocks):
                     cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
 
                     cmds.append(Cmd([result], 'and', None, [eq_lo, eq_hi]))
-            elif cmd.op == 'ne':
-                assert cmd.size in (1, 2)
-                if cmd.size == 1:
-                    cmd.size = None
-                else:
-                    (result,) = cmd.results
-
-                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
-                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
-
-                    ne_lo = new_name('ne_lo', defns)
-                    cmds.append(Cmd([ne_lo], 'ne', None, [arg1_lo, arg2_lo]))
-
-                    ne_hi = new_name('ne_hi', defns)
-                    cmds.append(Cmd([ne_hi], 'ne', None, [arg1_hi, arg2_hi]))
-
-                    cmds.append(Cmd([result], 'or', None, [ne_lo, ne_hi]))
             elif cmd.op == 'lt':
                 assert cmd.size in (1, 2)
                 if cmd.size == 1:
@@ -728,6 +737,7 @@ break_live_ranges_across_recursive_calls(funcs)
 blocks = merge_all_funcs(funcs)
 
 to_ssa(blocks)
+lower_cmp(blocks)
 lower_16(blocks)
 for block in blocks:
     print(block)
