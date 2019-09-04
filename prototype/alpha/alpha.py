@@ -115,11 +115,6 @@ def parse_func(first, rest):
     return Func(name, inputs, blocks)
 
 
-def parse_input(first, rest):
-    (_, name) = first.split()
-    return Input(name)
-
-
 def parse_block(first, rest):
     (name,) = first.split()
     first = next(rest)
@@ -416,8 +411,6 @@ def compute_live_sets(func):
 
 
 def break_live_ranges_across_recursive_calls(funcs):
-    calls = []
-
     callers = defaultdict(set)
     for func in funcs:
         for block in func.blocks:
@@ -430,7 +423,7 @@ def break_live_ranges_across_recursive_calls(funcs):
 
     while True:
         old_size = callers_size()
-        for lee, lers in callers.items():
+        for lers in callers.values():
             new_lers = set()
             for ler in lers:
                 # Never add anything to the callers defaultdict, since it is
