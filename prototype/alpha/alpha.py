@@ -713,9 +713,40 @@ def split_const(blocks):
                         val >>= 8
                         cmds.append(Cmd([lo], 'copy', None, [str(lo_val)]))
                 except ValueError:
-                    pass
-            cmds.append(cmd)
+                    cmds.append(cmd)
+            else:
+                cmds.append(cmd)
         block.cmds = cmds
+    remove_copies(blocks)
+
+
+def lt_0(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'lt' and cmd.args[1] == '0':
+                cmds.append(Cmd(cmd.results, 'copy', None, ['0']))
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+    remove_copies(blocks)
+
+
+def or_0(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'or':
+                if cmd.args[0] == '0':
+                    cmds.append(Cmd(cmd.results, 'copy', None, [cmd.args[1]]))
+                elif cmd.args[1] == '0':
+                    cmds.append(Cmd(cmd.results, 'copy', None, [cmd.args[0]]))
+                else:
+                    cmds.append(cmd)
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+    remove_copies(blocks)
 
 
 def get_blocks_definitions(blocks):
@@ -752,5 +783,7 @@ to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
 split_const(blocks)
+lt_0(blocks)
+or_0(blocks)
 for block in blocks:
     print(block)
