@@ -699,6 +699,25 @@ def lower_16(blocks):
         block.cmds = cmds
 
 
+def split_const(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'split':
+                try:
+                    val = int(cmd.args[0])
+                    assert len(cmd.results) == 2
+                    while cmd.results:
+                        lo = cmd.results.pop(0)
+                        lo_val = val & 0xff
+                        val >>= 8
+                        cmds.append(Cmd([lo], 'copy', None, [str(lo_val)]))
+                except ValueError:
+                    pass
+            cmds.append(cmd)
+        block.cmds = cmds
+
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -732,5 +751,6 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
+split_const(blocks)
 for block in blocks:
     print(block)
