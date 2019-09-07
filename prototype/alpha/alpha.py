@@ -652,7 +652,7 @@ def lower_16(blocks):
                         cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
                 elif cmd.op == 'lsr':
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_'], 'lsr', None, cmd.args + ['0']))
+                        cmds.append(Cmd(cmd.results + ['_'], 'ror', None, cmd.args + ['0']))
                     else:
                         (result,) = cmd.results
 
@@ -660,8 +660,8 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
 
                         carry = new_name('carry', defns)
-                        cmds.append(Cmd([result_hi, carry], 'lsr', None, [arg_hi, '0']))
-                        cmds.append(Cmd([result_lo, '_'], 'lsr', None, [arg_lo, carry]))
+                        cmds.append(Cmd([result_hi, carry], 'ror', None, [arg_hi, '0']))
+                        cmds.append(Cmd([result_lo, '_'], 'ror', None, [arg_lo, carry]))
                 elif cmd.op == 'eq':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
@@ -842,3 +842,6 @@ lt_0(blocks)
 or_0(blocks)
 for block in blocks:
     print(block)
+
+# TODO: Constant Arith
+# TODO: Constant Arith
