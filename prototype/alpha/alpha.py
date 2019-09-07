@@ -836,6 +836,44 @@ def const_adc(blocks):
         remove_copies(blocks)
 
 
+def not_br(blocks):
+    nots = {}
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'not':
+                (result,) = cmd.results
+                (arg,) = cmd.args
+                nots[result] = arg
+
+    nots_use_count = Counter()
+    for block in blocks:
+        for cmd in block.cmds:
+            for arg in cmd.args:
+                if arg in nots:
+                    nots_use_count[arg] += 1
+
+    nots_only_used_in_br = set()
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'br' and nots_use_count[cmd.args[0]] == 1:
+                nots_only_used_in_br.add(cmd.args[0])
+
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'not':
+                if cmd.results[0] not in nots_only_used_in_br:
+                    cmds.append(cmd)
+            elif cmd.op == 'br':
+                if cmd.args[0] in nots_only_used_in_br:
+                    cmds.append(Cmd([], 'br', None, [nots[cmd.args[0]], cmd.args[2], cmd.args[1]]))
+                else:
+                    cmds.append(cmd)
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -872,6 +910,7 @@ lower_16(blocks)
 lt_0(blocks)
 or_0(blocks)
 const_adc(blocks)
+not_br(blocks)
 for block in blocks:
     print(block)
 
