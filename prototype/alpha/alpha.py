@@ -805,6 +805,37 @@ def or_0(blocks):
     remove_copies(blocks)
 
 
+def const_adc(blocks):
+    fixed = False
+    while not fixed:
+        fixed = True
+        for block in blocks:
+            cmds = []
+            for cmd in block.cmds:
+                if cmd.op == 'adc':
+                    try:
+                        left = int(cmd.args[0], 0)
+                        right = int(cmd.args[1], 0)
+                        carry = int(cmd.args[2], 0)
+                    except ValueError:
+                        cmds.append(cmd)
+                        continue
+                    fixed = False
+                    s = left + right + carry
+                    c = 0
+                    if s >= 256:
+                        s -= 256
+                        c = 1
+                    if cmd.results[0] != '_':
+                        cmds.append(Cmd([cmd.results[0]], 'copy', None, [str(s)]))
+                    if cmd.results[1] != '_':
+                        cmds.append(Cmd([cmd.results[1]], 'copy', None, [str(c)]))
+                else:
+                    cmds.append(cmd)
+            block.cmds = cmds
+        remove_copies(blocks)
+
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -840,6 +871,7 @@ lower_cmp(blocks)
 lower_16(blocks)
 lt_0(blocks)
 or_0(blocks)
+const_adc(blocks)
 for block in blocks:
     print(block)
 
