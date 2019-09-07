@@ -1,7 +1,7 @@
 main
   start
     call init_putchar
-    call putint 2w
+    call putint 2
     call putchar '\n'
 
     i = copy 3

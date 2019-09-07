@@ -593,130 +593,186 @@ def lower_cmp(blocks):
 def lower_16(blocks):
     defns = get_blocks_definitions(blocks)
 
-    for block in blocks:
-        cmds = []
+    split_vars = {}
 
-        def emit_split2(name, val):
-            val_lo = new_name(f'{name}_lo', defns)
-            val_hi = new_name(f'{name}_hi', defns)
-            cmds.append(Cmd([val_lo, val_hi], 'split', None, [val]))
-            return [val_lo, val_hi]
+    def split(var):
+        if var == 'main_i1_lo':
+            breakpoint()
+        if var in split_vars:
+            return split_vars[var]
+        if var not in defns:
+            var = int(var, 0)
+            s = [str(var & 0xff), str((var >> 8) & 0xff)]
+        else:
+            s = [
+                new_name(var + '_lo', defns),
+                new_name(var + '_hi', defns),
+            ]
+        split_vars[var] = s
+        return s
 
-        for cmd in block.cmds:
-            if cmd.op == 'add':
-                assert cmd.size in (1, 2)
-                if cmd.size == 1:
-                    cmds.append(Cmd(cmd.results + ['_'], 'adc', None, cmd.args + ['0']))
-                else:
-                    (result,) = cmd.results
+    fixed = False
+    while not fixed:
+        fixed = True
+        for block in blocks:
+            cmds = []
 
-                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
-                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
-
-                    result_lo = new_name(result + '_lo', defns)
-                    carry = new_name('carry', defns)
-                    cmds.append(Cmd([result_lo, carry], 'adc', None, [arg1_lo, arg2_lo, '0']))
-
-                    result_hi = new_name(result + '_hi', defns)
-                    cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
-
-                    cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
-            elif cmd.op == 'sub':
-                assert cmd.size in (1, 2)
-                if cmd.size == 1:
-                    cmds.append(Cmd(cmd.results + ['_'], 'sbc', None, cmd.args + ['1']))
-                else:
-                    (result,) = cmd.results
-
-                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
-                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
-
-                    result_lo = new_name(result + '_lo', defns)
-                    borrow = new_name('borrow', defns)
-                    cmds.append(Cmd([result_lo, borrow], 'sbc', None, [arg1_lo, arg2_lo, '1']))
-
-                    result_hi = new_name(result + '_hi', defns)
-                    cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
-
-                    cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
-            elif cmd.op == 'lsr':
-                assert cmd.size in (1, 2, None)
-                if cmd.size == 2:
-                    (result,) = cmd.results
-
-                    arg_lo, arg_hi = emit_split2('arg', cmd.args[0])
-
-                    result_hi = new_name(result + '_hi', defns)
-                    carry = new_name('carry', defns)
-                    cmds.append(Cmd([result_hi, carry], 'lsr', None, [arg_hi, '0']))
-
-                    result_lo = new_name(result + '_lo', defns)
-                    cmds.append(Cmd([result_lo, '_'], 'lsr', None, [arg_lo, carry]))
-
-                    cmds.append(Cmd([result], 'join', None, [result_lo, result_hi]))
-            elif cmd.op == 'eq':
-                assert cmd.size in (1, 2)
-                if cmd.size == 1:
-                    cmd.size = None
-                else:
-                    (result,) = cmd.results
-
-                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
-                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
-
-                    eq_lo = new_name('eq_lo', defns)
-                    cmds.append(Cmd([eq_lo], 'eq', None, [arg1_lo, arg2_lo]))
-
-                    eq_hi = new_name('eq_hi', defns)
-                    cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
-
-                    cmds.append(Cmd([result], 'and', None, [eq_lo, eq_hi]))
-            elif cmd.op == 'lt':
-                assert cmd.size in (1, 2)
-                if cmd.size == 1:
-                    cmd.size = None
-                else:
-                    (result,) = cmd.results
-
-                    arg1_lo, arg1_hi = emit_split2('arg1', cmd.args[0])
-                    arg2_lo, arg2_hi = emit_split2('arg2', cmd.args[1])
-
-                    lt_hi = new_name('lt_hi', defns)
-                    cmds.append(Cmd([lt_hi], 'lt', None, [arg1_hi, arg2_hi]))
-
-                    lt_lo = new_name('lt_lo', defns)
-                    cmds.append(Cmd([lt_lo], 'lt', None, [arg1_lo, arg2_lo]))
-
-                    eq_hi = new_name('eq_hi', defns)
-                    cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
-
-                    t = new_name('t', defns)
-                    cmds.append(Cmd([t], 'and', None, [eq_hi, lt_lo]))
-
-                    cmds.append(Cmd([result], 'or', None, [lt_hi, t]))
-            else:
-                cmds.append(cmd)
-        block.cmds = cmds
-
-
-def split_const(blocks):
-    for block in blocks:
-        cmds = []
-        for cmd in block.cmds:
-            if cmd.op == 'split':
-                try:
-                    val = int(cmd.args[0])
-                    assert len(cmd.results) == 2
-                    while cmd.results:
-                        lo = cmd.results.pop(0)
-                        lo_val = val & 0xff
-                        val >>= 8
-                        cmds.append(Cmd([lo], 'copy', None, [str(lo_val)]))
-                except ValueError:
+            for cmd in block.cmds:
+                if cmd.size is None and cmd.op != 'split':
                     cmds.append(cmd)
-            else:
-                cmds.append(cmd)
-        block.cmds = cmds
+                    continue
+
+                if cmd.op == 'add':
+                    assert cmd.size in (1, 2)
+                    if cmd.size == 1:
+                        cmds.append(Cmd(cmd.results + ['_'], 'adc', None, cmd.args + ['0']))
+                    else:
+                        (result,) = cmd.results
+
+                        arg1_lo, arg1_hi = split(cmd.args[0])
+                        arg2_lo, arg2_hi = split(cmd.args[1])
+                        result_lo, result_hi = split(result)
+                        carry = new_name('carry', defns)
+
+                        cmds.append(Cmd([result_lo, carry], 'adc', None, [arg1_lo, arg2_lo, '0']))
+                        cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
+                elif cmd.op == 'sub':
+                    assert cmd.size in (1, 2)
+                    if cmd.size == 1:
+                        cmds.append(Cmd(cmd.results + ['_'], 'sbc', None, cmd.args + ['1']))
+                    else:
+                        (result,) = cmd.results
+
+                        arg1_lo, arg1_hi = split(cmd.args[0])
+                        arg2_lo, arg2_hi = split(cmd.args[1])
+                        result_lo, result_hi = split(result)
+
+                        borrow = new_name('borrow', defns)
+                        cmds.append(Cmd([result_lo, borrow], 'sbc', None, [arg1_lo, arg2_lo, '1']))
+                        cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
+                elif cmd.op == 'lsr':
+                    if cmd.size == 1:
+                        cmds.append(Cmd(cmd.results + ['_'], 'lsr', None, cmd.args + ['0']))
+                    else:
+                        (result,) = cmd.results
+
+                        arg_lo, arg_hi = split(cmd.args[0])
+                        result_lo, result_hi = split(result)
+
+                        carry = new_name('carry', defns)
+                        cmds.append(Cmd([result_hi, carry], 'lsr', None, [arg_hi, '0']))
+                        cmds.append(Cmd([result_lo, '_'], 'lsr', None, [arg_lo, carry]))
+                elif cmd.op == 'eq':
+                    assert cmd.size in (1, 2)
+                    if cmd.size == 1:
+                        cmd.size = None
+                    else:
+                        (result,) = cmd.results
+
+                        arg1_lo, arg1_hi = split(cmd.args[0])
+                        arg2_lo, arg2_hi = split(cmd.args[1])
+                        eq_lo = new_name('eq_lo', defns)
+                        eq_hi = new_name('eq_hi', defns)
+
+                        cmds.append(Cmd([eq_lo], 'eq', None, [arg1_lo, arg2_lo]))
+                        cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
+                        cmds.append(Cmd([result], 'and', None, [eq_lo, eq_hi]))
+                elif cmd.op == 'lt':
+                    assert cmd.size in (1, 2)
+                    if cmd.size == 1:
+                        cmd.size = None
+                    else:
+                        (result,) = cmd.results
+
+                        arg1_lo, arg1_hi = split(cmd.args[0])
+                        arg2_lo, arg2_hi = split(cmd.args[1])
+                        lt_hi = new_name('lt_hi', defns)
+                        lt_lo = new_name('lt_lo', defns)
+                        eq_hi = new_name('eq_hi', defns)
+                        t = new_name('t', defns)
+
+                        cmds.append(Cmd([lt_hi], 'lt', None, [arg1_hi, arg2_hi]))
+                        cmds.append(Cmd([lt_lo], 'lt', None, [arg1_lo, arg2_lo]))
+                        cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
+                        cmds.append(Cmd([t], 'and', None, [eq_hi, lt_lo]))
+                        cmds.append(Cmd([result], 'or', None, [lt_hi, t]))
+                elif cmd.op == 'store':
+                    assert cmd.size in (1, 2)
+                    if cmd.size == 1:
+                        addr_lo, addr_hi = split(cmd.args[0])
+                        cmds.append(Cmd([], 'store', None, [addr_lo, addr_hi, cmd.args[1]]))
+                    else:
+                        fixed = False
+                        arg_lo, arg_hi = split(cmd.args[1])
+                        cmds.append(Cmd([], 'store', 1, [cmd.args[0], arg_lo]))
+                        next_addr = new_name('next_addr', defns)
+                        cmds.append(Cmd([next_addr], 'add', 2, [cmd.args[0], '1']))
+                        cmds.append(Cmd([], 'store', 1, [next_addr, arg_hi]))
+                elif cmd.op == 'split':
+                    if len(cmd.results) == 1:
+                        cmds.append(cmd)
+                    else:
+                        assert len(cmd.results) == 2, cmd
+                        arg_lo, arg_hi = split(cmd.args[0])
+                        if cmd.results[0] != '_':
+                            cmds.append(Cmd([cmd.results[0]], 'copy', None, [arg_lo]))
+                        if cmd.results[1] != '_':
+                            cmds.append(Cmd([cmd.results[1]], 'copy', None, [arg_hi]))
+                else:
+                    assert False, cmd
+            block.cmds = cmds
+
+    fixed = False
+    while not fixed:
+        fixed = True
+        for block in blocks:
+            cmds = []
+            for cmd in block.cmds:
+                if (any(r in split_vars for r in cmd.results) or
+                    any(a in split_vars for a in cmd.args)):
+                    fixed = False
+
+                    if cmd.op == 'phi':
+                        (result,) = cmd.results
+                        result_lo, result_hi = split(result)
+
+                        args_lo = []
+                        args_hi = []
+                        for i, arg in enumerate(cmd.args):
+                            if i % 2:
+                                arg_lo, arg_hi = split(arg)
+                                args_lo.append(arg_lo)
+                                args_hi.append(arg_hi)
+                            else:
+                                args_lo.append(arg)
+                                args_hi.append(arg)
+
+                        cmds.append(Cmd([result_lo], 'phi', None, args_lo))
+                        cmds.append(Cmd([result_hi], 'phi', None, args_hi))
+                    elif cmd.op == 'save':
+                        for arg in cmd.args:
+                            arg_lo, arg_hi = split(arg)
+                            cmds.append(Cmd([], 'save', None, [arg_lo]))
+                            cmds.append(Cmd([], 'save', None, [arg_hi]))
+                    elif cmd.op == 'restore':
+                        for result in cmd.results:
+                            result_lo, result_hi = split(result)
+                            cmds.append(Cmd([result_hi], 'restore', None, []))
+                            cmds.append(Cmd([result_lo], 'restore', None, []))
+                    else:
+                        assert False, cmd
+
+                else:
+                    cmds.append(cmd)
+            block.cmds = cmds
+
+    for block in blocks:
+        for cmd in block.cmds:
+            for result in cmd.results:
+                assert result not in split_vars, cmd
+            for arg in cmd.args:
+                assert arg not in split_vars, cmd
+
     remove_copies(blocks)
 
 
@@ -782,7 +838,6 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
-split_const(blocks)
 lt_0(blocks)
 or_0(blocks)
 for block in blocks:
