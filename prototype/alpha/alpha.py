@@ -874,6 +874,74 @@ def not_br(blocks):
         block.cmds = cmds
 
 
+def and_or_br(blocks):
+    fixed = False
+    while not fixed:
+        fixed = True
+        ands = {}
+        ors = {}
+        for block in blocks:
+            for cmd in block.cmds:
+                if cmd.op == 'and' or cmd.op == 'or':
+                    (result,) = cmd.results
+                    if cmd.op == 'and':
+                        ands[result] = cmd.args
+                    else:
+                        ors[result] = cmd.args
+
+
+        use_count = Counter()
+        for block in blocks:
+            for cmd in block.cmds:
+                for arg in cmd.args:
+                    if arg in ands or arg in ors:
+                        use_count[arg] += 1
+
+        only_used_in_br = set()
+        for block in blocks:
+            for cmd in block.cmds:
+                if cmd.op == 'br' and use_count[cmd.args[0]] == 1:
+                    only_used_in_br.add(cmd.args[0])
+
+        block_names = set(b.name for b in blocks)
+        new_blocks = []
+        for block in blocks:
+            cmds = []
+            for cmd in block.cmds:
+                if cmd.op == 'and' or cmd.op == 'or':
+                    if cmd.results[0] not in only_used_in_br:
+                        cmds.append(cmd)
+                elif cmd.op == 'br':
+                    if cmd.args[0] in only_used_in_br:
+                        fixed = False
+                        if cmd.args[0] in ands:
+                            lhs, rhs = ands[cmd.args[0]]
+                            new_block_name = new_name(block.name, block_names)
+                            cmds.append(Cmd([], 'br', None, [lhs, new_block_name, cmd.args[2]]))
+                            block.cmds = cmds
+                            new_blocks.append(block)
+                            block = Block(new_block_name, [])
+                            cmds = []
+                            cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
+                        else:
+                            lhs, rhs = ors[cmd.args[0]]
+                            new_block_name = new_name(block.name, block_names)
+                            cmds.append(Cmd([], 'br', None, [lhs, cmd.args[1], new_block_name]))
+                            block.cmds = cmds
+                            new_blocks.append(block)
+                            block = Block(new_block_name, [])
+                            cmds = []
+                            cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
+                    else:
+                        cmds.append(cmd)
+                else:
+                    cmds.append(cmd)
+            block.cmds = cmds
+            new_blocks.append(block)
+            blocks = new_blocks
+
+    return blocks
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -911,6 +979,7 @@ lt_0(blocks)
 or_0(blocks)
 const_adc(blocks)
 not_br(blocks)
+blocks = and_or_br(blocks)
 for block in blocks:
     print(block)
 
