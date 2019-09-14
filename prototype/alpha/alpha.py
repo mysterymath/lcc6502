@@ -942,6 +942,48 @@ def and_or_br(blocks):
 
     return blocks
 
+
+def push_down_unique_uses(blocks):
+    use_counts = Counter()
+    used_in_phi = set()
+    for block in blocks:
+        for cmd in block.cmds:
+            for arg in cmd.args:
+                if cmd.op == 'phi':
+                    used_in_phi.add(arg)
+                use_counts[arg] += 1
+
+    unique = {}
+
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op in ('phi', 'load', 'restore'):
+                cmds.append(cmd)
+                continue
+            unique_results = [r for r in cmd.results if use_counts[r] == 1]
+            if len(unique_results) != 1:
+                cmds.append(cmd)
+                continue
+            (result,) = unique_results
+            if result in used_in_phi:
+                cmds.append(cmd)
+                continue
+            unique[result] = cmd
+        block.cmds = cmds
+
+    while unique:
+        for block in blocks:
+            cmds = []
+            for cmd in block.cmds:
+                for arg in reversed(cmd.args):
+                    if arg in unique:
+                        cmds.append(unique[arg])
+                        del unique[arg]
+                cmds.append(cmd)
+            block.cmds = cmds
+
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -980,6 +1022,7 @@ or_0(blocks)
 const_adc(blocks)
 not_br(blocks)
 blocks = and_or_br(blocks)
+push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
 
