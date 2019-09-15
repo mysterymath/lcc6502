@@ -571,15 +571,15 @@ def lower_cmp(blocks):
         cmds = []
 
         for cmd in block.cmds:
-            if cmd.op == 'gt':
-                cmds.append(Cmd(cmd.results, 'lt', cmd.size, [cmd.args[1], cmd.args[0]]))
-            elif cmd.op == 'ge':
+            if cmd.op == 'lt':
                 t = new_name('t', defns)
-                cmds.append(Cmd([t], 'lt', cmd.size, [cmd.args[0], cmd.args[1]]))
+                cmds.append(Cmd([t], 'ge', cmd.size, [cmd.args[0], cmd.args[1]]))
                 cmds.append(Cmd(cmd.results, 'not', None, [t]))
             elif cmd.op == 'le':
+                cmds.append(Cmd(cmd.results, 'ge', cmd.size, [cmd.args[1], cmd.args[0]]))
+            elif cmd.op == 'gt':
                 t = new_name('t', defns)
-                cmds.append(Cmd([t], 'lt', cmd.size, [cmd.args[1], cmd.args[0]]))
+                cmds.append(Cmd([t], 'ge', cmd.size, [cmd.args[1], cmd.args[0]]))
                 cmds.append(Cmd(cmd.results, 'not', None, [t]))
             elif cmd.op == 'ne':
                 t = new_name('t', defns)
@@ -625,7 +625,7 @@ def lower_16(blocks):
                 if cmd.op == 'add':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_'], 'adc', None, cmd.args + ['0']))
+                        cmds.append(Cmd(cmd.results + ['_']*2, 'adc', None, cmd.args + ['0']))
                     else:
                         (result,) = cmd.results
 
@@ -634,12 +634,12 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
                         carry = new_name('carry', defns)
 
-                        cmds.append(Cmd([result_lo, carry], 'adc', None, [arg1_lo, arg2_lo, '0']))
-                        cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
+                        cmds.append(Cmd([result_lo, carry, '_'], 'adc', None, [arg1_lo, arg2_lo, '0']))
+                        cmds.append(Cmd([result_hi, '_', '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
                 elif cmd.op == 'sub':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_'], 'sbc', None, cmd.args + ['1']))
+                        cmds.append(Cmd(cmd.results + ['_']*2, 'sbc', None, cmd.args + ['1']))
                     else:
                         (result,) = cmd.results
 
@@ -648,11 +648,11 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
 
                         borrow = new_name('borrow', defns)
-                        cmds.append(Cmd([result_lo, borrow], 'sbc', None, [arg1_lo, arg2_lo, '1']))
-                        cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
+                        cmds.append(Cmd([result_lo, borrow, '_'], 'sbc', None, [arg1_lo, arg2_lo, '1']))
+                        cmds.append(Cmd([result_hi, '_', '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
                 elif cmd.op == 'lsr':
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_'], 'ror', None, cmd.args + ['0']))
+                        cmds.append(Cmd(cmd.results + ['_']*2, 'ror', None, cmd.args + ['0']))
                     else:
                         (result,) = cmd.results
 
@@ -660,8 +660,8 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
 
                         carry = new_name('carry', defns)
-                        cmds.append(Cmd([result_hi, carry], 'ror', None, [arg_hi, '0']))
-                        cmds.append(Cmd([result_lo, '_'], 'ror', None, [arg_lo, carry]))
+                        cmds.append(Cmd([result_hi, carry, '_'], 'ror', None, [arg_hi, '0']))
+                        cmds.append(Cmd([result_lo, '_', '_'], 'ror', None, [arg_lo, carry]))
                 elif cmd.op == 'eq':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
@@ -674,10 +674,10 @@ def lower_16(blocks):
                         eq_lo = new_name('eq_lo', defns)
                         eq_hi = new_name('eq_hi', defns)
 
-                        cmds.append(Cmd([eq_lo], 'eq', None, [arg1_lo, arg2_lo]))
-                        cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
+                        cmds.append(Cmd([eq_lo, '_'], 'cmp', None, [arg1_lo, arg2_lo]))
+                        cmds.append(Cmd([eq_hi, '_'], 'cmp', None, [arg1_hi, arg2_hi]))
                         cmds.append(Cmd([result], 'and', None, [eq_lo, eq_hi]))
-                elif cmd.op == 'lt':
+                elif cmd.op == 'ge':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
                         cmd.size = None
@@ -686,16 +686,17 @@ def lower_16(blocks):
 
                         arg1_lo, arg1_hi = split(cmd.args[0])
                         arg2_lo, arg2_hi = split(cmd.args[1])
-                        lt_hi = new_name('lt_hi', defns)
-                        lt_lo = new_name('lt_lo', defns)
+                        ge_hi = new_name('ge_hi', defns)
+                        ge_lo = new_name('ge_lo', defns)
                         eq_hi = new_name('eq_hi', defns)
+                        ne_hi = new_name('ne_hi', defns)
                         t = new_name('t', defns)
 
-                        cmds.append(Cmd([lt_hi], 'lt', None, [arg1_hi, arg2_hi]))
-                        cmds.append(Cmd([lt_lo], 'lt', None, [arg1_lo, arg2_lo]))
-                        cmds.append(Cmd([eq_hi], 'eq', None, [arg1_hi, arg2_hi]))
-                        cmds.append(Cmd([t], 'and', None, [eq_hi, lt_lo]))
-                        cmds.append(Cmd([result], 'or', None, [lt_hi, t]))
+                        cmds.append(Cmd([eq_hi, ge_hi], 'cmp', None, [arg1_hi, arg2_hi]))
+                        cmds.append(Cmd(['_', ge_lo], 'cmp', None, [arg1_lo, arg2_lo]))
+                        cmds.append(Cmd([ne_hi], 'not', None, [eq_hi]))
+                        cmds.append(Cmd([t], 'or', None, [ne_hi, ge_lo]))
+                        cmds.append(Cmd([result], 'and', None, [ge_hi, t]))
                 elif cmd.op == 'store':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
@@ -773,35 +774,6 @@ def lower_16(blocks):
             for arg in cmd.args:
                 assert arg not in split_vars, cmd
 
-    remove_copies(blocks)
-
-
-def lt_0(blocks):
-    for block in blocks:
-        cmds = []
-        for cmd in block.cmds:
-            if cmd.op == 'lt' and cmd.args[1] == '0':
-                cmds.append(Cmd(cmd.results, 'copy', None, ['0']))
-            else:
-                cmds.append(cmd)
-        block.cmds = cmds
-    remove_copies(blocks)
-
-
-def or_0(blocks):
-    for block in blocks:
-        cmds = []
-        for cmd in block.cmds:
-            if cmd.op == 'or':
-                if cmd.args[0] == '0':
-                    cmds.append(Cmd(cmd.results, 'copy', None, [cmd.args[1]]))
-                elif cmd.args[1] == '0':
-                    cmds.append(Cmd(cmd.results, 'copy', None, [cmd.args[0]]))
-                else:
-                    cmds.append(cmd)
-            else:
-                cmds.append(cmd)
-        block.cmds = cmds
     remove_copies(blocks)
 
 
@@ -1017,11 +989,10 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
-#lt_0(blocks)
-#or_0(blocks)
 #const_adc(blocks)
-#not_br(blocks)
-#blocks = and_or_br(blocks)
+not_br(blocks)
+blocks = and_or_br(blocks)
+not_br(blocks)
 #push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
