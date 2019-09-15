@@ -1017,14 +1017,11 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
-lt_0(blocks)
-or_0(blocks)
-const_adc(blocks)
-not_br(blocks)
-blocks = and_or_br(blocks)
-push_down_unique_uses(blocks)
+#lt_0(blocks)
+#or_0(blocks)
+#const_adc(blocks)
+#not_br(blocks)
+#blocks = and_or_br(blocks)
+#push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
-
-# TODO: Constant Arith
-# TODO: Constant Arith
