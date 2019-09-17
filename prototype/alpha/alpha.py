@@ -547,6 +547,7 @@ def merge_all_funcs(funcs):
                     blocks.append(block)
 
                     block = Block(new_block_name(block_name), [])
+                    cmd.args.append(block.name)
                     cmds = []
                     rts_dest_blocks[cmd.args[0]].add(block.name)
             phi_blocks[block_name] = block.name
@@ -973,6 +974,46 @@ def new_name(name, defns):
     return chosen
 
 
+def dominators(blocks):
+    preds = collect_predecessors(blocks)
+
+    jsr_dom = {}
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'jsr':
+                jsr_dom[cmd.args[1]] = block.name
+
+
+    doms = defaultdict(set)
+    for block in blocks:
+        if not preds[block.name]:
+            doms[block.name] = {block.name}
+            continue
+        for block2 in blocks:
+            if block2.name != block.name:
+                doms[block.name].add(block2.name)
+
+    fixed = False
+    while not fixed:
+        fixed = True
+        for block in blocks:
+            if not preds[block.name]:
+                continue
+            new_doms = {block.name} | set.intersection(*(doms[p.name] for p in preds[block.name]))
+            if block.name in jsr_dom:
+                new_doms |= doms[jsr_dom[block.name]]
+            if new_doms != doms[block.name]:
+                fixed = False
+            doms[block.name] = new_doms
+    
+    return doms
+
+
+def gvn(blocks):
+    doms = dominators(blocks)
+
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -989,6 +1030,7 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
+gvn(blocks)
 #const_adc(blocks)
 not_br(blocks)
 blocks = and_or_br(blocks)
