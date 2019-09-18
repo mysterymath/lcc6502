@@ -91,7 +91,7 @@ is_odd_prime
     done = gt2 i half
     br done prime loop
 
-  finish
+  prime
     ret 1
 end
 

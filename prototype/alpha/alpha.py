@@ -204,8 +204,15 @@ def to_ssa(blocks):
 def relabel_uses(blocks, new_values, renumber):
     preds = collect_predecessors(blocks)
 
+    rts_targets = set()
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op != 'rts':
+                continue
+            rts_targets |= set(cmd.args)
+
     # Look up the reaching definition of a value at a given command.
-    def lookup_renumbered_value(val, cmd_index, block):
+    def lookup_renumbered_value(val, cmd_index, block, rts_stack):
         # Handle constants, block refs, anything not defined by a cmd.
         if val not in new_values:
             return val
@@ -227,24 +234,42 @@ def relabel_uses(blocks, new_values, renumber):
         # was already inserted, it will terminate any loops in the
         # dataflow graph by referencing itself.
         for pred in preds[block.name]:
-            args.append(pred.name)
-            args.append(lookup_value_from_end(val, pred))
+            if pred.cmds[-1].op == 'jsr' and rts_stack:
+                if pred.cmds[-1].args[1] != rts_stack[-1]:
+                    continue
+                else:
+                    args.append(pred.name)
+                    args.append(lookup_value_from_end(val, pred, rts_stack[:-1]))
+            else:
+                args.append(pred.name)
+                args.append(lookup_value_from_end(val, pred, rts_stack))
         return new_v
 
     # Look up reaching definition of a value from the end of a block.
-    def lookup_value_from_end(val, block):
-        return lookup_renumbered_value(val, len(block.cmds), block)
+    def lookup_value_from_end(val, block, rts_stack):
+        if block.name in rts_targets:
+            rts_stack += (block.name,)
+        return lookup_renumbered_value(val, len(block.cmds), block, rts_stack)
 
     for block in blocks:
         while True:
+            rts_stack = ()
+            if block.name in rts_targets:
+                rts_stack += (block.name,)
             for cmd_index, cmd in enumerate(block.cmds):
                 # Only newly added phis should be skipped.
                 if cmd.op == 'phi_tmp':
                     continue
                 def lookup_value(val):
-                    return lookup_renumbered_value(val, cmd_index, block)
+                    return lookup_renumbered_value(val, cmd_index, block, rts_stack)
                 old_size = len(block.cmds)
-                cmd.args = list(map(lookup_value, cmd.args))
+                if cmd.op == 'phi':
+                    for i in range(0, len(cmd.args), 2):
+                        blk = cmd.args[i]
+                        (blk,) = (b for b in blocks if b.name == cmd.args[i])
+                        cmd.args[i+1] = lookup_value_from_end(cmd.args[i+1], blk, rts_stack)
+                else:
+                    cmd.args = list(map(lookup_value, cmd.args))
                 if len(block.cmds) != old_size:
                     break
             else:
@@ -1032,9 +1057,9 @@ lower_cmp(blocks)
 lower_16(blocks)
 gvn(blocks)
 #const_adc(blocks)
-not_br(blocks)
-blocks = and_or_br(blocks)
-not_br(blocks)
+#not_br(blocks)
+#blocks = and_or_br(blocks)
+#not_br(blocks)
 #push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
