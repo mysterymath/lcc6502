@@ -1034,9 +1034,41 @@ def dominators(blocks):
     return doms
 
 
-def gvn(blocks):
-    doms = dominators(blocks)
+def ge_zero(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'cmp' and cmd.args[1] == '0' and cmd.results[1] != '_':
+                if cmd.results[0] != '_':
+                    cmds.append(Cmd([cmd.results[0], '_'], 'cmp', None, cmd.args))
+                cmds.append(Cmd([cmd.results[1]], 'copy', None, ['true']))
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
 
+    remove_copies(blocks)
+
+
+def const_and(blocks):
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'and' and any(a in ('true', 'false') for a in cmd.args):
+                if all(a in ('true', 'false') for a in cmd.args):
+                    result = 'true' if cmd.args[0] == 'true' and cmd.args[1] == 'true' else 'false'
+                    cmds.append(Cmd(cmd.results, 'copy', None, [result]))
+                else:
+                    if cmd.args[0] not in ('true', 'false'):
+                        cmd.args[0], cmd.args[1] = cmd.args[1], cmd.args[0]
+                    if cmd.args[0] == 'true':
+                        cmds.append(Cmd(cmd.results, 'copy', None, [cmd.args[1]]))
+                    else:
+                        cmds.append(Cmd(cmd.results, 'copy', None, ['false']))
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+
+    remove_copies(blocks)
 
 
 try:
@@ -1055,8 +1087,9 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
-gvn(blocks)
-#const_adc(blocks)
+const_adc(blocks)
+ge_zero(blocks)
+const_and(blocks)
 #not_br(blocks)
 #blocks = and_or_br(blocks)
 #not_br(blocks)
