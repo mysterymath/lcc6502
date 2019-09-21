@@ -1083,6 +1083,35 @@ def const_and(blocks):
     return fixed
 
 
+def redundant_cmp_zero(blocks):
+    defns = {}
+    for block in blocks:
+        for cmd in block.cmds:
+            for result in cmd.results:
+                if result != '_':
+                    defns[result] = cmd
+
+    defns_set = get_blocks_definitions(blocks)
+
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'cmp' and cmd.args[1] == '0':
+                assert cmd.results[1] == '_'
+                defn = defns[cmd.args[0]]
+                if defn.op in 'ror, adc, sbc':
+                    if defn.results[2] == '_':
+                        defn.results[2] = new_name('eq', defns_set)
+                    cmds.append(Cmd([cmd.results[0]], 'copy', None, [defn.results[2]]))
+                else:
+                    cmds.append(cmd)
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+
+    remove_copies(blocks)
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -1106,6 +1135,8 @@ while not fixed:
     fixed &= const_adc(blocks)
     fixed &= ge_zero(blocks)
     fixed &= const_and(blocks)
+
+redundant_cmp_zero(blocks)
 
 fixed = False
 while not fixed:
