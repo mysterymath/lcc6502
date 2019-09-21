@@ -804,37 +804,38 @@ def lower_16(blocks):
 
 
 def const_adc(blocks):
-    fixed = False
-    while not fixed:
-        fixed = True
-        for block in blocks:
-            cmds = []
-            for cmd in block.cmds:
-                if cmd.op == 'adc':
-                    try:
-                        left = int(cmd.args[0], 0)
-                        right = int(cmd.args[1], 0)
-                        carry = int(cmd.args[2], 0)
-                    except ValueError:
-                        cmds.append(cmd)
-                        continue
-                    fixed = False
-                    s = left + right + carry
-                    c = 0
-                    if s >= 256:
-                        s -= 256
-                        c = 1
-                    if cmd.results[0] != '_':
-                        cmds.append(Cmd([cmd.results[0]], 'copy', None, [str(s)]))
-                    if cmd.results[1] != '_':
-                        cmds.append(Cmd([cmd.results[1]], 'copy', None, [str(c)]))
-                else:
+    fixed = True
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'adc':
+                try:
+                    left = int(cmd.args[0], 0)
+                    right = int(cmd.args[1], 0)
+                    carry = int(cmd.args[2], 0)
+                except ValueError:
                     cmds.append(cmd)
-            block.cmds = cmds
-        remove_copies(blocks)
+                    continue
+                fixed = False
+                s = left + right + carry
+                c = 0
+                if s >= 256:
+                    s -= 256
+                    c = 1
+                if cmd.results[0] != '_':
+                    cmds.append(Cmd([cmd.results[0]], 'copy', None, [str(s)]))
+                if cmd.results[1] != '_':
+                    cmds.append(Cmd([cmd.results[1]], 'copy', None, [str(c)]))
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+
+    remove_copies(blocks)
+    return fixed
 
 
 def not_br(blocks):
+    fixed = True
     nots = {}
     for block in blocks:
         for cmd in block.cmds:
@@ -864,6 +865,7 @@ def not_br(blocks):
                     cmds.append(cmd)
             elif cmd.op == 'br':
                 if cmd.args[0] in nots_only_used_in_br:
+                    fixed = False
                     cmds.append(Cmd([], 'br', None, [nots[cmd.args[0]], cmd.args[2], cmd.args[1]]))
                 else:
                     cmds.append(cmd)
@@ -871,74 +873,78 @@ def not_br(blocks):
                 cmds.append(cmd)
         block.cmds = cmds
 
+    return fixed
+
 
 def and_or_br(blocks):
-    fixed = False
-    while not fixed:
-        fixed = True
-        ands = {}
-        ors = {}
-        for block in blocks:
-            for cmd in block.cmds:
-                if cmd.op == 'and' or cmd.op == 'or':
-                    (result,) = cmd.results
-                    if cmd.op == 'and':
-                        ands[result] = cmd.args
+    orig_blocks = blocks
+
+    fixed = True
+    ands = {}
+    ors = {}
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'and' or cmd.op == 'or':
+                (result,) = cmd.results
+                if cmd.op == 'and':
+                    ands[result] = cmd.args
+                else:
+                    ors[result] = cmd.args
+
+
+    use_count = Counter()
+    for block in blocks:
+        for cmd in block.cmds:
+            for arg in cmd.args:
+                if arg in ands or arg in ors:
+                    use_count[arg] += 1
+
+    only_used_in_br = set()
+    for block in blocks:
+        for cmd in block.cmds:
+            if cmd.op == 'br' and use_count[cmd.args[0]] == 1:
+                only_used_in_br.add(cmd.args[0])
+
+    block_names = set(b.name for b in blocks)
+    new_blocks = []
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op == 'and' or cmd.op == 'or':
+                if cmd.results[0] not in only_used_in_br:
+                    cmds.append(cmd)
+            elif cmd.op == 'br':
+                if cmd.args[0] in only_used_in_br:
+                    fixed = False
+                    if cmd.args[0] in ands:
+                        lhs, rhs = ands[cmd.args[0]]
+                        new_block_name = new_name(block.name, block_names)
+                        cmds.append(Cmd([], 'br', None, [lhs, new_block_name, cmd.args[2]]))
+                        block.cmds = cmds
+                        new_blocks.append(block)
+                        block = Block(new_block_name, [])
+                        cmds = []
+                        cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
                     else:
-                        ors[result] = cmd.args
-
-
-        use_count = Counter()
-        for block in blocks:
-            for cmd in block.cmds:
-                for arg in cmd.args:
-                    if arg in ands or arg in ors:
-                        use_count[arg] += 1
-
-        only_used_in_br = set()
-        for block in blocks:
-            for cmd in block.cmds:
-                if cmd.op == 'br' and use_count[cmd.args[0]] == 1:
-                    only_used_in_br.add(cmd.args[0])
-
-        block_names = set(b.name for b in blocks)
-        new_blocks = []
-        for block in blocks:
-            cmds = []
-            for cmd in block.cmds:
-                if cmd.op == 'and' or cmd.op == 'or':
-                    if cmd.results[0] not in only_used_in_br:
-                        cmds.append(cmd)
-                elif cmd.op == 'br':
-                    if cmd.args[0] in only_used_in_br:
-                        fixed = False
-                        if cmd.args[0] in ands:
-                            lhs, rhs = ands[cmd.args[0]]
-                            new_block_name = new_name(block.name, block_names)
-                            cmds.append(Cmd([], 'br', None, [lhs, new_block_name, cmd.args[2]]))
-                            block.cmds = cmds
-                            new_blocks.append(block)
-                            block = Block(new_block_name, [])
-                            cmds = []
-                            cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
-                        else:
-                            lhs, rhs = ors[cmd.args[0]]
-                            new_block_name = new_name(block.name, block_names)
-                            cmds.append(Cmd([], 'br', None, [lhs, cmd.args[1], new_block_name]))
-                            block.cmds = cmds
-                            new_blocks.append(block)
-                            block = Block(new_block_name, [])
-                            cmds = []
-                            cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
-                    else:
-                        cmds.append(cmd)
+                        lhs, rhs = ors[cmd.args[0]]
+                        new_block_name = new_name(block.name, block_names)
+                        cmds.append(Cmd([], 'br', None, [lhs, cmd.args[1], new_block_name]))
+                        block.cmds = cmds
+                        new_blocks.append(block)
+                        block = Block(new_block_name, [])
+                        cmds = []
+                        cmds.append(Cmd([], 'br', None, [rhs, cmd.args[1], cmd.args[2]]))
                 else:
                     cmds.append(cmd)
-            block.cmds = cmds
-            new_blocks.append(block)
-            blocks = new_blocks
+            else:
+                cmds.append(cmd)
+        block.cmds = cmds
+        new_blocks.append(block)
+        blocks = new_blocks
 
-    return blocks
+    orig_blocks.clear()
+    orig_blocks.extend(blocks)
+    return fixed
 
 
 def push_down_unique_uses(blocks):
@@ -1035,10 +1041,12 @@ def dominators(blocks):
 
 
 def ge_zero(blocks):
+    fixed = True
     for block in blocks:
         cmds = []
         for cmd in block.cmds:
             if cmd.op == 'cmp' and cmd.args[1] == '0' and cmd.results[1] != '_':
+                fixed = False
                 if cmd.results[0] != '_':
                     cmds.append(Cmd([cmd.results[0], '_'], 'cmp', None, cmd.args))
                 cmds.append(Cmd([cmd.results[1]], 'copy', None, ['true']))
@@ -1047,13 +1055,16 @@ def ge_zero(blocks):
         block.cmds = cmds
 
     remove_copies(blocks)
+    return fixed
 
 
 def const_and(blocks):
+    fixed = True
     for block in blocks:
         cmds = []
         for cmd in block.cmds:
             if cmd.op == 'and' and any(a in ('true', 'false') for a in cmd.args):
+                fixed = False
                 if all(a in ('true', 'false') for a in cmd.args):
                     result = 'true' if cmd.args[0] == 'true' and cmd.args[1] == 'true' else 'false'
                     cmds.append(Cmd(cmd.results, 'copy', None, [result]))
@@ -1069,6 +1080,7 @@ def const_and(blocks):
         block.cmds = cmds
 
     remove_copies(blocks)
+    return fixed
 
 
 try:
@@ -1087,12 +1099,19 @@ blocks = merge_all_funcs(funcs)
 to_ssa(blocks)
 lower_cmp(blocks)
 lower_16(blocks)
-const_adc(blocks)
-ge_zero(blocks)
-const_and(blocks)
-#not_br(blocks)
-#blocks = and_or_br(blocks)
-#not_br(blocks)
+
+fixed = False
+while not fixed:
+    fixed = True
+    fixed &= const_adc(blocks)
+    fixed &= ge_zero(blocks)
+    fixed &= const_and(blocks)
+
+fixed = False
+while not fixed:
+    fixed = True
+    fixed &= not_br(blocks)
+    fixed &= and_or_br(blocks)
 #push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
