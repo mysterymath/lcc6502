@@ -965,12 +965,23 @@ def push_down_unique_uses(blocks):
             if cmd.op in ('phi', 'load', 'restore'):
                 cmds.append(cmd)
                 continue
-            unique_results = [r for r in cmd.results if use_counts[r] == 1]
-            if len(unique_results) != 1:
-                cmds.append(cmd)
-                continue
-            (result,) = unique_results
-            if result in used_in_phi:
+
+            def uniquely_used_result():
+                result = None
+                for r in cmd.results:
+                    if r == '_':
+                        continue
+                    if r in used_in_phi:
+                        return None
+                    if use_counts[r] != 1:
+                        return None
+                    if result is not None:
+                        return None
+                    result = r
+                return result
+
+            result = uniquely_used_result()
+            if result is None:
                 cmds.append(cmd)
                 continue
             unique[result] = cmd
@@ -1143,6 +1154,6 @@ while not fixed:
     fixed = True
     fixed &= not_br(blocks)
     fixed &= and_or_br(blocks)
-#push_down_unique_uses(blocks)
+push_down_unique_uses(blocks)
 for block in blocks:
     print(block)
