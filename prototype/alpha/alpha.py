@@ -1123,6 +1123,64 @@ def redundant_cmp_zero(blocks):
     remove_copies(blocks)
 
 
+def from_ssa(blocks):
+    new_blocks = []
+
+    block_names = set(b.name for b in blocks)
+    phi_headers = {}
+
+    for block in blocks:
+        copy_for_predecessor = {}
+
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op != 'phi':
+                cmds.append(cmd)
+                continue
+            (result,) = cmd.results
+            for i in range(0, len(cmd.args), 2):
+                pred = cmd.args[i]
+                arg = cmd.args[i+1]
+                if pred not in copy_for_predecessor:
+                    copy_for_predecessor[pred] = Cmd([], 'copy', None, [])
+                copy = copy_for_predecessor[pred]
+                copy.results.append(result)
+                copy.args.append(arg)
+        block.cmds = cmds
+
+        for pred, copy in copy_for_predecessor.items():
+            name = new_name(f'{block.name}_from_{pred}', block_names)
+            br = Cmd([], 'br', None, [block.name])
+            header = Block(name, [copy, br])
+            phi_headers[pred, block.name] = header
+            new_blocks.append(header)
+        new_blocks.append(block)
+
+    for block in blocks:
+        term = block.cmds[-1]
+        if term.op == 'rts':
+            continue
+        if term.op == 'br':
+            if len(term.args) == 1:
+                if (block.name, term.args[0]) in phi_headers:
+                    term.args[0] = phi_headers[block.name, term.args[0]].name
+            else:
+                if (block.name, term.args[1]) in phi_headers:
+                    term.args[1] = phi_headers[block.name, term.args[1]].name
+                if (block.name, term.args[2]) in phi_headers:
+                    term.args[2] = phi_headers[block.name, term.args[2]].name
+        else:
+            assert term.op == 'jsr'
+            if (block.name, term.args[0]) in phi_headers:
+                header = phi_headers[block.name, term.args[0]]
+                block.cmds[-1] = Cmd([], 'br', None, [header.name])
+                header.cmds[-1] = term
+
+    blocks.clear()
+    blocks.extend(new_blocks)
+
+
+
 try:
     funcs = parse()
 except Exception as e:
@@ -1154,6 +1212,10 @@ while not fixed:
     fixed = True
     fixed &= not_br(blocks)
     fixed &= and_or_br(blocks)
+
 push_down_unique_uses(blocks)
+
+from_ssa(blocks)
+
 for block in blocks:
     print(block)
