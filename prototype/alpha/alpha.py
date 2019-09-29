@@ -1101,28 +1101,25 @@ def from_ssa(blocks):
     phi_headers = {}
 
     for block in blocks:
-        copy_for_predecessor = {}
+        copies_for_predecessor = {}
 
         cmds = []
         for cmd in block.cmds:
             if cmd.op != 'phi':
                 cmds.append(cmd)
                 continue
-            (result,) = cmd.results
             for i in range(0, len(cmd.args), 2):
                 pred = cmd.args[i]
                 arg = cmd.args[i+1]
-                if pred not in copy_for_predecessor:
-                    copy_for_predecessor[pred] = Cmd([], 'copy', None, [])
-                copy = copy_for_predecessor[pred]
-                copy.results.append(result)
-                copy.args.append(arg)
+                if pred not in copies_for_predecessor:
+                    copies_for_predecessor[pred] = []
+                copies_for_predecessor[pred].append(Cmd(cmd.results, 'copy', None, [arg]))
         block.cmds = cmds
 
-        for pred, copy in copy_for_predecessor.items():
+        for pred, copies in copies_for_predecessor.items():
             name = new_name(f'{block.name}_from_{pred}', block_names)
             br = Cmd([], 'br', None, [block.name])
-            header = Block(name, [copy, br])
+            header = Block(name, [*copies, br])
             phi_headers[pred, block.name] = header
             new_blocks.append(header)
         new_blocks.append(block)
