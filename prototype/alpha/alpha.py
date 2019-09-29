@@ -651,7 +651,7 @@ def lower_16(blocks):
                 if cmd.op == 'add':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_']*2, 'adc', None, cmd.args + ['0']))
+                        cmds.append(Cmd(cmd.results, 'adc', None, cmd.args + ['0']))
                     else:
                         (result,) = cmd.results
 
@@ -660,12 +660,12 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
                         carry = new_name('carry', defns)
 
-                        cmds.append(Cmd([result_lo, carry, '_'], 'adc', None, [arg1_lo, arg2_lo, '0']))
-                        cmds.append(Cmd([result_hi, '_', '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
+                        cmds.append(Cmd([result_lo, carry], 'adc', None, [arg1_lo, arg2_lo, '0']))
+                        cmds.append(Cmd([result_hi, '_'], 'adc', None, [arg1_hi, arg2_hi, carry]))
                 elif cmd.op == 'sub':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_']*2, 'sbc', None, cmd.args + ['1']))
+                        cmds.append(Cmd(cmd.results, 'sbc', None, cmd.args + ['1']))
                     else:
                         (result,) = cmd.results
 
@@ -674,11 +674,11 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
 
                         borrow = new_name('borrow', defns)
-                        cmds.append(Cmd([result_lo, borrow, '_'], 'sbc', None, [arg1_lo, arg2_lo, '1']))
-                        cmds.append(Cmd([result_hi, '_', '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
+                        cmds.append(Cmd([result_lo, borrow], 'sbc', None, [arg1_lo, arg2_lo, '1']))
+                        cmds.append(Cmd([result_hi, '_'], 'sbc', None, [arg1_hi, arg2_hi, borrow]))
                 elif cmd.op == 'lsr':
                     if cmd.size == 1:
-                        cmds.append(Cmd(cmd.results + ['_']*2, 'ror', None, cmd.args + ['0']))
+                        cmds.append(Cmd(cmd.results, 'ror', None, cmd.args + ['0']))
                     else:
                         (result,) = cmd.results
 
@@ -686,8 +686,8 @@ def lower_16(blocks):
                         result_lo, result_hi = split(result)
 
                         carry = new_name('carry', defns)
-                        cmds.append(Cmd([result_hi, carry, '_'], 'ror', None, [arg_hi, '0']))
-                        cmds.append(Cmd([result_lo, '_', '_'], 'ror', None, [arg_lo, carry]))
+                        cmds.append(Cmd([result_hi, carry], 'ror', None, [arg_hi, '0']))
+                        cmds.append(Cmd([result_lo, '_'], 'ror', None, [arg_lo, carry]))
                 elif cmd.op == 'eq':
                     assert cmd.size in (1, 2)
                     if cmd.size == 1:
@@ -1094,35 +1094,6 @@ def const_and(blocks):
     return fixed
 
 
-def redundant_cmp_zero(blocks):
-    defns = {}
-    for block in blocks:
-        for cmd in block.cmds:
-            for result in cmd.results:
-                if result != '_':
-                    defns[result] = cmd
-
-    defns_set = get_blocks_definitions(blocks)
-
-    for block in blocks:
-        cmds = []
-        for cmd in block.cmds:
-            if cmd.op == 'cmp' and cmd.args[1] == '0':
-                assert cmd.results[1] == '_'
-                defn = defns[cmd.args[0]]
-                if defn.op in 'ror, adc, sbc':
-                    if defn.results[2] == '_':
-                        defn.results[2] = new_name('eq', defns_set)
-                    cmds.append(Cmd([cmd.results[0]], 'copy', None, [defn.results[2]]))
-                else:
-                    cmds.append(cmd)
-            else:
-                cmds.append(cmd)
-        block.cmds = cmds
-
-    remove_copies(blocks)
-
-
 def from_ssa(blocks):
     new_blocks = []
 
@@ -1204,8 +1175,6 @@ while not fixed:
     fixed &= const_adc(blocks)
     fixed &= ge_zero(blocks)
     fixed &= const_and(blocks)
-
-redundant_cmp_zero(blocks)
 
 fixed = False
 while not fixed:
