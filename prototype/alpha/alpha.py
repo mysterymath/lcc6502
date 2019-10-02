@@ -1055,7 +1055,7 @@ def dominators(blocks):
             if new_doms != doms[block.name]:
                 fixed = False
             doms[block.name] = new_doms
-    
+
     return doms
 
 
@@ -1103,6 +1103,8 @@ def const_and(blocks):
 
 
 def redundant_cmp_zero(blocks):
+    fixed = True
+
     defns = {}
     for block in blocks:
         for cmd in block.cmds:
@@ -1112,23 +1114,48 @@ def redundant_cmp_zero(blocks):
 
     defns_set = get_blocks_definitions(blocks)
 
+    phis_for_block = defaultdict(list)
+    cmps_for_block = defaultdict(list)
+
     for block in blocks:
         cmds = []
         for cmd in block.cmds:
             if cmd.op == 'cmp' and cmd.args[1] == '0':
                 assert cmd.results[1] == '_'
+                if cmd.args[0] not in defns:
+                    v = int(cmd.args[0])
+                    cmds.append(Cmd([cmd.results[0]], 'copy', None, ['1' if v else '0']))
+                    continue
                 defn = defns[cmd.args[0]]
-                if defn.op in 'ror, adc, sbc':
-                    if defn.results[2] == '_':
-                        defn.results[2] = new_name('eq', defns_set)
-                    cmds.append(Cmd([cmd.results[0]], 'copy', None, [defn.results[2]]))
+                if defn.op == 'phi':
+                    fixed = False
+                    phi_args = []
+                    for i in range(0, len(defn.args), 2):
+                        pred = defn.args[i]
+                        arg = defn.args[i+1]
+                        cmp_name = new_name(f'{arg}_eq', defns_set)
+                        cmp = Cmd([cmp_name, '_'], 'cmp', None, [arg, '0'])
+                        cmps_for_block[pred].append(cmp)
+                        phi_args.append(pred)
+                        phi_args.append(cmp_name)
+
+                    phi_name = new_name(f'{defn.results[0]}_eq', defns_set)
+                    phis_for_block[block.name].append(Cmd([phi_name], 'phi', None, phi_args))
+                    source = phi_name
                 else:
-                    cmds.append(cmd)
+                    if defn.results[-1] == '_':
+                        defn.results[-1] = new_name('eq', defns_set)
+                    source = defn.results[-1]
+                cmds.append(Cmd([cmd.results[0]], 'copy', None, [source]))
             else:
                 cmds.append(cmd)
         block.cmds = cmds
 
-    remove_copies(blocks)
+    for block in blocks:
+        block.cmds = [*phis_for_block[block.name], *block.cmds[:-1], *cmps_for_block[block.name], block.cmds[-1]]
+
+    return fixed
+
 
 
 def from_ssa(blocks):
@@ -1211,7 +1238,11 @@ while not fixed:
     fixed &= ge_zero(blocks)
     fixed &= const_and(blocks)
 
-redundant_cmp_zero(blocks)
+fixed = False
+while not fixed:
+    fixed = True
+    fixed &= redundant_cmp_zero(blocks)
+remove_copies(blocks)
 
 fixed = False
 while not fixed:
@@ -1221,7 +1252,7 @@ while not fixed:
 
 push_down_unique_uses(blocks)
 
-#from_ssa(blocks)
+from_ssa(blocks)
 
 for block in blocks:
     print(block)
