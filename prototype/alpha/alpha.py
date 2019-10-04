@@ -1007,6 +1007,54 @@ def push_down_unique_uses(blocks):
             block.cmds = cmds
 
 
+def cse(blocks):
+    fixed = True
+    doms = dominators(blocks)
+
+    blocks_by_name = {}
+    for block in blocks:
+        blocks_by_name[block.name] = block
+
+    for block in blocks:
+        cmds = []
+        for cmd in block.cmds:
+            if cmd.op in ('br', 'jsr', 'rts', 'save', 'restore', 'store'):
+                cmds.append(cmd)
+                continue
+
+            def find_dom_cmd():
+                for dom_cmd in block.cmds:
+                    if dom_cmd is cmd:
+                        break
+                    if cmd.op == dom_cmd.op and cmd.args == dom_cmd.args:
+                        return dom_cmd
+
+                for dom in doms[block.name]:
+                    if dom == block.name:
+                        continue
+                    dom = blocks_by_name[dom]
+                    for dom_cmd in dom.cmds:
+                        if cmd.op == dom_cmd.op and cmd.args == dom_cmd.args:
+                            return dom_cmd
+
+            dom_cmd = find_dom_cmd()
+            if dom_cmd is None:
+                cmds.append(cmd)
+                continue
+            fixed = False
+            for i in range(len(cmd.results)):
+                if cmd.results[i] == '_':
+                    continue
+                if dom_cmd.results[i] == '_':
+                    dom_cmd.results[i] = cmd.results[i]
+                else:
+                    cmds.append(Cmd([cmd.results[i]], 'copy', None, [dom_cmd.results[i]]))
+        block.cmds = cmds
+
+    remove_copies(blocks)
+    return fixed
+
+
 def get_blocks_definitions(blocks):
     defns = set()
     for block in blocks:
@@ -1243,6 +1291,11 @@ while not fixed:
     fixed = True
     fixed &= redundant_cmp_zero(blocks)
 remove_copies(blocks)
+
+fixed = False
+while not fixed:
+    fixed = True
+    fixed &= cse(blocks)
 
 fixed = False
 while not fixed:
