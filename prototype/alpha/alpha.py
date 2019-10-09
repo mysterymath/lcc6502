@@ -1,5 +1,6 @@
 from attr import attrs, attrib, Factory
 from collections import defaultdict, Counter
+import copy
 import fileinput
 import re
 import textwrap
@@ -1260,6 +1261,32 @@ def from_ssa(blocks):
     blocks.extend(new_blocks)
 
 
+def compute_blocks_live_sets(blocks):
+    live_ins = {}
+    live_outs = {}
+
+    defns = get_blocks_definitions(blocks)
+
+    for block in blocks:
+        live_ins[block.name] = {(): set()}
+        live_outs[block.name] = {(): set()}
+
+    fixed = False
+    while not fixed:
+        fixed = True
+        for block in blocks:
+            live = copy.deepcopy(live_outs[block.name])
+            for cmd in reversed(block.cmds):
+                for s in live.values():
+                    s -= set(cmd.results)
+                    s |= set(cmd.args) & defns
+            if live != live_ins[block.name]:
+                fixed = False
+                live_ins[block.name] = live
+
+    return live_ins, live_outs
+
+
 
 try:
     funcs = parse()
@@ -1305,7 +1332,15 @@ while not fixed:
 
 push_down_unique_uses(blocks)
 
-from_ssa(blocks)
+live_ins, live_outs = compute_blocks_live_sets(blocks)
 
 for block in blocks:
+    print(live_ins[block.name])
     print(block)
+    print(live_outs[block.name])
+    print()
+
+# from_ssa(blocks)
+
+# for block in blocks:
+#     print(block)
