@@ -1266,20 +1266,54 @@ def compute_blocks_live_sets(blocks):
     live_outs = {}
 
     defns = get_blocks_definitions(blocks)
+    blocks_by_name = {}
 
     for block in blocks:
+        blocks_by_name[block.name] = block
         live_ins[block.name] = {(): set()}
         live_outs[block.name] = {(): set()}
 
     fixed = False
     while not fixed:
         fixed = True
+
         for block in blocks:
+            def successors():
+                term = block.cmds[-1]
+                if term.op == 'br':
+                    if len(term.args) == 1:
+                        return term.args
+                    else:
+                        return term.args[1:]
+                else:
+                    # TODO: JSR, RTS
+                    return []
+
+            for succ in successors():
+                for stack, ins in live_ins[succ].items():
+                    if stack not in live_outs[block.name]:
+                        fixed = False
+                        live_outs[block.name][stack] = ins.copy()
+                    elif not (ins <= live_outs[block.name][stack]):
+                        fixed = False
+                        live_outs[block.name][stack] |= ins
+
+                    for cmd in blocks_by_name[succ].cmds:
+                        if cmd.op != 'phi':
+                            break
+                        for i in range(0, len(cmd.args), 2):
+                            b = cmd.args[i]
+                            arg = cmd.args[i+1]
+                            if b == block.name and arg in defns and arg not in live_outs[block.name][stack]:
+                                fixed = False
+                                live_outs[block.name][stack].add(arg)
+
             live = copy.deepcopy(live_outs[block.name])
             for cmd in reversed(block.cmds):
                 for s in live.values():
                     s -= set(cmd.results)
-                    s |= set(cmd.args) & defns
+                    if cmd.op != 'phi':
+                        s |= set(cmd.args) & defns
             if live != live_ins[block.name]:
                 fixed = False
                 live_ins[block.name] = live
