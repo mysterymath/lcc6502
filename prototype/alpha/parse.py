@@ -4,30 +4,33 @@ import re
 from common import Func, Block, Cmd, Asm, AsmInstr
 
 
-debug_line = None
-
-
 class ParseError(Exception):
     pass
 
 
 def parse():
-    try:
-        rest = read_lines()
-        first = next(rest)
-        return parse_funcs(first, rest)
-    except Exception as e:
-        raise ParseError(f'{fileinput.filename()}:{fileinput.lineno()}: {debug_line}') from e
+    return Parser().parse()
 
 
-def read_lines():
-    global debug_line
-    for line in fileinput.input():
-        line = line.strip()
-        if not line:
-            continue
-        debug_line = line
-        yield line
+class Parser:
+    def __init__(self):
+        self.debug_line = None
+
+    def parse(self):
+        try:
+            rest = self.read_lines()
+            first = next(rest)
+            return parse_funcs(first, rest)
+        except Exception as e:
+            raise ParseError(f'{fileinput.filename()}:{fileinput.lineno()}: {self.debug_line}') from e
+
+    def read_lines(self):
+        for line in fileinput.input():
+            line = line.strip()
+            if not line:
+                continue
+            self.debug_line = line
+            yield line
 
 
 def parse_funcs(first, rest):
