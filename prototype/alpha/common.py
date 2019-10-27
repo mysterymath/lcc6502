@@ -1,5 +1,6 @@
 from attr import attrs, attrib, Factory
 from collections import defaultdict
+import itertools
 import textwrap
 
 
@@ -112,6 +113,15 @@ def remove_copies(blocks):
                     return copies[val]
                 return val
             cmd.args = list(map(relabel, cmd.args))
+
+
+def new_name(name, defns):
+    if name == '_':
+        return name
+    candidates = itertools.chain([name], (f'{name}{n}' for n in itertools.count(1)))
+    chosen = next(c for c in candidates if c not in defns)
+    defns.add(chosen)
+    return chosen
 
 
 def strcat(*args):

@@ -3,7 +3,7 @@ import copy
 import itertools
 
 from common import Func, Block, Cmd, Asm, AsmInstr
-from common import collect_predecessors, remove_copies
+from common import collect_predecessors, new_name, remove_copies
 from parse import parse
 from to_ssa import to_ssa
 
@@ -668,15 +668,6 @@ def get_blocks_definitions(blocks):
         for cmd in block.cmds:
             defns |= set(cmd.results)
     return defns
-
-
-def new_name(name, defns):
-    if name == '_':
-        return name
-    candidates = itertools.chain([name], (f'{name}{n}' for n in itertools.count(1)))
-    chosen = next(c for c in candidates if c not in defns)
-    defns.add(chosen)
-    return chosen
 
 
 def dominators(blocks):

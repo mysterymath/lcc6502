@@ -2,7 +2,7 @@ from collections import defaultdict
 import itertools
 
 from common import Cmd
-from common import collect_predecessors, remove_copies
+from common import collect_predecessors, new_name, remove_copies
 
 def to_ssa(blocks):
     # SSA values that have been already defined.
@@ -16,9 +16,7 @@ def to_ssa(blocks):
     def renumber(result):
         if result == '_':
             return result
-        candidates = itertools.chain([result], (f'{result}{n}' for n in itertools.count(1)))
-        chosen = next(c for c in candidates if c not in defns)
-        defns.add(chosen)
+        chosen = new_name(result, defns)
         new_values[result].add(chosen)
         return chosen
 
