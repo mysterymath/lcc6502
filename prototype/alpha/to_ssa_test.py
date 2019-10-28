@@ -11,9 +11,9 @@ class TestToSsa(unittest.TestCase):
     (func,) = parse_lines("""
       main
         start
-          a = add 1 2
-          b = add 3 4
-          a = add 5 6
+          a = add 1 1
+          b = add 2 2
+          a = add 3 3
           ret
       end
     """)
@@ -21,9 +21,9 @@ class TestToSsa(unittest.TestCase):
     self.assertMultiLineEqual(str(func), dedent("""\
       main
         start
-          a = add 1 2
-          b = add 3 4
-          a1 = add 5 6
+          a = add 1 1
+          b = add 2 2
+          a1 = add 3 3
           ret
       end
     """))
@@ -32,9 +32,9 @@ class TestToSsa(unittest.TestCase):
     (func,) = parse_lines("""
       main
         start
-          a = add 1 2
-          a = add 3 4
-          b = add 5 6
+          a = add 1 1
+          a = add 2 2
+          b = add 3 3
           b = add a b
           ret
       end
@@ -43,9 +43,9 @@ class TestToSsa(unittest.TestCase):
     self.assertMultiLineEqual(str(func), dedent("""\
       main
         start
-          a = add 1 2
-          a1 = add 3 4
-          b = add 5 6
+          a = add 1 1
+          a1 = add 2 2
+          b = add 3 3
           b1 = add a1 b
           ret
       end
@@ -55,8 +55,8 @@ class TestToSsa(unittest.TestCase):
     (func,) = parse_lines("""
       main
         start
-          a = add 1 2
-          a = add 3 4
+          a = add 1 1
+          a = add 2 2
           br next
         next
           b = add a 1
@@ -67,8 +67,8 @@ class TestToSsa(unittest.TestCase):
     self.assertMultiLineEqual(str(func), dedent("""\
       main
         start
-          a = add 1 2
-          a1 = add 3 4
+          a = add 1 1
+          a1 = add 2 2
           br next
         next
           b = add a1 1
@@ -82,12 +82,12 @@ class TestToSsa(unittest.TestCase):
         start
           br 1 left right
         left
-          a = add 1 2
-          a = add 3 4
+          a = add 1 1
+          a = add 2 2
           br join
         right
-          b = add 5 6
-          b = add 7 8
+          b = add 3 3
+          b = add 4 4
           br join
         join
           c = phi left a right b
@@ -100,12 +100,12 @@ class TestToSsa(unittest.TestCase):
         start
           br 1 left right
         left
-          a = add 1 2
-          a1 = add 3 4
+          a = add 1 1
+          a1 = add 2 2
           br join
         right
-          b = add 5 6
-          b1 = add 7 8
+          b = add 3 3
+          b1 = add 4 4
           br join
         join
           c = phi left a1 right b1
