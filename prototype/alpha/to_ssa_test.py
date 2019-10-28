@@ -75,3 +75,40 @@ class TestToSsa(unittest.TestCase):
           ret
       end
     """))
+
+  def test_renumbers_phi_args(self):
+    (func,) = parse_lines("""
+      main
+        start
+          br 1 left right
+        left
+          a = add 1 2
+          a = add 3 4
+          br join
+        right
+          b = add 5 6
+          b = add 7 8
+          br join
+        join
+          c = phi left a right b
+          ret
+      end
+    """)
+    to_ssa(func.blocks)
+    self.assertMultiLineEqual(str(func), dedent("""\
+      main
+        start
+          br 1 left right
+        left
+          a = add 1 2
+          a1 = add 3 4
+          br join
+        right
+          b = add 5 6
+          b1 = add 7 8
+          br join
+        join
+          c = phi left a1 right b1
+          ret
+      end
+    """))
