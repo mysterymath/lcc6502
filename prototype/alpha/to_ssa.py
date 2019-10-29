@@ -80,7 +80,6 @@ def relabel_uses(blocks, new_values, renumber):
         return lookup_renumbered_value(val, len(block.cmds), block, rts_stack)
 
     for block in blocks:
-        while True:
             rts_stack = ()
             if block.name in rts_targets:
                 rts_stack += (block.name,)
@@ -89,8 +88,12 @@ def relabel_uses(blocks, new_values, renumber):
                 if cmd.op == 'phi_tmp':
                     continue
                 def lookup_value(val):
-                    return lookup_renumbered_value(val, cmd_index, block, rts_stack)
-                old_size = len(block.cmds)
+                    nonlocal cmd_index
+                    old_size = len(block.cmds)
+                    ret = lookup_renumbered_value(val, cmd_index, block, rts_stack)
+                    if len(block.cmds) != old_size:
+                        cmd_index += 1
+                    return ret
                 if cmd.op == 'phi':
                     for i in range(0, len(cmd.args), 2):
                         blk = cmd.args[i]
@@ -98,10 +101,6 @@ def relabel_uses(blocks, new_values, renumber):
                         cmd.args[i+1] = lookup_value_from_end(cmd.args[i+1], blk, rts_stack)
                 else:
                     cmd.args = list(map(lookup_value, cmd.args))
-                if len(block.cmds) != old_size:
-                    break
-            else:
-                break
 
     # Change all temporary phis back to regular phis.
     for block in blocks:
