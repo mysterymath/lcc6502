@@ -34,7 +34,7 @@ class Cmd:
     args = attrib()
 
     def is_terminator(self):
-        return self.op in ('br', 'ret')
+        return self.op in ('br', 'ret', 'jsr', 'rts')
 
     def __str__(self):
         results_str = f'{unsplit(self.results)} = ' if self.results else ''

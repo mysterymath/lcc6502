@@ -112,3 +112,32 @@ class TestToSsa(unittest.TestCase):
           ret
       end
     """))
+
+  def test_renumbers_uses_across_rts(self):
+    (func,) = parse_lines("""
+      main
+        start
+          jsr foo footer
+        foo
+          a = add 1 1
+          a = add 2 2
+          rts footer
+        footer
+          b = add a a
+          ret
+      end
+    """)
+    to_ssa(func.blocks)
+    self.assertMultiLineEqual(str(func), dedent("""\
+      main
+        start
+          jsr foo footer
+        foo
+          a = add 1 1
+          a1 = add 2 2
+          rts footer
+        footer
+          b = add a1 a1
+          ret
+      end
+    """))
