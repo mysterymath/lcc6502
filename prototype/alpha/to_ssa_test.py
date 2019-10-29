@@ -141,3 +141,32 @@ class TestToSsa(unittest.TestCase):
           ret
       end
     """))
+
+  def test_renumbers_uses_across_subroutine_call(self):
+    (func,) = parse_lines("""
+      main
+        start
+          a = add 1 1
+          a = add 2 2
+          jsr foo footer
+        foo
+          rts footer
+        footer
+          b = add a a
+          ret
+      end
+    """)
+    to_ssa(func.blocks)
+    self.assertMultiLineEqual(str(func), dedent("""\
+      main
+        start
+          a = add 1 1
+          a1 = add 2 2
+          jsr foo footer
+        foo
+          rts footer
+        footer
+          b = add a1 a1
+          ret
+      end
+    """))
