@@ -1,5 +1,6 @@
 from attr import attrs, attrib, Factory
 from collections import defaultdict
+from operator import itemgetter
 import itertools
 import textwrap
 
@@ -37,9 +38,18 @@ class Cmd:
         return self.op in ('br', 'ret', 'jsr', 'rts')
 
     def __str__(self):
+        if self.op == 'phi':
+            arg_tuples = []
+            for i in range(0, len(self.args), 2):
+                arg_tuples.append(tuple(self.args[i:i+2]))
+            arg_tuples.sort(key=itemgetter(0))
+            args = [a for t in arg_tuples for a in t]
+        else:
+            args = self.args
+
         results_str = f'{unsplit(self.results)} = ' if self.results else ''
         op_str = f'{self.op}{self.size}' if self.size is not None else self.op
-        args_str = ' ' + unsplit(self.args) if self.args else ''
+        args_str = ' ' + unsplit(args) if args else ''
         return f'{results_str}{op_str}{args_str}\n'
 
 
